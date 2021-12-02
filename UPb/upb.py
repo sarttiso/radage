@@ -4,30 +4,51 @@ import numpy as np
 import scipy.stats as stats
 from scipy.optimize import minimize_scalar
 
+import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 import matplotlib.transforms as transforms
+
+import warnings
+
+import pdb
 
 # in My
 l238 = 1.55125e-10*1e6
 l238_std = 0.5*l238*0.107/100  # see Schoene 2014 pg. 359
 l235 = 9.8485e-10*1e6
 l235_std = 0.5*l235*0.137/100
+l232 = 0.049475e-9*1e6   # probably needs to be updated, from Stacey and Kramers 1975
+u238u235 = 137.837
 
-"""
-t in My
-returns ratios and times corresponding to those ratios in 206-238 vs 207-235 space over a given time interval.
-"""
+
 def concordia(t):
+    """
+    t in My
+    returns ratios and times corresponding to those ratios in 206/238 vs 207/235 space over a given time interval.
+    """
     r206_238 = np.exp(l238*t)-1
     r207_235 = np.exp(l235*t)-1
 
     return r207_235, r206_238
 
-"""
-function giving 206/238, 207/235 ratios for bounds on confidence region around concordia at a given t
-returns upper bound, then lower bound
-"""
+def concordia_tw(t):
+    """
+    Tara-Wasserberg concordia
+    t in My
+    returns ratios and times corresponding to those ratios in 207/206 vs 238/206 space over a given time interval.
+    """
+    r206_238 = np.exp(l238*t)-1
+    r238_206 = 1/r206_238
+    r207_206 = (np.exp(l235*t)-1)/(np.exp(l238*t)-1)*1/u238u235
+
+    return r238_206, r207_206
+
+
 def concordia_confint(t, conf=0.95):
+    """
+    function giving 206/238, 207/235 ratios for bounds on confidence region around concordia at a given t
+    returns upper bound, then lower bound
+    """
     # slope of line tangent to concordia
     m = (l238*np.exp(l238*t))/(l235*np.exp(l235*t))
 
@@ -75,14 +96,18 @@ def t235(r35_07):
     return t
 
 
-"""
-class for handling U-Pb ages, where data are given as isotopic ratios and their uncertainties
-"""
-class UPbAge:
+
+class UPb:
     """
-    create object, just need means, stds, and correlations
+    class for handling U-Pb ages, where data are given as isotopic ratios and their uncertainties
     """
-    def __init__(self, r206_238, r206_238_std, r207_235, r207_235_std, r207_206, r207_206_std, rho238_235,rho207_238):
+    def __init__(self, r206_238, r206_238_std, 
+                       r207_235, r207_235_std, 
+                       r207_206, r207_206_std, 
+                       rho238_235, rho207_238, name=None):
+        """
+        create object, just need means, stds, and correlations
+        """
         self.r206_238 = r206_238
         self.r206_238_std = r206_238_std
         self.r207_235 = r207_235
@@ -93,29 +118,41 @@ class UPbAge:
         self.rho238_235 = rho238_235 # rho1
         self.rho207_238 = rho207_238 # rho2
 
-        # compute eigen decomposition of covariance matrix
+        self.name = name
+
+        # compute eigen decomposition of covariance matrix for 206/238, 207/235
         self.cov_235_238 = np.array([[self.r207_235_std**2,
                                       self.rho238_235*self.r206_238_std*self.r207_235_std],
                                      [self.rho238_235*self.r206_238_std*self.r207_235_std,
                                       self.r206_238_std**2]])
-        self.eigval, self.eigvec = np.linalg.eig(self.cov_235_238)
-        idx = np.argsort(self.eigval)[::-1] # sort descending
-        self.eigval = self.eigval[idx]
-        self.eigvec = self.eigvec.T[idx].T
+        self.eigval_235_238, self.eigvec_235_238 = np.linalg.eig(self.cov_235_238)
+        idx = np.argsort(self.eigval_235_238)[::-1] # sort descending
+        self.eigval_235_238 = self.eigval_235_238[idx]
+        self.eigvec_235_238 = self.eigvec_235_238.T[idx].T
 
+        # compute eigen decomposition of covariance matrix for 238/206, 207/206
+        self.r238_206_std = (self.r206_238_std/self.r206_238)*(1/self.r206_238)
+        self.cov_238_207 = np.array([[self.r238_206_std**2,
+                                      self.rho207_238*self.r238_206_std*self.r207_206_std],
+                                     [self.rho207_238*self.r238_206_std*self.r207_206_std,
+                                      self.r207_206_std**2]])
+        self.eigval_238_207, self.eigvec_238_207 = np.linalg.eig(self.cov_238_207)
+        idx = np.argsort(self.eigval_238_207)[::-1] # sort descending
+        self.eigval_238_207 = self.eigval_238_207[idx]
+        self.eigvec_238_207 = self.eigvec_238_207.T[idx].T
 
-    """
-    produce uncertainty/confidence ellipse (need to make explicitly the 207/235 vs 206/238 ellipse)
+    def ellipse_235_238(self, conf=0.95, facecolor='wheat', edgecolor='k', linewidth=0.5, **kwargs):
+        """
+        Generate uncertainty ellipse for desired confidence level for $^{206}$Pb/$^{238}$U
 
-    see https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Interval
-    """
-    def ellipse(self, conf=0.95, facecolor='wheat', edgecolor='k', linewidth=0.5, **kwargs):
+        [more here](https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Interval)
+        """
         r = stats.chi2.ppf(conf, 2)
-        a1 = np.sqrt(self.eigval[0]*r)
-        a2 = np.sqrt(self.eigval[1]*r)
+        a1 = np.sqrt(self.eigval_235_238[0]*r)
+        a2 = np.sqrt(self.eigval_235_238[1]*r)
 
         # compute rotation from primary eigenvector
-        rotdeg = np.arctan(self.eigvec[0, 0]/self.eigvec[1, 0])
+        rotdeg = np.rad2deg(np.arccos(self.eigvec_235_238[0, 0]))
 
         # create
         ell  = Ellipse((self.r207_235, self.r206_238), width=a1*2, height=a2*2, angle=rotdeg,
@@ -123,26 +160,121 @@ class UPbAge:
 
         return ell
 
-    """
-    at some confidence level, is the grain concordant (does concordia pass through confidence region)
-    """
-    def isconcordant(self, conf=0.95, n=1e3):
-        n = int(n)
-        t = np.linspace(0, int(4.6e3), n)
-        r35, r38 = concordia(t)
-        mu = np.vstack([self.r35, self.r38])
+    def ellipse_238_207(self, conf=0.95, facecolor='wheat', edgecolor='k', linewidth=0.5, **kwargs):
+        """
+            [more here](https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Interval)
+        """
+        r = stats.chi2.ppf(conf, 2)
+        a1 = np.sqrt(self.eigval_238_207[0]*r)
+        a2 = np.sqrt(self.eigval_238_207[1]*r)
 
-        exp_arg = np.zeros(n)
-        for ii in range(n):
-            exp_arg[ii] = np.matmul((np.vstack([r35[ii], r38[ii]])-mu).T, np.matmul(np.linalg.inv(self.cov_235_238), (np.vstack([r35[ii], r38[ii]])-mu)))
+        # compute rotation from primary eigenvector
+        rotdeg = np.rad2deg(np.arccos(self.eigvec_238_207[0, 0]))
 
-        return np.any(exp_arg <= stats.chi2.ppf(conf, 2))
+        # create
+        ell  = Ellipse((1/self.r206_238, self.r207_206), width=a1*2, height=a2*2, angle=rotdeg,
+                       facecolor=facecolor, edgecolor=edgecolor, linewidth=linewidth, **kwargs)
 
-    """
-    give 235, 238 concordia age as per Ludwig 1998, with uncertainty and MSWD
-    """
+        return ell
+
+
+    def discordance(self, method='SK'):
+        """
+        compute the discordance by some metric of this age
+
+        method (default 'SK'): 
+            'SK': Stacey and Kramer's (1975) common 
+            'p_238_235': use the probability of fit from the concordia age
+            'relative_68_76': relative age difference 1-(t68/t76)
+
+        """
+        if method=='SK':
+            r238_206_sk = sk_pb()
+            # dsk = 1 - self.
+        elif method=='relative_68_76':
+            d = 1- self.age68(conf=None)/self.age76(conf=None)
+        elif method=='absolute_76_68':
+            d = np.abs(self.age76(conf=None)-self.age68(conf=None))
+        elif method=='p_68_75':
+            tc = self.age_235_238_concordia()[0]
+            v = np.array([[self.r207_235 - np.exp(l235*tc) + 1,
+                           self.r206_238 - np.exp(l238*tc) + 1]]).T
+            C = np.array([[self.r207_235_std**2, self.rho238_235*self.r207_235_std*self.r206_238_std],
+                          [self.rho238_235*self.r207_235_std*self.r206_238_std, self.r206_238_std**2]])
+            S = np.matmul(v.T, np.matmul(np.linalg.inv(C), v))
+            d = 1 - stats.chi2.cdf(S, 2)
+            d = np.squeeze(d)[()]
+
+        return d
+
+
+    def age_207_238_concordia(self):
+        """
+        Generate $^{207}$Pb/$^{206}$Pb - $^{206}$Pb/$^{238}$U concordia age as per Ludwig (1998), with uncertainty and MSWD.
+
+        DOES NOT WORK
+        """
+        # get omega for a given t
+        def get_omega(t):
+            """
+            note that this function uses the error transformations in Appendix A of Ludwig (1998)
+            """
+            # relative errors
+            SX = self.r206_238_std/self.r206_238
+            SY = self.r207_206_std/self.r207_206
+            Sx = self.r207_235_std/self.r207_235
+            Sy = self.r206_238_std/self.r206_238
+            rhoXY = self.rho207_238
+            sigx = self.r207_235*np.sqrt(SX**2 + SY**2 - 2*SX*SY*rhoXY)
+            rhoxy = (SX**2-SX*SY*rhoXY)/(Sx*Sy)
+            sigy = self.r206_238_std 
+
+            P235 = t*np.exp(l235*t)
+            P238 = t*np.exp(l238*t)
+
+            cov_mod = np.array([[sigx**2 + P235**2*l235_std**2,
+                                 rhoxy*sigx*sigy], 
+                                 [rhoxy*sigx*sigy, sigy**2 + P238**2*l238_std**2]])
+            omega = np.linalg.inv(cov_mod)
+            return omega
+
+        
+        def S_cost(t):
+            omega = get_omega(t)
+
+            R = self.r207_206*u238u235*self.r206_238 - (np.exp(l235*t)-1)
+            r = self.r206_238 - np.exp(l238*t) + 1
+
+            S = omega[0, 0]*R**2 + omega[1, 1]*r**2 + 2*R*r*omega[0, 1]
+
+            return S
+
+        opt = minimize_scalar(S_cost, bounds=[0, 5000], method='bounded')
+        t = opt.x
+
+        omega = get_omega(t)
+
+        Q235 = l235*np.exp(l235*t)
+        Q238 = l238*np.exp(l238*t)
+
+        t_std = np.sqrt((Q235**2*omega[0, 0] + Q238**2*omega[1, 1] + 2*Q235*Q238*omega[0,1])**(-1))
+
+        MSWD = 1 - stats.chi2.cdf(opt.fun, 1)
+        # pdb.set_trace()
+        return t, t_std, MSWD
+
+
     def age_235_238_concordia(self):
+        """
+        Generate $^{207}$Pb/$^{235}$U - $^{206}$Pb/$^{238}$U concordia age as per Ludwig (1998), with uncertainty and MSWD.
 
+        [![Ludwig 1998](https://img.shields.io/badge/DOI-10.1016%2FS0016--7037(98)00059--3-blue?link=http://doi.org/10.1016/S0016-7037(98)00059-3&style=flat-square)](http://doi.org/10.1016/S0016-7037(98)00059-3)
+
+        Returns:
+        - t: age
+        - t_std: standard deviation of age
+        - MSWD: exceedance probability of misfit for concordance, corresponds to a 1-MSWD confidence level for accepting the observed misfit. Lower values permit more discordant ages.
+        """
         # get omega for a given t
         def get_omega(t):
             P235 = t*np.exp(l235*t)
@@ -180,54 +312,238 @@ class UPbAge:
 
         return t, t_std, MSWD
 
-    """
-    return 238 age with interval for desired confidence
-    """
-    def age238(self, conf=0.95, n=1e6):
+
+    def age68(self, conf=0.95, n=1e5):
+        """
+        return 206/238 age with interval for desired confidence
+        """
         n = int(n)
         age = np.log(self.r206_238+1)/l238
-        sig = np.std(np.log(stats.norm.rvs(self.r206_238, self.r206_238_std, size=n)+1)/l238)
-        conf = 1 - (1-conf)/2
-        confint = stats.norm.ppf(conf, age, sig)-age
-        return age, sig, confint
+        if conf == None:
+            return age
+        else:
+            sig = np.std(np.log(stats.norm.rvs(self.r206_238, self.r206_238_std, size=n)+1)/l238)
+            conf = 1 - (1-conf)/2
+            confint = stats.norm.ppf(conf, age, sig)-age
+            return age, sig, confint
 
-    """
-    return 238 age with interval for desired confidence
-    """
-    def age235(self, conf=0.95, n=1e6):
+
+    def age57(self, conf=0.95, n=1e5):
+        """
+        return 207/235 age with interval for desired confidence
+        """
         n = int(n)
         age = np.log(self.r207_235+1)/l235
-        sig = np.std(np.log(stats.norm.rvs(self.r207_235, self.r207_235_std, size=n)+1)/l235)
-        conf = 1 - (1-conf)/2
-        confint = stats.norm.ppf(conf, age, sig)-age
-        return age, sig, confint
+        if conf == None:
+            return age
+        else:
+            sig = np.std(np.log(stats.norm.rvs(self.r207_235, self.r207_235_std, size=n)+1)/l235)
+            conf = 1 - (1-conf)/2
+            confint = stats.norm.ppf(conf, age, sig)-age
+            return age, sig, confint
+
+    
+    def age76(self, conf=0.95, n=1e3, u238u235=u238u235):
+        """
+        return 207/206 age with interval for desired confidence
+        """
+        # ignore warning that occurs sometimes during optimization
+        warnings.filterwarnings('ignore', message='invalid value encountered in double_scalars')
+
+        n = int(n)
+        def cost(t, cur207_206):
+            """
+            cost function for solving for t
+            """
+            S = (1/u238u235 * (np.exp(l235*t)-1)/(np.exp(l238*t)-1) - cur207_206)**2
+            return S
+
+        # compute age
+        age = minimize_scalar(cost, args=(self.r207_206), bounds=(0, 4500)).x
+
+        if conf == None:
+            return age
+        else:
+            # now Monte Carlo solutions for t given uncertainty on the 207/206 ratio
+            ages = np.zeros(n)
+            r207_206_samp = stats.norm.rvs(self.r207_206, self.r207_206_std, size=n)
+            for ii in range(n):
+                res = minimize_scalar(cost, args=(r207_206_samp[ii]), bounds=(0, 4500))
+                ages[ii] = res.x
+            sig = np.std(ages)
+            conf = 1 - (1-conf)/2
+            confint = stats.norm.ppf(conf, age, sig) - age
+            return age, sig, confint
 
 
-"""
-draw intelligent concordia plot
-
-ages: list of UPbAges to plot
-"""
-# def plotconcordia(ages):
 
 
+def sk_pb(t, npt=100, t1=3.7e3, 
+          r206_204=18.7, r207_204=15.628, r208_204=38.63, 
+          mu1=7.19, mu2=9.74,
+          r206_204_0=9.307, r207_204_0=10.294, r208_204_0=29.476,
+          t0=4.57e3, r238_206_0=7.19, r232_204_0=32.21):
+    """
+    common lead model from Stacey and Kramers (1975)
 
-"""
-Implementation of York 1969 10.1016/S0012-821X(68)80059-7
-IN:
-x: mean x-values
-y: mean y-values
-wx: weights for x-values (typically 1/sigma^2)
-wy: weights for y-values (typically 1/sigma^2)
-r: correlation coefficient between sigma_x and sigma_y
-OUT:
-b: maximum likelihood estimate for slope of line
-a: maximum likelihood estimate for intercept of lin
-b_sig: standard deviation of slope for line
-a_sig: standard deviation of intercept for line
-mswd: reduced chi-squared statistic for residuals with respect to the maximum likelihood linear model
-"""
+    t: time (in Ma) for which to return isotopic ratios for the linear mixing model from concordia to mantle
+    npt (default 100): number of points on linear mixing line to return
+    t1 (default ): time for transition between model stages
+    r206_204 (default 18.7): modern 206-204 ratio, default is from Stacey and Kramer 1975
+    r207_204 (default 15.628): modern 207-204 ratio, default is from Stacey and Kramer 1975
+    r208_204 (default 38.63): modern 208-204 ratio, default is from Stacey and Kramer 1975
+    """
+    
+    if type(t)!='list' or type(t)!='numpy.ndarray':
+        t = [t]
+
+    for tt in t:
+        # stage 1
+        continue
+
+
+    return r207_206, r238_206
+
+
+def annotate_concordia(ages, ax=None):
+    """
+    use this function to annotate concordia plots with times
+
+    ages: list of numbers in Ma to annotate and plot on concordia
+    """
+    n_ages = len(ages)
+    r207_235_lab, r206_238_lab = concordia(ages)
+
+    if ax==None:
+        ax = plt.gca()
+
+    # time labels
+    ax.plot(r207_235_lab, r206_238_lab, 'o')
+
+    for ii in range(n_ages):
+        ax.annotate(int(ages[ii]), xy=(r207_235_lab[ii], r206_238_lab[ii]), 
+                    xytext=(-20, 10), textcoords='offset points')
+
+def plot_concordia(ages=[], t_min=None, t_max=None, n_t_labels=5, uncertainty=False, concordia_conf=0.95, ax=None, facecolor='wheat'):
+    """
+    draw intelligent concordia plot
+
+    ages: list of UPbAges to plot
+    n_t_labels: number of points on concordia to be labeled with ages in Ma
+    uncertainty: whether or not to include uncertainty on concordia
+    concordia_conf: confidence interval for concordia uncertainty
+    ax: axis to plot into if desired
+
+    TO DO: change facecolor and other similar arguments to be *args
+    """
+
+    if t_min==None or t_max==None:
+        t_min = 4500
+        t_max = 0
+
+        for age in ages:
+            cur_age = age.age235()[0]
+            t_min = np.min([t_min, cur_age])
+            t_max = np.max([t_max, cur_age])
+
+        # take some percentage below min age and above max age for plotting bounds of concordia
+        pct = 0.1
+        t_min = (1-pct)*t_min
+        t_max = (1+pct)*t_max
+
+    # make labels nice round numbers located within the desired range
+    delt = (t_max-t_min)/(n_t_labels-1)
+    delt = np.round(delt, -int(np.floor(np.log10(delt))))
+    t_lab = np.linspace(t_min, t_max, n_t_labels)
+    r207_235_lab, r206_238_lab = concordia(t_lab)
+
+    # unfinished
+    t_min = np.round(t_min-(delt*(n_t_labels-1) - (t_max-t_min))/2, -int(np.floor(np.log10(delt))))
+
+
+    t = np.linspace(t_min, t_max, 500)
+    r207_235, r206_238 = concordia(t)
+
+    if ax==None:
+        ax = plt.axes()
+
+    # concordia
+    ax.plot(r207_235, r206_238)
+
+    # uncertainty
+    if uncertainty:
+        ub, lb = concordia_confint(t, conf=concordia_conf)
+        ax.plot(lb[:, 0], lb[:, 1], color='gray', linewidth=0.25)
+        ax.plot(ub[:, 0], ub[:, 1], color='gray', linewidth=0.25)
+
+    # time labels
+    ax.plot(r207_235_lab, r206_238_lab, 'o')
+
+    for ii in range(n_t_labels):
+        ax.annotate(int(t_lab[ii]), xy=(r207_235_lab[ii], r206_238_lab[ii]), 
+                    xytext=(-20, 10), textcoords='offset points')
+
+    for age in ages:
+        ell = age.ellipse_235_238(facecolor=facecolor)
+        ax.add_patch(ell)
+
+    ax.set_xlabel('207/235')
+    ax.set_ylabel('206/238')
+
+
+def propagate_standard_uncertainty():
+    """
+    for a dataframe export from iolite, propagate uncertainty into all observations such that each standard population has MSWD <= 1
+    """
+    stand_strs = ['AusZ', 'GJ1', 'Plesovice', '9435', '91500', 'Temora']
+
+    files = glob.glob('exports/*run[0-9].xlsx')
+
+    dfs = []
+    for file in files:
+        dfs.append(pd.read_excel(file, sheet_name='Data', index_col=0))
+        
+    # for each run, scale standard standard errors to enforce MSWD<=1
+    for ii in range(len(files)):
+        cur_scale = 1
+        for jj in range(len(stand_strs)):
+            # find standard analyses
+            idx = dfs[ii].index.str.match(stand_strs[jj])
+            curdat = dfs[ii][idx]
+            mu = np.mean(curdat['Final Pb206/U238 age_mean'])
+            mswd = np.sum((curdat['Final Pb206/U238 age_mean']-mu)**2/ \
+                        (curdat['Final Pb206/U238 age_2SE(prop)']/2*cur_scale)**2)/(np.sum(idx)-1)
+            while mswd > 1:
+                cur_scale=cur_scale+0.01
+                mswd = np.sum((curdat['Final Pb206/U238 age_mean']-mu)**2/ \
+                            (curdat['Final Pb206/U238 age_2SE(prop)']/2*cur_scale)**2)/(np.sum(idx)-1)
+        # rescale all uncertainties
+        dfs[ii][list(dfs[ii].filter(like='2SE'))] = cur_scale*dfs[ii][list(dfs[ii].filter(like='2SE'))]
+        dfs[ii][list(dfs[ii].filter(like='2SD'))] = cur_scale*dfs[ii][list(dfs[ii].filter(like='2SD'))]
+        
+    # concatenate
+    dat = pd.concat(dfs, axis=0)
+
+    n_dat = len(dat)
+
+
 def yorkfit(x, y, wx, wy, r, thres=1e-3):
+    """
+    Implementation of York 1969 10.1016/S0012-821X(68)80059-7
+
+    IN:
+    x: mean x-values
+    y: mean y-values
+    wx: weights for x-values (typically 1/sigma^2)
+    wy: weights for y-values (typically 1/sigma^2)
+    r: correlation coefficient between sigma_x and sigma_y
+    OUT:
+    b: maximum likelihood estimate for slope of line
+    a: maximum likelihood estimate for intercept of line
+    b_sig: standard deviation of slope for line
+    a_sig: standard deviation of intercept for line
+    mswd: reduced chi-squared statistic for residuals with respect to the maximum likelihood linear model
+    """
     n = len(x)
     # get first guess for b
     b = stats.linregress(x, y)[0]

@@ -182,8 +182,10 @@ class UPb:
         """
         compute the discordance by some metric of this age
 
-        method (default 'SK'): 
-            'SK': Stacey and Kramer's (1975) common 
+        Paramters:
+        ----------
+        method : String
+            'SK': mixture model with Stacey and Kramers' (1975) common lead model
             'p_238_235': use the probability of fit from the concordia age
             'relative_68_76': relative age difference 1-(t68/t76)
 
@@ -201,7 +203,9 @@ class UPb:
                            self.r206_238 - np.exp(l238*tc) + 1]]).T
             C = np.array([[self.r207_235_std**2, self.rho238_235*self.r207_235_std*self.r206_238_std],
                           [self.rho238_235*self.r207_235_std*self.r206_238_std, self.r206_238_std**2]])
+            # chi-squared statistic is this quadratic 
             S = np.matmul(v.T, np.matmul(np.linalg.inv(C), v))
+            # probability of exceeding the statistic is just 1-cdf for a chi-squared distribution with 2 dof
             d = 1 - stats.chi2.cdf(S, 2)
             d = np.squeeze(d)[()]
 
@@ -376,33 +380,53 @@ class UPb:
             return age, sig, confint
 
 
-
-
-def sk_pb(t, npt=100, t1=3.7e3, 
-          r206_204=18.7, r207_204=15.628, r208_204=38.63, 
-          mu1=7.19, mu2=9.74,
-          r206_204_0=9.307, r207_204_0=10.294, r208_204_0=29.476,
-          t0=4.57e3, r238_206_0=7.19, r232_204_0=32.21):
+def sk_pb(t, t0=4.57e3, t1=3.7e3, mu1=7.19, mu2=9.74, x0=9.307, y0=10.294):
     """
     common lead model from Stacey and Kramers (1975)
 
-    t: time (in Ma) for which to return isotopic ratios for the linear mixing model from concordia to mantle
-    npt (default 100): number of points on linear mixing line to return
-    t1 (default ): time for transition between model stages
-    r206_204 (default 18.7): modern 206-204 ratio, default is from Stacey and Kramer 1975
-    r207_204 (default 15.628): modern 207-204 ratio, default is from Stacey and Kramer 1975
-    r208_204 (default 38.63): modern 208-204 ratio, default is from Stacey and Kramer 1975
+    Parameters:
+    -----------
+    t : 1d array like
+        time (in Ma) for which to return isotopic ratios for the linear mixing model from concordia to mantle
+
+    t0 : float
+        age of earth in My
+
+    t1 : float 
+        time for transition between model stages
+    
+    x0 : float
+        206Pb/204Pb ratio for troilite lead
+
+    y0 : float
+        207Pb/204Pb ratio for troilite lead
+
+    mu1 : float
+
+    mu2 : float
     """
     
-    if type(t)!='list' or type(t)!='numpy.ndarray':
-        t = [t]
+    t = np.reshape(np.array([t]), -1)
 
-    for tt in t:
-        # stage 1
-        continue
+    n = len(t)
 
+    # output ratios
+    r206_204 = np.zeros(n) # x(t)
+    r207_204 = np.zeros(n) # y(t)
 
-    return r207_206, r238_206
+    # for times in first stage
+    idx = t > t1
+    r206_204[idx] = x0 + mu1*(np.exp(l238*t0)-np.exp(l238*t[idx]))
+    r207_204[idx] = y0 + mu1/u238u235 * (np.exp(l235*t0)-np.exp(l235*t[idx]))
+
+    # for times in second stage
+    idx = t <= t1
+    x1 = x0 + mu1*(np.exp(l238*t0)-np.exp(l238*t1))
+    y1 = y0 + mu1/u238u235 * (np.exp(l235*t0)-np.exp(l235*t1))
+    r206_204[idx] = x1 + mu2*(np.exp(l238*t1)-np.exp(l238*t[idx]))
+    r207_204[idx] = y1 + mu2/u238u235 * (np.exp(l235*t1)-np.exp(l235*t[idx]))
+
+    return r206_204, r207_204
 
 
 def annotate_concordia(ages, ax=None):
@@ -494,6 +518,8 @@ def plot_concordia(ages=[], t_min=None, t_max=None, n_t_labels=5, uncertainty=Fa
 def propagate_standard_uncertainty():
     """
     for a dataframe export from iolite, propagate uncertainty into all observations such that each standard population has MSWD <= 1
+
+    UNFINISHED
     """
     stand_strs = ['AusZ', 'GJ1', 'Plesovice', '9435', '91500', 'Temora']
 

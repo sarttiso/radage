@@ -191,9 +191,15 @@ class UPb:
 
         """
         if method=='SK':
-            r238_206_sk = sk_pb()
-            # dsk = 1 - self.
-        elif method=='relative_68_76':
+            t = Pb_mix_find_t(self.r207_206, 1/self.r206_238)
+            r238_206_rad = 1 / (np.exp(l238*t)-1)
+            # r207_206_rad = 1/u238u235 * (np.exp(l235*t)-1)/(np.exp(l238*t)-1)
+            # r207_206_cm = sk_pb(t)[1]/sk_pb(t)[0]
+            # L = np.sqrt((r207_206_rad-r207_206_cm)**2 + (r238_206_rad)**2)
+            # l = np.sqrt((1/self.r206_238-r238_206_rad)**2 + (self.r207_206-r207_206_rad)**2)
+            d = 1 - (1/self.r206_238)/r238_206_rad
+            # d = l/L
+        elif method=='relative_76_68':
             d = 1- self.age68(conf=None)/self.age76(conf=None)
         elif method=='absolute_76_68':
             d = np.abs(self.age76(conf=None)-self.age68(conf=None))

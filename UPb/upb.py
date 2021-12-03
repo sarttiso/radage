@@ -474,8 +474,8 @@ def Pb_mix_plot(t, ax=None, **kwargs):
     r207_206_0 = r207_204/r206_204
     r238_206_0 = 0
 
-    # if ax != 'matplotlib.axes._subplots.AxesSubplot':
-    #     ax = plt.axes()
+    if ax == None:
+        ax = plt.axes()
     
     ax.plot(np.array([r238_206_0, r238_206_rad]), np.array([r207_206_0, r207_206_rad]))
 
@@ -500,7 +500,7 @@ def annotate_concordia(ages, ax=None):
                     xytext=(-20, 10), textcoords='offset points')
 
 def plot_concordia(ages=[], 
-                   t_min=None, t_max=None, tw=False,
+                   t_min=None, t_max=None, tw=False, labels=[],
                    n_t_labels=5, uncertainty=False, concordia_conf=0.95, ax=None, facecolor='wheat'):
     """
     draw intelligent concordia plot
@@ -510,15 +510,19 @@ def plot_concordia(ages=[],
     ages: 1d array like
         list of UPbAges to plot
     
-    t_min : 
+    t_min : float
 
-    t_max : 
+    t_max : float
 
     tw : boolean
         Tera Wassergburg or conventional concordia
 
+    labels : 1d array_like
+        Time points to label on concordia. takes precedence over n_t_labels
+
     n_t_labels : 
-        number of points on concordia to be labeled with ages in Ma
+        number of points on concordia to be labeled with ages in Ma. Rounds for easier 
+        reading, which may change t_min and t_max
     
     uncertainty :
         whether or not to include uncertainty on concordia
@@ -548,18 +552,26 @@ def plot_concordia(ages=[],
         t_min = (1-pct)*t_min
         t_max = (1+pct)*t_max
 
-    # make labels nice round numbers located within the desired range
-    delt = (t_max-t_min)/(n_t_labels-1)
-    delt = np.round(delt, -int(np.floor(np.log10(delt))))
-    t_lab = np.linspace(t_min, t_max, n_t_labels)
+    # if not provided, make labels nice round numbers located within the desired range
+    if len(labels) == 0:
+        delt = (t_max-t_min)/(n_t_labels-1)
+        delt = np.round(delt, -int(np.floor(np.log10(delt))))        
+        t_min_lab = np.round(t_min-(delt*(n_t_labels-1) - (t_max-t_min))/2, -int(np.floor(np.log10(delt))))
+        t_lab = np.cumsum(delt*np.ones(n_t_labels))-delt + t_min_lab
+        t_max_lab = t_lab[-1]
+
+        if t_min_lab < t_min:
+            t_min = t_min_lab
+        if t_max_lab > t_max:
+            t_max = t_max_lab
+    else:
+        t_lab = labels
+        n_t_labels = len(t_lab)
+
     if tw:
         x_lab, y_lab = concordia_tw(t_lab)
     else:
         x_lab, y_lab = concordia(t_lab)
-
-    # unfinished
-    t_min = np.round(t_min-(delt*(n_t_labels-1) - (t_max-t_min))/2, -int(np.floor(np.log10(delt))))
-
 
     t = np.linspace(t_min, t_max, 500)
     if tw:

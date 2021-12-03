@@ -332,7 +332,7 @@ class UPb:
             return age, sig, confint
 
 
-    def age57(self, conf=0.95, n=1e5):
+    def age75(self, conf=0.95, n=1e5):
         """
         return 207/235 age with interval for desired confidence
         """
@@ -426,7 +426,58 @@ def sk_pb(t, t0=4.57e3, t1=3.7e3, mu1=7.19, mu2=9.74, x0=9.307, y0=10.294):
     r206_204[idx] = x1 + mu2*(np.exp(l238*t1)-np.exp(l238*t[idx]))
     r207_204[idx] = y1 + mu2/u238u235 * (np.exp(l235*t1)-np.exp(l235*t[idx]))
 
-    return r206_204, r207_204
+    return r206_204.squeeze(), r207_204.squeeze()
+
+
+def Pb_mix_find_t(r207_206, r238_206):
+    """
+    given a pair of 207/206 & 238/206 isotopic ratios, solve for the age such that one has a lead mixing model that 
+    results in identical Stacey & Kramers' (1975) common lead model ages and radiogenic concordia ages
+    while also passing through the observed ratios.
+    """
+    def cost(t):
+        """
+        defines a cost metric to search over appropriate times
+        """
+        r206_204, r207_204 = sk_pb(t)
+        # intercept (common lead)
+        r207_206_0 = r207_204/r206_204
+        r238_206_0 = 0
+
+        # concordia (radiogenic component)
+        r238_206_rad = 1 / (np.exp(l238*t)-1)
+        r207_206_rad = 1/u238u235 * (np.exp(l235*t)-1)/(np.exp(l238*t)-1)
+
+        # compute distance from line connecting these two points
+        d = np.abs((r238_206_rad-r238_206_0)*(r207_206_0-r207_206) - \
+                   (r238_206_0-r238_206)*(r207_206_rad-r207_206_0)) / \
+            np.sqrt((r238_206_rad-r238_206_0)**2 + (r207_206_rad-r207_206_0)**2)
+        
+        return d
+
+    res = minimize_scalar(cost, bounds=(0, 4500))
+    t = res.x
+    
+    return t
+
+
+def Pb_mix_plot(t, ax=None, **kwargs):
+    """
+    for given t, plot a linear common-radiogenic lead mixing model in TW space
+    
+    To Do: update the input validation for ax
+    """
+    r238_206_rad = 1 / (np.exp(l238*t)-1)
+    r207_206_rad = 1/u238u235 * (np.exp(l235*t)-1)/(np.exp(l238*t)-1)
+
+    r206_204, r207_204 = sk_pb(t)
+    r207_206_0 = r207_204/r206_204
+    r238_206_0 = 0
+
+    # if ax != 'matplotlib.axes._subplots.AxesSubplot':
+    #     ax = plt.axes()
+    
+    ax.plot(np.array([r238_206_0, r238_206_rad]), np.array([r207_206_0, r207_206_rad]))
 
 
 def annotate_concordia(ages, ax=None):
@@ -448,15 +499,34 @@ def annotate_concordia(ages, ax=None):
         ax.annotate(int(ages[ii]), xy=(r207_235_lab[ii], r206_238_lab[ii]), 
                     xytext=(-20, 10), textcoords='offset points')
 
-def plot_concordia(ages=[], t_min=None, t_max=None, n_t_labels=5, uncertainty=False, concordia_conf=0.95, ax=None, facecolor='wheat'):
+def plot_concordia(ages=[], 
+                   t_min=None, t_max=None, tw=False,
+                   n_t_labels=5, uncertainty=False, concordia_conf=0.95, ax=None, facecolor='wheat'):
     """
     draw intelligent concordia plot
 
-    ages: list of UPbAges to plot
-    n_t_labels: number of points on concordia to be labeled with ages in Ma
-    uncertainty: whether or not to include uncertainty on concordia
-    concordia_conf: confidence interval for concordia uncertainty
-    ax: axis to plot into if desired
+    Parameters:
+    -----------
+    ages: 1d array like
+        list of UPbAges to plot
+    
+    t_min : 
+
+    t_max : 
+
+    tw : boolean
+        Tera Wassergburg or conventional concordia
+
+    n_t_labels : 
+        number of points on concordia to be labeled with ages in Ma
+    
+    uncertainty :
+        whether or not to include uncertainty on concordia
+
+    concordia_conf : 
+        confidence interval for concordia uncertainty
+
+    ax : axis to plot into if desired
 
     TO DO: change facecolor and other similar arguments to be *args
     """
@@ -466,7 +536,10 @@ def plot_concordia(ages=[], t_min=None, t_max=None, n_t_labels=5, uncertainty=Fa
         t_max = 0
 
         for age in ages:
-            cur_age = age.age235()[0]
+            if tw:
+                cur_age = age.age68()[0]
+            else:
+                cur_age = age.age75()[0]
             t_min = np.min([t_min, cur_age])
             t_max = np.max([t_max, cur_age])
 
@@ -479,20 +552,26 @@ def plot_concordia(ages=[], t_min=None, t_max=None, n_t_labels=5, uncertainty=Fa
     delt = (t_max-t_min)/(n_t_labels-1)
     delt = np.round(delt, -int(np.floor(np.log10(delt))))
     t_lab = np.linspace(t_min, t_max, n_t_labels)
-    r207_235_lab, r206_238_lab = concordia(t_lab)
+    if tw:
+        x_lab, y_lab = concordia_tw(t_lab)
+    else:
+        x_lab, y_lab = concordia(t_lab)
 
     # unfinished
     t_min = np.round(t_min-(delt*(n_t_labels-1) - (t_max-t_min))/2, -int(np.floor(np.log10(delt))))
 
 
     t = np.linspace(t_min, t_max, 500)
-    r207_235, r206_238 = concordia(t)
+    if tw:
+        x, y = concordia_tw(t)
+    else:
+        x, y = concordia(t)
 
     if ax==None:
         ax = plt.axes()
 
     # concordia
-    ax.plot(r207_235, r206_238)
+    ax.plot(x, y)
 
     # uncertainty
     if uncertainty:
@@ -501,18 +580,25 @@ def plot_concordia(ages=[], t_min=None, t_max=None, n_t_labels=5, uncertainty=Fa
         ax.plot(ub[:, 0], ub[:, 1], color='gray', linewidth=0.25)
 
     # time labels
-    ax.plot(r207_235_lab, r206_238_lab, 'o')
+    ax.plot(x_lab, y_lab, 'o')
 
     for ii in range(n_t_labels):
-        ax.annotate(int(t_lab[ii]), xy=(r207_235_lab[ii], r206_238_lab[ii]), 
+        ax.annotate(int(t_lab[ii]), xy=(x_lab[ii], y_lab[ii]), 
                     xytext=(-20, 10), textcoords='offset points')
 
     for age in ages:
-        ell = age.ellipse_235_238(facecolor=facecolor)
+        if tw:
+            ell = age.ellipse_238_207(facecolor=facecolor)
+        else:
+            ell = age.ellipse_235_238(facecolor=facecolor)
         ax.add_patch(ell)
 
-    ax.set_xlabel('207/235')
-    ax.set_ylabel('206/238')
+    if tw:
+        ax.set_xlabel('238/206')
+        ax.set_ylabel('207/206')
+    else:
+        ax.set_xlabel('207/235')
+        ax.set_ylabel('206/238')
 
 
 def propagate_standard_uncertainty():
@@ -523,7 +609,7 @@ def propagate_standard_uncertainty():
     """
     stand_strs = ['AusZ', 'GJ1', 'Plesovice', '9435', '91500', 'Temora']
 
-    files = glob.glob('exports/*run[0-9].xlsx')
+    # files = glob.glob('exports/*run[0-9].xlsx')
 
     dfs = []
     for file in files:

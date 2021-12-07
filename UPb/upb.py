@@ -214,7 +214,15 @@ class UPb:
             # probability of exceeding the statistic is just 1-cdf for a chi-squared distribution with 2 dof
             d = 1 - stats.chi2.cdf(S, 2)
             d = np.squeeze(d)[()]
+        elif method=='aitchison_76_68':
+            def dx(t):
+                return np.log(self.r206_238) - np.log(np.exp(l238*t)-1)
+        
+            def dy(t):
+                return np.log(self.r207_206) - np.log(1/u238u235 * (np.exp(l235*t)-1)/(np.exp(l238*t)-1))
 
+            d = dx(self.age76(conf=None)) * np.sin(np.arctan(dy(self.age68(conf=None))/dx(self.age76(conf=None))))
+        
         return d
 
 

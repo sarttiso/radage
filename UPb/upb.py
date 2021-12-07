@@ -579,7 +579,7 @@ def plot_concordia(ages=[],
         if t_max_lab > t_max:
             t_max = t_max_lab
     else:
-        t_lab = labels
+        t_lab = np.array(labels)
         n_t_labels = len(t_lab)
 
     if tw:
@@ -620,11 +620,11 @@ def plot_concordia(ages=[],
         ax.add_patch(ell)
 
     if tw:
-        ax.set_xlabel('238/206')
-        ax.set_ylabel('207/206')
+        ax.set_xlabel('$^{238}\mathrm{U}/^{206}\mathrm{Pb}$')
+        ax.set_ylabel('$^{207}\mathrm{Pb}/^{206}\mathrm{Pb}$')
     else:
-        ax.set_xlabel('207/235')
-        ax.set_ylabel('206/238')
+        ax.set_xlabel('$^{207}\mathrm{Pb}/^{235}\mathrm{U}$')
+        ax.set_ylabel('$^{206}\mathrm{Pb}/^{238}\mathrm{U}$')
 
 
 def propagate_standard_uncertainty():

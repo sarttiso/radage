@@ -609,8 +609,15 @@ def plot_concordia(ages=[],
     ax.plot(x_lab, y_lab, 'o')
 
     for ii in range(n_t_labels):
+        if tw:
+            offset=(0, -15)
+            ha = 'right'
+        else:
+            offset=(0, 5)
+            ha = 'right'
+
         ax.annotate(int(t_lab[ii]), xy=(x_lab[ii], y_lab[ii]), 
-                    xytext=(-20, 10), textcoords='offset points')
+                    xytext=offset, textcoords='offset points', ha=ha)
 
     for age in ages:
         if tw:
@@ -618,6 +625,11 @@ def plot_concordia(ages=[],
         else:
             ell = age.ellipse_235_238(facecolor=facecolor)
         ax.add_patch(ell)
+    
+    # enforce limits
+    buf = 0.05
+    ax.set_xlim([np.min(x)*(1-buf), np.max(x)*(1+buf)])
+    ax.set_ylim([np.min(y)*(1-buf), np.max(y)*(1+buf)])
 
     if tw:
         ax.set_xlabel('$^{238}\mathrm{U}/^{206}\mathrm{Pb}$')

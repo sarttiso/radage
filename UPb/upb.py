@@ -729,3 +729,42 @@ def yorkfit(x, y, wx, wy, r, thres=1e-3):
     mswd = np.sum(W*(y-b*x-a)**2)/(n-2)
 
     return b, a, b_sig, a_sig, mswd
+
+
+def get_sample(dfs, sample_name):
+    """
+    get entries in dataframes corresponding to a sample
+    """
+    df_sample = pd.DataFrame(columns=list(dfs[0]))
+    for df in dfs:
+        cur_idx = df.iloc[:, 0].str.contains(sample_name)
+        df_sample = df_sample.append(df.loc[cur_idx])
+    return df_sample
+
+
+def get_ages(dfs):
+    """
+    produce UPb age objects for each row in data files exported from Iolite 4
+    """
+    # cols
+    cols = ['Final Pb206/U238_mean', 
+            'Final Pb206/U238_2SE(prop)', 
+            'Final Pb207/U235_mean',
+            'Final Pb207/U235_2SE(prop)',
+            'Final Pb207/Pb206_mean',
+            'Final Pb207/Pb206_2SE(prop)',
+            'rho 206Pb/238U v 207Pb/235U',
+            'rho 207Pb/206Pb v 238U/206Pb']
+    
+    ages = []
+    for df in dfs:
+        for ii in range(df.shape[0]):
+            ages.append(UPb(df.iloc[ii][cols[0]], 
+                              df.iloc[ii][cols[1]]/2,
+                              df.iloc[ii][cols[2]], 
+                              df.iloc[ii][cols[3]]/2, 
+                              df.iloc[ii][cols[4]], 
+                              df.iloc[ii][cols[5]]/2, 
+                              df.iloc[ii][cols[6]],
+                              df.iloc[ii][cols[7]], name=df.iloc[ii, 0]))
+    return ages

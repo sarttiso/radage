@@ -653,14 +653,14 @@ def plot_concordia(ages=[],
         ax.set_ylabel('$^{206}\mathrm{Pb}/^{238}\mathrm{U}$')
 
 
-def discordance_filter(ages, method='relative', threshold=0.03):
+def discordance_filter(ages, method='relative', threshold=0.03, system_threshold=False):
     """
     function to filter on discordance
     
     Parameters:
     -----------
     filter_method : string
-        'relative', 'absolute', 'aitchinson'
+        'relative', 'absolute', 'aitchison'
         discordance metric to use. Discordance is evaluated between
         207/206-238/206 ages for samples with 207/206 ages > 1 Ga, and 
         206/238-207/235 ages for sample with 207/206 ages < 1 Ga
@@ -668,17 +668,28 @@ def discordance_filter(ages, method='relative', threshold=0.03):
     filter_threshold : float
         discordance value for chosen filtering method above which to flag
         ages as discordant
+
+    system_threshold : boolean
+        whether or not to switch discordance metrics between the 207/206-238/206 
+        and 206/238-207/235 systems at 1 Ga. If false, then discordance is always
+        computed between the 207/206-238/206 systems. If true, only works for 
+        aithison, relative, and absolute discordance metrics.
     """
     ages_conc = []
-    for age in ages:
-        if age.age76(conf=None) > 1000:
-            cur_method = method + '_76_68'
-        else:
-            cur_method = method + '_68_75'
-        d = np.abs(age.discordance(method=cur_method))
-        if d < threshold:
-            ages_conc.append(age)
-        
+    if system_threshold:
+        for age in ages:
+            if age.age76(conf=None) > 1000:
+                cur_method = method + '_76_68'
+            else:
+                cur_method = method + '_68_75'
+            d = np.abs(age.discordance(method=cur_method))
+            if d < threshold:
+                ages_conc.append(age)
+    else:
+        for age in ages:
+            d = np.abs(age.discordance(method=method + '_76_68'))
+            if d < threshold:
+                ages_conc.append(age)
     return ages_conc
 
 

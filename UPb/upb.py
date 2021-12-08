@@ -4,6 +4,8 @@ import numpy as np
 import scipy.stats as stats
 from scipy.optimize import minimize_scalar
 
+import statsmodels.api as sm
+
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 import matplotlib.transforms as transforms
@@ -203,6 +205,10 @@ class UPb:
             d = 1- self.age68(conf=None)/self.age76(conf=None)
         elif method=='absolute_76_68':
             d = np.abs(self.age76(conf=None)-self.age68(conf=None))
+        elif method=='relative_68_75':
+            d = 1- self.age68(conf=None)/self.age75(conf=None)
+        elif method=='absolute_68_75':
+            d = np.abs(self.age75(conf=None)-self.age68(conf=None))
         elif method=='p_68_75':
             tc = self.age_235_238_concordia()[0]
             v = np.array([[self.r207_235 - np.exp(l235*tc) + 1,
@@ -222,6 +228,14 @@ class UPb:
                 return np.log(self.r207_206) - np.log(1/u238u235 * (np.exp(l235*t)-1)/(np.exp(l238*t)-1))
 
             d = dx(self.age76(conf=None)) * np.sin(np.arctan(dy(self.age68(conf=None))/dx(self.age76(conf=None))))
+        elif method=='aitchison_68_75':
+            def dx(t):
+                return np.log(self.r207_235) - np.log(np.exp(l235*t)-1)
+        
+            def dy(t):
+                return np.log(self.r206_238) - np.log(np.exp(l238*t)-1)
+
+            d = dx(self.age68(conf=None)) * np.sin(np.arctan(dy(self.age75(conf=None))/dx(self.age68(conf=None))))
         
         return d
 
@@ -637,6 +651,85 @@ def plot_concordia(ages=[],
     else:
         ax.set_xlabel('$^{207}\mathrm{Pb}/^{235}\mathrm{U}$')
         ax.set_ylabel('$^{206}\mathrm{Pb}/^{238}\mathrm{U}$')
+
+
+def discordance_filter(ages, method='relative', threshold=0.03):
+    """
+    function to filter on discordance
+    
+    Parameters:
+    -----------
+    filter_method : string
+        'relative', 'absolute', 'aitchinson'
+        discordance metric to use. Discordance is evaluated between
+        207/206-238/206 ages for samples with 207/206 ages > 1 Ga, and 
+        206/238-207/235 ages for sample with 207/206 ages < 1 Ga
+
+    filter_threshold : float
+        discordance value for chosen filtering method above which to flag
+        ages as discordant
+    """
+    ages_conc = []
+    for age in ages:
+        if age.age76(conf=None) > 1000:
+            cur_method = method + '_76_68'
+        else:
+            cur_method = method + '_68_75'
+        d = np.abs(age.discordance(method=cur_method))
+        if d < threshold:
+            ages_conc.append(age)
+        
+    return ages_conc
+
+
+def kdes(ages, kernel='gau', bw='scott', systems=['r68', 'r76', 'r75'], ):
+    """
+    generate kde's for a given list of ages, optionally filtering on discordance
+
+    Parameters:
+    -----------
+    ages : 1d array like of UPb objects
+        ages from which to estimate KDE
+
+    kernel : string
+        statsmodels.nonparametric.kde.KDEUnivariate.fit() kernel
+
+    bw : string or float
+        statsmodels.nonparametric.kde.KDEUnivariate.fit() bw
+
+    systems : list containing some combination of 'r68', 'r76', 'r75'
+        Which isotopic systems to plot KDE's for
+
+    Returns:
+    --------
+    kdes_by_system : list
+        list of kdes objects, one for every requested system
+
+    """
+    kdes_by_system = []
+    if 'r68' in systems:
+        ages68 = [age.age68(conf=None) for age in ages]
+        # ages_by_system.append(ages68)
+        kdes_by_system.append(sm.nonparametric.KDEUnivariate(ages68).fit(kernel=kernel, bw=bw))
+    if 'r76' in systems:
+        ages76 = [age.age76(conf=None) for age in ages]
+        # ages_by_system.append(ages76)
+        kdes_by_system.append(sm.nonparametric.KDEUnivariate(ages76).fit(kernel=kernel, bw=bw))
+    if 'r75' in systems:
+        ages75 = [age.age75(conf=None) for age in ages]
+        # ages_by_system.append(ages75)
+        kdes_by_system.append(sm.nonparametric.KDEUnivariate(ages75).fit(kernel=kernel, bw=bw))
+
+    # index isotopic systems in order provided by user
+    systems_def = ['r68', 'r76', 'r75']
+    idx = np.zeros(len(systems)).astype(int)
+    for ii, system in enumerate(systems):
+        idx[ii] = np.argwhere(np.array(systems_def)==system).squeeze() - (3-len(systems))
+    
+    kdes_by_system = [kdes_by_system[x] for x in idx]
+    # ages_by_system = [ages_by_system[x] for x in idx]
+
+    return kdes_by_system
 
 
 def propagate_standard_uncertainty():

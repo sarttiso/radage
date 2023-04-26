@@ -200,17 +200,21 @@ class UPb:
         self.eigval_238_207 = self.eigval_238_207[idx]
         self.eigvec_238_207 = self.eigvec_238_207.T[idx].T
 
+
     def ellipse_235_238(self,
                         conf=0.95,
-                        facecolor='wheat',
-                        edgecolor='k',
-                        linewidth=0.5,
-                        **kwargs):
+                        patch_dict=None):
         """
         Generate uncertainty ellipse for desired confidence level for $^{206}$Pb/$^{238}$U
 
         [more here](https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Interval)
         """
+        # set up a default stle
+        if patch_dict is None:
+            patch_dict = {'facecolor': 'wheat', 
+                        'linewidth': 0.5, 
+                        'edgecolor': 'k'}
+            
         r = stats.chi2.ppf(conf, 2)
         a1 = np.sqrt(self.eigval_235_238[0] * r)
         a2 = np.sqrt(self.eigval_235_238[1] * r)
@@ -223,22 +227,22 @@ class UPb:
                       width=a1 * 2,
                       height=a2 * 2,
                       angle=rotdeg,
-                      facecolor=facecolor,
-                      edgecolor=edgecolor,
-                      linewidth=linewidth,
-                      **kwargs)
+                      **patch_dict)
 
         return ell
 
     def ellipse_238_207(self,
                         conf=0.95,
-                        facecolor='wheat',
-                        edgecolor='k',
-                        linewidth=0.5,
-                        **kwargs):
+                        patch_dict=None,):
         """
             [more here](https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Interval)
         """
+        # set up a default stle
+        if patch_dict is None:
+            patch_dict = {'facecolor': 'wheat', 
+                        'linewidth': 0.5, 
+                        'edgecolor': 'k'}
+            
         r = stats.chi2.ppf(conf, 2)
         a1 = np.sqrt(self.eigval_238_207[0] * r)
         a2 = np.sqrt(self.eigval_238_207[1] * r)
@@ -251,14 +255,11 @@ class UPb:
                       width=a1 * 2,
                       height=a2 * 2,
                       angle=rotdeg,
-                      facecolor=facecolor,
-                      edgecolor=edgecolor,
-                      linewidth=linewidth,
-                      **kwargs)
+                      **patch_dict)
 
         return ell
 
-    def discordance(self, method='SK'):
+    def discordance(self, method='relative'):
         """
         compute the discordance by some metric of this age
 
@@ -267,7 +268,11 @@ class UPb:
         method : String
             'SK': mixture model with Stacey and Kramers' (1975) common lead model
             'p_238_235': use the probability of fit from the concordia age
-            'relative_68_76': relative age difference 1-(t68/t76)
+            'relative': relative age different, where the 206/238 vs 207/235 ages are
+                used for 206/238 ages younger than 1 Ga, and the 207/206 vs 206/238
+                ages are used for ages older than 1 Ga
+            'relative_68_76': relative age difference using only the 206/238 and 206/207
+                ages, computed as 1-(t68/t76)
 
         """
         if method == 'SK':
@@ -279,6 +284,13 @@ class UPb:
             # l = np.sqrt((1/self.r206_238-r238_206_rad)**2 + (self.r207_206-r207_206_rad)**2)
             d = 1 - (1 / self.r206_238) / r238_206_rad
             # d = l/L
+        elif method == 'relative':
+            cur68_age = self.age68(conf=None)
+            # use 75 vs 68 for younger than 1 Ga
+            if cur68_age < 1000:
+                d = 1 - cur68_age/self.age75(conf=None)
+            else:
+                d = 1- cur68_age / self.age76(conf=None)
         elif method == 'relative_76_68':
             d = 1 - self.age68(conf=None) / self.age76(conf=None)
         elif method == 'absolute_76_68':
@@ -658,7 +670,7 @@ def plot_concordia(ages=[],
                    uncertainty=False,
                    concordia_conf=0.95,
                    ax=None,
-                   facecolor='wheat'):
+                   patch_dict=None):
     """
     draw intelligent concordia plot
 
@@ -689,8 +701,16 @@ def plot_concordia(ages=[],
 
     ax : axis to plot into if desired
 
+    patch_dict : dictionary of style parameters for the ellipse patch object
+
     TO DO: change facecolor and other similar arguments to be *args
     """
+
+    # set up a default stle
+    if patch_dict is None:
+        patch_dict = {'facecolor': 'wheat', 
+                      'linewidth': 0.5, 
+                      'edgecolor': 'k'}
 
     if t_min == None or t_max == None:
         t_min = 4500
@@ -769,9 +789,9 @@ def plot_concordia(ages=[],
 
     for age in ages:
         if tw:
-            ell = age.ellipse_238_207(facecolor=facecolor)
+            ell = age.ellipse_238_207(patch_dict=patch_dict)
         else:
-            ell = age.ellipse_235_238(facecolor=facecolor)
+            ell = age.ellipse_235_238(patch_dict=patch_dict)
         ax.add_patch(ell)
 
     # enforce limits

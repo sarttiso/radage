@@ -86,6 +86,19 @@ def concordia_confint(t, conf=0.95):
     return np.vstack([xtan_1, ytan_1]).T, np.vstack([xtan_2, ytan_2]).T
 
 
+def axlim_conc(tlims, ax=None):
+    if ax is None:
+        ax = plt.gca()
+
+    tlims = np.array(tlims)
+    
+    r75, r68 = concordia(tlims)
+
+    ax.set_xlim(r75)
+    ax.set_ylim(r68)
+
+
+
 def t238(r38_06):
     """_summary_
 
@@ -148,8 +161,8 @@ class UPb:
                  r207_235_std,
                  r207_206,
                  r207_206_std,
-                 rho238_235,
-                 rho207_238,
+                 rho75_68,
+                 rho86_76,
                  name=None):
         """
         create object, just need means, stds, and correlations
@@ -161,8 +174,8 @@ class UPb:
         self.r207_206 = r207_206
         self.r207_206_std = r207_206_std
 
-        self.rho238_235 = rho238_235  # rho1
-        self.rho207_238 = rho207_238  # rho2
+        self.rho75_68 = rho75_68  # rho1
+        self.rho86_76 = rho86_76  # rho2
 
         self.name = name
 
@@ -170,10 +183,10 @@ class UPb:
         self.cov_235_238 = np.array(
             [[
                 self.r207_235_std**2,
-                self.rho238_235 * self.r206_238_std * self.r207_235_std
+                self.rho75_68 * self.r206_238_std * self.r207_235_std
             ],
              [
-                 self.rho238_235 * self.r206_238_std * self.r207_235_std,
+                 self.rho75_68 * self.r206_238_std * self.r207_235_std,
                  self.r206_238_std**2
              ]])
         self.eigval_235_238, self.eigvec_235_238 = np.linalg.eig(
@@ -188,10 +201,10 @@ class UPb:
         self.cov_238_207 = np.array(
             [[
                 self.r238_206_std**2,
-                self.rho207_238 * self.r238_206_std * self.r207_206_std
+                self.rho86_76 * self.r238_206_std * self.r207_206_std
             ],
              [
-                 self.rho207_238 * self.r238_206_std * self.r207_206_std,
+                 self.rho86_76 * self.r238_206_std * self.r207_206_std,
                  self.r207_206_std**2
              ]])
         self.eigval_238_207, self.eigvec_238_207 = np.linalg.eig(
@@ -307,10 +320,10 @@ class UPb:
             ]]).T
             C = np.array([[
                 self.r207_235_std**2,
-                self.rho238_235 * self.r207_235_std * self.r206_238_std
+                self.rho75_68 * self.r207_235_std * self.r206_238_std
             ],
                           [
-                              self.rho238_235 * self.r207_235_std *
+                              self.rho75_68 * self.r207_235_std *
                               self.r206_238_std, self.r206_238_std**2
                           ]])
             # chi-squared statistic is this quadratic
@@ -362,7 +375,7 @@ class UPb:
             SY = self.r207_206_std / self.r207_206
             Sx = self.r207_235_std / self.r207_235
             Sy = self.r206_238_std / self.r206_238
-            rhoXY = self.rho207_238
+            rhoXY = self.rho86_76
             sigx = self.r207_235 * np.sqrt(SX**2 + SY**2 - 2 * SX * SY * rhoXY)
             rhoxy = (SX**2 - SX * SY * rhoXY) / (Sx * Sy)
             sigy = self.r206_238_std
@@ -423,10 +436,10 @@ class UPb:
             cov_mod = np.array(
                 [[
                     self.r207_235_std**2 + P235**2 * l235_std**2,
-                    self.rho238_235 * self.r206_238_std * self.r207_235_std
+                    self.rho75_68 * self.r206_238_std * self.r207_235_std
                 ],
                  [
-                     self.rho238_235 * self.r206_238_std * self.r207_235_std,
+                     self.rho75_68 * self.r206_238_std * self.r207_235_std,
                      self.r206_238_std**2 + P238**2 * l238_std**2
                  ]])
             omega = np.linalg.inv(cov_mod)
@@ -1048,30 +1061,6 @@ def get_sample(dfs, sample_name):
         df_sample = pd.concat([df_sample, df.loc[cur_idx]])
     return df_sample
 
-
-def get_ages(dfs):
-    """
-    produce UPb age objects for each row in data files exported from Iolite 4
-    """
-    # cols
-    cols = [
-        'Final Pb206/U238_mean', 'Final Pb206/U238_2SE(prop)',
-        'Final Pb207/U235_mean', 'Final Pb207/U235_2SE(prop)',
-        'Final Pb207/Pb206_mean', 'Final Pb207/Pb206_2SE(prop)',
-        'rho 206Pb/238U v 207Pb/235U', 'rho 207Pb/206Pb v 238U/206Pb'
-    ]
-
-    ages = []
-    for df in dfs:
-        for ii in range(df.shape[0]):
-            ages.append(
-                UPb(df.iloc[ii][cols[0]],
-                    df.iloc[ii][cols[1]] / 2,
-                    df.iloc[ii][cols[2]],
-                    df.iloc[ii][cols[3]] / 2,
-                    df.iloc[ii][cols[4]],
-                    df.iloc[ii][cols[5]] / 2,
-                    df.iloc[ii][cols[6]],
-                    df.iloc[ii][cols[7]],
-                    name=df.iloc[ii, 0]))
-    return ages
+def age_rank_plot(ax=None):
+    
+    return

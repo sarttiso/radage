@@ -7,7 +7,7 @@ from scipy.optimize import minimize_scalar
 import statsmodels.api as sm
 
 import matplotlib.pyplot as plt
-from matplotlib.patches import Ellipse
+from matplotlib.patches import Ellipse, Rectangle
 import matplotlib.transforms as transforms
 
 import warnings
@@ -87,6 +87,12 @@ def concordia_confint(t, conf=0.95):
 
 
 def axlim_conc(tlims, ax=None):
+    """set x and y lims for conccordia plot base on age range
+
+    Args:
+        tlims (array-like): minimum and maximum age bounds to plot
+        ax (matplotlib axis, optional): axis to set the limits for. If none, plt.gca(). Defaults to None.
+    """
     if ax is None:
         ax = plt.gca()
 
@@ -481,10 +487,11 @@ class UPb:
         if conf == None:
             return age
         else:
-            sig = np.std(
-                np.log(
-                    stats.norm.rvs(self.r206_238, self.r206_238_std, size=n) +
-                    1) / l238)
+            # sig = np.std(
+            #     np.log(
+            #         stats.norm.rvs(self.r206_238, self.r206_238_std, size=n) +
+            #         1) / l238)
+            sig = (1/l238) * self.r206_238_std/(self.r206_238 + 1)
             conf = 1 - (1 - conf) / 2
             confint = stats.norm.ppf(conf, age, sig) - age
             return age, sig, confint
@@ -1061,6 +1068,39 @@ def get_sample(dfs, sample_name):
         df_sample = pd.concat([df_sample, df.loc[cur_idx]])
     return df_sample
 
-def age_rank_plot(ax=None):
+
+def age_rank_plot(ages, ages_2s, ax=None, wid=0.6, patch_dict=None):
+    # set up a default stle
+    if patch_dict is None:
+        patch_dict = {'facecolor': 'wheat', 
+                    'linewidth': 0.5, 
+                    'edgecolor': 'k'}
     
-    return
+    if ax is None:
+        ax = plt.axes()
+
+    # sort ages
+    idx_sort = np.argsort(ages)
+    ages = ages[idx_sort]
+    ages_2s = ages_2s[idx_sort]
+
+    n_ages = len(ages)
+
+    for ii in range(n_ages):
+        bot = ages[ii] - ages_2s[ii]
+        height = 2*ages_2s[ii]
+        cur_rect = Rectangle([ii-wid/2, bot], wid, height, **patch_dict)
+        ax.add_patch(cur_rect)
+        
+    xlim = [0-wid, n_ages+wid-1]
+    vert_range = np.max(ages+ages_2s)- np.min(ages-ages_2s)
+    vert_fact = 0.05
+    ylim = [np.min(ages-ages_2s)-vert_fact*vert_range, 
+            np.max(ages+ages_2s)+vert_fact*vert_range]
+
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
+    ax.set_xticks([])
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)

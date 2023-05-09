@@ -1069,7 +1069,18 @@ def get_sample(dfs, sample_name):
     return df_sample
 
 
-def age_rank_plot(ages, ages_2s, ax=None, wid=0.6, patch_dict=None):
+def age_rank_plot(ages, ages_2s, ranks=None, ax=None, wid=0.6, patch_dict=None):
+    """rank-age plotting
+
+    Args:
+        ages (array-like): age means
+        ages_2s (array-like): (symmetric) age uncertainty to plot
+        ranks (array-like): manually specified ranks (if plotting several different
+            samples together). defaults to None
+        ax (matplotlib.axes, optional): axis to plot into. Defaults to None.
+        wid (float, optional): width of age bar. Defaults to 0.6.
+        patch_dict (dict, optional): style dict for Rectangle patches. Defaults to None.
+    """
     # set up a default stle
     if patch_dict is None:
         patch_dict = {'facecolor': 'wheat', 
@@ -1086,10 +1097,13 @@ def age_rank_plot(ages, ages_2s, ax=None, wid=0.6, patch_dict=None):
 
     n_ages = len(ages)
 
+    if ranks is None:
+        ranks = np.arange(n_ages)
+
     for ii in range(n_ages):
         bot = ages[ii] - ages_2s[ii]
         height = 2*ages_2s[ii]
-        cur_rect = Rectangle([ii-wid/2, bot], wid, height, **patch_dict)
+        cur_rect = Rectangle([ranks[ii]-wid/2, bot], wid, height, **patch_dict)
         ax.add_patch(cur_rect)
         
     xlim = [0-wid, n_ages+wid-1]
@@ -1104,3 +1118,78 @@ def age_rank_plot(ages, ages_2s, ax=None, wid=0.6, patch_dict=None):
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
+
+
+def ages_rank_plot_samples(samples_dict, sample_spacing=1, ax=None, **kwargs):
+    """plot age rank for multiple samples
+
+    Args:
+        samples_dict (dict): dictionary with samples. each sample key has another
+            dictionary with required keys 'ages', 'ages 2s' which have arrays of the
+            same length to plot ages. optional keys are 
+            'style': patch_dict for age_rank_plot
+            'mean': weighted mean; requires 'sig' and plots a box showing a weighted
+                mean across the other ages
+            'sig': uncertainty on weighted mean 
+        sample_spacing (int, optional): spacing between samples. Defaults to 1.
+        ax (matplotlib.Axes, optional): axis to plot into. Defaults to None.
+    """
+    if ax is None:
+        ax = plt.axes()
+
+    n_samples = len(samples_dict)
+
+    style_default = {}
+
+    # loop over samples
+    age_max, age_min = np.nan, np.nan # keep track of min and max ages
+    rank_start = 0
+    for sample in samples_dict:
+        cur_samp = samples_dict[sample]
+        n_ages = len(cur_samp['ages'])
+        cur_ranks = np.arange(rank_start, n_ages+1+rank_start)
+        # set style
+        if 'style' in cur_samp:
+            style = cur_samp['style']
+        else:
+            style = style_default
+        # plot ranks
+        age_rank_plot(cur_samp['ages'], cur_samp['ages 2s'], ranks=cur_ranks, 
+                      ax=ax, patch_dict=style, **kwargs)
+        # plot mean
+        if ('mean' in cur_samp) and ('sig' in cur_samp):
+            cur_rect = Rectangle([rank_start-0.5, cur_samp['mean']-cur_samp['sig']], 
+                                 n_ages, 2*cur_samp['sig'],
+                                 color='gray', alpha=0.5)
+            ax.add_patch(cur_rect)
+
+        # update min and max
+        cur_max = np.max(cur_samp['ages']+cur_samp['ages 2s'])
+        cur_min = np.min(cur_samp['ages']-cur_samp['ages 2s'])
+        age_max = np.nanmax([age_max, cur_max])
+        age_min = np.nanmin([age_min, cur_min])
+        # annotate 
+        ax.annotate(sample, (rank_start + n_ages/2 - 0.5, cur_max),
+                    xytext=(0, 5), textcoords='offset points', 
+                    ha='center', va='bottom')
+        # update rank start
+        rank_start = rank_start + n_ages + sample_spacing
+ 
+    # set limits
+    ax.set_xlim([-sample_spacing, rank_start+1])
+    ax.set_ylim([age_min, age_max])
+
+
+def weighted_mean(ages, ages_s):
+    """weighted mean age computation
+
+    Args:
+        ages (array-like): age means
+        ages_s (array-like): age standard deviations (same length as ages)
+
+    Returns:
+        _type_: _description_
+    """
+    mu = np.sum(ages/ages_s**2)/np.sum(1/ages_s**2)
+    sig = np.sqrt(1/np.sum(1/ages_s**2))
+    return mu, sig

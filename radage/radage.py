@@ -1160,7 +1160,7 @@ def ages_rank_plot_samples(samples_dict, sample_spacing=1, ax=None, **kwargs):
         if ('mean' in cur_samp) and ('sig' in cur_samp):
             cur_rect = Rectangle([rank_start-0.5, cur_samp['mean']-cur_samp['sig']], 
                                  n_ages, 2*cur_samp['sig'],
-                                 color='gray', alpha=0.5)
+                                 color='gray', alpha=0.5, zorder=0)
             ax.add_patch(cur_rect)
 
         # update min and max

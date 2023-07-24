@@ -220,7 +220,7 @@ class UPb:
         self.eigvec_238_207 = self.eigvec_238_207.T[idx].T
 
 
-    def ellipse_235_238(self,
+    def ellipse_68_75(self,
                         conf=0.95,
                         patch_dict=None):
         """
@@ -250,7 +250,7 @@ class UPb:
 
         return ell
 
-    def ellipse_238_207(self,
+    def ellipse_76_86(self,
                         conf=0.95,
                         patch_dict=None,):
         """
@@ -807,13 +807,11 @@ def plot_concordia(ages=[],
                     textcoords='offset points',
                     ha=ha)
 
-    for age in ages:
-        if tw:
-            ell = age.ellipse_238_207(patch_dict=patch_dict)
-        else:
-            ell = age.ellipse_235_238(patch_dict=patch_dict)
-        ax.add_patch(ell)
-
+    if tw:
+        plot_ellipses_76_86(ages, ax=ax, patch_dict=patch_dict)
+    else:
+        plot_ellipses_68_75(ages, patch_dict=patch_dict, ax=ax)
+        
     # enforce limits
     buf = 0.05
     ax.set_xlim([np.min(x) * (1 - buf), np.max(x) * (1 + buf)])
@@ -825,6 +823,22 @@ def plot_concordia(ages=[],
     else:
         ax.set_xlabel('$^{207}\mathrm{Pb}/^{235}\mathrm{U}$')
         ax.set_ylabel('$^{206}\mathrm{Pb}/^{238}\mathrm{U}$')
+
+
+def plot_ellipses_68_75(ages, conf=0.95, patch_dict=None, ax=None):
+    if ax == None:
+        ax = plt.axes()
+    for age in ages:
+        cur_ell = age.ellipse_68_75(conf=conf, patch_dict=patch_dict)
+        ax.add_patch(cur_ell)
+
+
+def plot_ellipses_76_86(ages, conf=0.95, patch_dict=None, ax=None):
+    if ax == None:
+        ax = plt.axes()
+    for age in ages:
+        cur_ell = age.ellipse_68_75(conf=conf, patch_dict=patch_dict)
+        ax.add_patch(cur_ell)
 
 
 def discordance_filter(ages,

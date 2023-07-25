@@ -811,7 +811,7 @@ def plot_concordia(ages=[],
         plot_ellipses_76_86(ages, ax=ax, patch_dict=patch_dict)
     else:
         plot_ellipses_68_75(ages, patch_dict=patch_dict, ax=ax)
-        
+
     # enforce limits
     buf = 0.05
     ax.set_xlim([np.min(x) * (1 - buf), np.max(x) * (1 + buf)])
@@ -837,7 +837,7 @@ def plot_ellipses_76_86(ages, conf=0.95, patch_dict=None, ax=None):
     if ax == None:
         ax = plt.axes()
     for age in ages:
-        cur_ell = age.ellipse_68_75(conf=conf, patch_dict=patch_dict)
+        cur_ell = age.ellipse_76_86(conf=conf, patch_dict=patch_dict)
         ax.add_patch(cur_ell)
 
 
@@ -1204,6 +1204,16 @@ def weighted_mean(ages, ages_s):
     Returns:
         _type_: _description_
     """
-    mu = np.sum(ages/ages_s**2)/np.sum(1/ages_s**2)
-    sig = np.sqrt(1/np.sum(1/ages_s**2))
-    return mu, sig
+    # weights
+    w = 1/(ages_s**2)
+    mu = np.sum(ages*w)/np.sum(w)
+    # naive
+    # sig = np.sqrt(1/np.sum(w))
+    # unbiased
+    sig2 = np.sum(w)/(np.sum(w)**2-np.sum(w**2))*np.sum(w*(ages-mu)**2)
+    # biased
+    # sig2 = (np.sum(w*ages**2)*np.sum(w) - np.sum(w*ages)**2)/np.sum(w)**2
+    sig = np.sqrt(sig2)
+    mswd = np.sum(w)/(np.sum(w)**2-np.sum(w**2)) * \
+          np.sum((w*(ages-mu)**2)/ages_s**2)
+    return mu, sig, mswd

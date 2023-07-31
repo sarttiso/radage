@@ -659,26 +659,45 @@ def Pb_mix_plot(t, ax=None, **kwargs):
             np.array([r207_206_0, r207_206_rad]))
 
 
-def annotate_concordia(ages, ax=None):
+def annotate_concordia(ages, tw=False, ax=None, ann_style=None):
     """
     use this function to annotate concordia plots with times
 
     ages: list of numbers in Ma to annotate and plot on concordia
+    tw: tera wasserberg space?
+    ann_style: dict
     """
     n_ages = len(ages)
-    r207_235_lab, r206_238_lab = concordia(ages)
+    if tw:
+        x_lab, y_lab = concordia_tw(ages)
+    else:
+        x_lab, y_lab = concordia(ages)
 
     if ax == None:
         ax = plt.gca()
 
+    if ann_style is None:
+        ann_style = {'color': 'red', 
+                     'marker': 'o', 
+                     'linestyle': ''}
+        
+    for ii in range(n_ages):
+        if tw:
+            offset = (0, -15)
+            ha = 'center'
+        else:
+            offset = (0, 5)
+            ha = 'right'
+
     # time labels
-    ax.plot(r207_235_lab, r206_238_lab, 'o')
+    ax.plot(x_lab, y_lab, **ann_style)
 
     for ii in range(n_ages):
         ax.annotate(int(ages[ii]),
-                    xy=(r207_235_lab[ii], r206_238_lab[ii]),
-                    xytext=(-20, 10),
-                    textcoords='offset points')
+                    xy=(x_lab[ii], y_lab[ii]),
+                    xytext=offset,
+                    textcoords='offset points',
+                    ha=ha)
 
 
 def plot_concordia(ages=[],

@@ -1190,6 +1190,8 @@ def age_rank_plot(ages, ages_2s, ranks=None, ax=None, wid=0.6, patch_dict=None):
     idx_sort = np.argsort(-ages)
     ages = ages[idx_sort]
     ages_2s = ages_2s[idx_sort]
+    # also sort styling
+    patch_dict = [patch_dict[idx] for idx in idx_sort]
 
     n_ages = len(ages)
 

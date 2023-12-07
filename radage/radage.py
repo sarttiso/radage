@@ -27,7 +27,8 @@ u238u235 = 137.837
 def concordia(t):
     """
     t in My
-    returns ratios and times corresponding to those ratios in 206/238 vs 207/235 space over a given time interval.
+    returns ratios and times corresponding to those ratios in 206/238 vs
+    207/235 space over a given time interval.
     """
     r206_238 = np.exp(l238 * t) - 1
     r207_235 = np.exp(l235 * t) - 1
@@ -39,7 +40,8 @@ def concordia_tw(t):
     """
     Tara-Wasserberg concordia
     t in My
-    returns ratios and times corresponding to those ratios in 207/206 vs 238/206 space over a given time interval.
+    returns ratios and times corresponding to those ratios in 207/206 vs
+    238/206 space over a given time interval.
     """
     r206_238 = np.exp(l238 * t) - 1
     r238_206 = 1 / r206_238
@@ -97,12 +99,11 @@ def axlim_conc(tlims, ax=None):
         ax = plt.gca()
 
     tlims = np.array(tlims)
-    
+
     r75, r68 = concordia(tlims)
 
     ax.set_xlim(r75)
     ax.set_ylim(r68)
-
 
 
 def t238(r38_06):
@@ -191,10 +192,10 @@ class UPb:
                 self.r207_235_std**2,
                 self.rho75_68 * self.r206_238_std * self.r207_235_std
             ],
-             [
-                 self.rho75_68 * self.r206_238_std * self.r207_235_std,
-                 self.r206_238_std**2
-             ]])
+                [
+                self.rho75_68 * self.r206_238_std * self.r207_235_std,
+                self.r206_238_std**2
+            ]])
         self.eigval_235_238, self.eigvec_235_238 = np.linalg.eig(
             self.cov_235_238)
         idx = np.argsort(self.eigval_235_238)[::-1]  # sort descending
@@ -209,20 +210,19 @@ class UPb:
                 self.r238_206_std**2,
                 self.rho86_76 * self.r238_206_std * self.r207_206_std
             ],
-             [
-                 self.rho86_76 * self.r238_206_std * self.r207_206_std,
-                 self.r207_206_std**2
-             ]])
+                [
+                self.rho86_76 * self.r238_206_std * self.r207_206_std,
+                self.r207_206_std**2
+            ]])
         self.eigval_238_207, self.eigvec_238_207 = np.linalg.eig(
             self.cov_238_207)
         idx = np.argsort(self.eigval_238_207)[::-1]  # sort descending
         self.eigval_238_207 = self.eigval_238_207[idx]
         self.eigvec_238_207 = self.eigvec_238_207.T[idx].T
 
-
     def ellipse_68_75(self,
-                        conf=0.95,
-                        patch_dict=None):
+                      conf=0.95,
+                      patch_dict=None):
         """
         Generate uncertainty ellipse for desired confidence level for $^{206}$Pb/$^{238}$U
 
@@ -230,10 +230,10 @@ class UPb:
         """
         # set up a default stle
         if patch_dict is None:
-            patch_dict = {'facecolor': 'wheat', 
-                        'linewidth': 0.5, 
-                        'edgecolor': 'k'}
-            
+            patch_dict = {'facecolor': 'wheat',
+                          'linewidth': 0.5,
+                          'edgecolor': 'k'}
+
         r = stats.chi2.ppf(conf, 2)
         a1 = np.sqrt(self.eigval_235_238[0] * r)
         a2 = np.sqrt(self.eigval_235_238[1] * r)
@@ -251,17 +251,17 @@ class UPb:
         return ell
 
     def ellipse_76_86(self,
-                        conf=0.95,
-                        patch_dict=None,):
+                      conf=0.95,
+                      patch_dict=None,):
         """
             [more here](https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Interval)
         """
         # set up a default stle
         if patch_dict is None:
-            patch_dict = {'facecolor': 'wheat', 
-                        'linewidth': 0.5, 
-                        'edgecolor': 'k'}
-            
+            patch_dict = {'facecolor': 'wheat',
+                          'linewidth': 0.5,
+                          'edgecolor': 'k'}
+
         r = stats.chi2.ppf(conf, 2)
         a1 = np.sqrt(self.eigval_238_207[0] * r)
         a2 = np.sqrt(self.eigval_238_207[1] * r)
@@ -309,7 +309,7 @@ class UPb:
             if cur68_age < 1000:
                 d = 1 - cur68_age/self.age75(conf=None)
             else:
-                d = 1- cur68_age / self.age76(conf=None)
+                d = 1 - cur68_age / self.age76(conf=None)
         elif method == 'relative_76_68':
             d = 1 - self.age68(conf=None) / self.age76(conf=None)
         elif method == 'absolute_76_68':
@@ -328,10 +328,10 @@ class UPb:
                 self.r207_235_std**2,
                 self.rho75_68 * self.r207_235_std * self.r206_238_std
             ],
-                          [
-                              self.rho75_68 * self.r207_235_std *
-                              self.r206_238_std, self.r206_238_std**2
-                          ]])
+                [
+                self.rho75_68 * self.r207_235_std *
+                self.r206_238_std, self.r206_238_std**2
+            ]])
             # chi-squared statistic is this quadratic
             S = np.matmul(v.T, np.matmul(np.linalg.inv(C), v))
             # probability of exceeding the statistic is just 1-cdf for a chi-squared distribution with 2 dof
@@ -444,10 +444,10 @@ class UPb:
                     self.r207_235_std**2 + P235**2 * l235_std**2,
                     self.rho75_68 * self.r206_238_std * self.r207_235_std
                 ],
-                 [
-                     self.rho75_68 * self.r206_238_std * self.r207_235_std,
-                     self.r206_238_std**2 + P238**2 * l238_std**2
-                 ]])
+                    [
+                    self.rho75_68 * self.r206_238_std * self.r207_235_std,
+                    self.r206_238_std**2 + P238**2 * l238_std**2
+                ]])
             omega = np.linalg.inv(cov_mod)
             return omega
 
@@ -567,7 +567,7 @@ def sk_pb(t, t0=4.57e3, t1=3.7e3, mu1=7.19, mu2=9.74, x0=9.307, y0=10.294):
 
     t1 : float 
         time for transition between model stages
-    
+
     x0 : float
         206Pb/204Pb ratio for troilite lead
 
@@ -626,9 +626,10 @@ def Pb_mix_find_t(r207_206, r238_206):
                                        1) / (np.exp(l238 * t) - 1)
 
         # compute distance from line connecting these two points
-        d = np.abs((r238_206_rad-r238_206_0)*(r207_206_0-r207_206) - \
+        d = np.abs((r238_206_rad-r238_206_0)*(r207_206_0-r207_206) -
                    (r238_206_0-r238_206)*(r207_206_rad-r207_206_0)) / \
-            np.sqrt((r238_206_rad-r238_206_0)**2 + (r207_206_rad-r207_206_0)**2)
+            np.sqrt((r238_206_rad-r238_206_0)**2 +
+                    (r207_206_rad-r207_206_0)**2)
 
         return d
 
@@ -641,7 +642,7 @@ def Pb_mix_find_t(r207_206, r238_206):
 def Pb_mix_plot(t, ax=None, **kwargs):
     """
     for given t, plot a linear common-radiogenic lead mixing model in TW space
-    
+
     To Do: update the input validation for ax
     """
     r238_206_rad = 1 / (np.exp(l238 * t) - 1)
@@ -677,10 +678,10 @@ def annotate_concordia(ages, tw=False, ax=None, ann_style=None):
         ax = plt.gca()
 
     if ann_style is None:
-        ann_style = {'color': 'red', 
-                     'marker': 'o', 
+        ann_style = {'color': 'red',
+                     'marker': 'o',
                      'linestyle': ''}
-        
+
     for ii in range(n_ages):
         if tw:
             offset = (0, -15)
@@ -717,7 +718,7 @@ def plot_concordia(ages=[],
     -----------
     ages: 1d array like
         list of UPbAges to plot
-    
+
     t_min : float
 
     t_max : float
@@ -731,7 +732,7 @@ def plot_concordia(ages=[],
     n_t_labels : 
         number of points on concordia to be labeled with ages in Ma. Rounds for easier 
         reading, which may change t_min and t_max
-    
+
     uncertainty :
         whether or not to include uncertainty on concordia
 
@@ -740,16 +741,13 @@ def plot_concordia(ages=[],
 
     ax : axis to plot into if desired
 
-    patch_dict : dictionary of style parameters for the ellipse patch object
+    patch_dict : list of dictionary of style parameters for the ellipse patch object
 
     TO DO: change facecolor and other similar arguments to be *args
     """
 
     # set up a default stle
-    if patch_dict is None:
-        patch_dict = {'facecolor': 'wheat', 
-                      'linewidth': 0.5, 
-                      'edgecolor': 'k'}
+    patch_dict = patch_dict_validator(patch_dict, len(ages))
 
     if t_min == None or t_max == None:
         t_min = 4500
@@ -844,15 +842,41 @@ def plot_concordia(ages=[],
         ax.set_ylabel('$^{206}\mathrm{Pb}/^{238}\mathrm{U}$')
 
 
+def patch_dict_validator(patch_dict, n):
+    """validate patch_dict
+
+    Args:
+        patch_dict (list): List of dictionaries
+        n (int): number of patches to style
+
+    Returns:
+        patch_dict: validated list
+    """
+    # set up a default stle
+    if patch_dict is None:
+        patch_dict = [{'facecolor': 'wheat',
+                      'linewidth': 0.5,
+                      'edgecolor': 'k'}]
+    elif len(patch_dict) == 1:
+        patch_dict = n * patch_dict
+    else:
+        assert len(patch_dict) == n, 'Need one style dictionary per age.'
+    return patch_dict
+
+
 def plot_ellipses_68_75(ages, conf=0.95, patch_dict=None, ax=None):
+    patch_dict = patch_dict_validator(patch_dict, len(ages))
+
     if ax == None:
         ax = plt.axes()
-    for age in ages:
+    for ii, age in enumerate(ages):
         cur_ell = age.ellipse_68_75(conf=conf, patch_dict=patch_dict)
         ax.add_patch(cur_ell)
 
 
 def plot_ellipses_76_86(ages, conf=0.95, patch_dict=None, ax=None):
+    patch_dict = patch_dict_validator(patch_dict, len(ages))
+
     if ax == None:
         ax = plt.axes()
     for age in ages:
@@ -866,7 +890,7 @@ def discordance_filter(ages,
                        system_threshold=False):
     """
     function to filter on discordance
-    
+
     Parameters:
     -----------
     filter_method : string
@@ -935,12 +959,52 @@ def discordia_age_76_86(m, b, precision=3):
     return age
 
 
-def kdes(
-    ages,
-    kernel='gau',
-    bw='scott',
-    systems=['r68', 'r76', 'r75'],
-):
+def kde(ages, t,
+        kernel='gau',
+        bw='scott',
+        systems='auto'):
+    """
+    evaluate kde for ages at times t
+
+    Parameters
+    ----------
+    ages : arraylike
+        list of radages.
+    t : arraylike
+        times at which to evaluate the kde.
+    kernel : str, optional
+        Type of kernel. The default is 'gau'.
+    bw : str, optional
+        bandwidth. The default is 'scott'.
+    systems : str, optional
+        systems to use. The default is 'auto,' which uses 76 after 1 Ga and 68
+        before
+
+    Returns
+    -------
+    kde_est : TYPE
+        DESCRIPTION.
+
+    """
+    # determine ages to use as input based on systems requested
+    if systems == 'auto':
+        ages76 = np.array([age.age76(conf=None) for age in ages])
+        ages68 = np.array([age.age68(conf=None) for age in ages])
+
+        ages_in = np.concatenate([ages68[ages68 < 1000],
+                                  ages76[ages76 > 1000]])
+
+    cur_kde = sm.nonparametric.KDEUnivariate(ages_in).fit(kernel=kernel, bw=bw)
+
+    kde_est = cur_kde.evaluate(t)
+
+    return kde_est
+
+
+def kdes(ages,
+         kernel='gau',
+         bw='scott',
+         systems=['r68', 'r76', 'r75']):
     """
     generate kde's for a given list of ages
 
@@ -1016,12 +1080,12 @@ def propagate_standard_uncertainty():
             idx = dfs[ii].index.str.match(stand_strs[jj])
             curdat = dfs[ii][idx]
             mu = np.mean(curdat['Final Pb206/U238 age_mean'])
-            mswd = np.sum((curdat['Final Pb206/U238 age_mean']-mu)**2/ \
-                        (curdat['Final Pb206/U238 age_2SE(prop)']/2*cur_scale)**2)/(np.sum(idx)-1)
+            mswd = np.sum((curdat['Final Pb206/U238 age_mean']-mu)**2 /
+                          (curdat['Final Pb206/U238 age_2SE(prop)']/2*cur_scale)**2)/(np.sum(idx)-1)
             while mswd > 1:
                 cur_scale = cur_scale + 0.01
-                mswd = np.sum((curdat['Final Pb206/U238 age_mean']-mu)**2/ \
-                            (curdat['Final Pb206/U238 age_2SE(prop)']/2*cur_scale)**2)/(np.sum(idx)-1)
+                mswd = np.sum((curdat['Final Pb206/U238 age_mean']-mu)**2 /
+                              (curdat['Final Pb206/U238 age_2SE(prop)']/2*cur_scale)**2)/(np.sum(idx)-1)
         # rescale all uncertainties
         dfs[ii][list(dfs[ii].filter(like='2SE'))] = cur_scale * dfs[ii][list(
             dfs[ii].filter(like='2SE'))]
@@ -1112,19 +1176,18 @@ def age_rank_plot(ages, ages_2s, ranks=None, ax=None, wid=0.6, patch_dict=None):
             samples together). defaults to None
         ax (matplotlib.axes, optional): axis to plot into. Defaults to None.
         wid (float, optional): width of age bar. Defaults to 0.6.
-        patch_dict (dict, optional): style dict for Rectangle patches. Defaults to None.
+        patch_dict (list, optional): list of style dicts for Rectangle patches.
+            Defaults to None. If one is provided, same styling is used for all patches.
+            Otherwise, must be same length as ages.
     """
     # set up a default stle
-    if patch_dict is None:
-        patch_dict = {'facecolor': 'wheat', 
-                    'linewidth': 0.5, 
-                    'edgecolor': 'k'}
-    
+    patch_dict = patch_dict_validator(patch_dict, len(ages))
+
     if ax is None:
         ax = plt.axes()
 
     # sort ages
-    idx_sort = np.argsort(ages)
+    idx_sort = np.argsort(-ages)
     ages = ages[idx_sort]
     ages_2s = ages_2s[idx_sort]
 
@@ -1136,17 +1199,18 @@ def age_rank_plot(ages, ages_2s, ranks=None, ax=None, wid=0.6, patch_dict=None):
     for ii in range(n_ages):
         bot = ages[ii] - ages_2s[ii]
         height = 2*ages_2s[ii]
-        cur_rect = Rectangle([ranks[ii]-wid/2, bot], wid, height, **patch_dict)
+        cur_rect = Rectangle([ranks[ii]-wid/2, bot], wid, height, **patch_dict[ii])
         ax.add_patch(cur_rect)
-        
+
     xlim = [0-wid, n_ages+wid-1]
-    vert_range = np.max(ages+ages_2s)- np.min(ages-ages_2s)
+    vert_range = np.max(ages+ages_2s) - np.min(ages-ages_2s)
     vert_fact = 0.05
-    ylim = [np.min(ages-ages_2s)-vert_fact*vert_range, 
+    ylim = [np.min(ages-ages_2s)-vert_fact*vert_range,
             np.max(ages+ages_2s)+vert_fact*vert_range]
 
     ax.set_xlim(xlim)
     ax.set_ylim(ylim)
+    ax.invert_yaxis()
     ax.set_xticks([])
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
@@ -1175,7 +1239,7 @@ def ages_rank_plot_samples(samples_dict, sample_spacing=1, ax=None, **kwargs):
     style_default = {}
 
     # loop over samples
-    age_max, age_min = np.nan, np.nan # keep track of min and max ages
+    age_max, age_min = np.nan, np.nan  # keep track of min and max ages
     rank_start = 0
     for sample in samples_dict:
         cur_samp = samples_dict[sample]
@@ -1187,11 +1251,11 @@ def ages_rank_plot_samples(samples_dict, sample_spacing=1, ax=None, **kwargs):
         else:
             style = style_default
         # plot ranks
-        age_rank_plot(cur_samp['ages'], cur_samp['ages 2s'], ranks=cur_ranks, 
+        age_rank_plot(cur_samp['ages'], cur_samp['ages 2s'], ranks=cur_ranks,
                       ax=ax, patch_dict=style, **kwargs)
         # plot mean
         if ('mean' in cur_samp) and ('sig' in cur_samp):
-            cur_rect = Rectangle([rank_start-0.5, cur_samp['mean']-cur_samp['sig']], 
+            cur_rect = Rectangle([rank_start-0.5, cur_samp['mean']-cur_samp['sig']],
                                  n_ages, 2*cur_samp['sig'],
                                  color='gray', alpha=0.5, zorder=0)
             ax.add_patch(cur_rect)
@@ -1201,16 +1265,18 @@ def ages_rank_plot_samples(samples_dict, sample_spacing=1, ax=None, **kwargs):
         cur_min = np.min(cur_samp['ages']-cur_samp['ages 2s'])
         age_max = np.nanmax([age_max, cur_max])
         age_min = np.nanmin([age_min, cur_min])
-        # annotate 
-        ax.annotate(sample, (rank_start + n_ages/2 - 0.5, cur_max),
-                    xytext=(0, 5), textcoords='offset points', 
+        # annotate
+        ax.annotate(sample, (rank_start + n_ages/2 - 0.5, cur_min),
+                    xytext=(0, 5), textcoords='offset points',
                     ha='center', va='bottom')
         # update rank start
         rank_start = rank_start + n_ages + sample_spacing
- 
+
     # set limits
     ax.set_xlim([-sample_spacing, rank_start+1])
     ax.set_ylim([age_min, age_max])
+    ax.invert_yaxis()
+
 
 
 def weighted_mean(ages, ages_s):
@@ -1234,5 +1300,5 @@ def weighted_mean(ages, ages_s):
     # sig2 = (np.sum(w*ages**2)*np.sum(w) - np.sum(w*ages)**2)/np.sum(w)**2
     sig = np.sqrt(sig2)
     mswd = np.sum(w)/(np.sum(w)**2-np.sum(w**2)) * \
-          np.sum((w*(ages-mu)**2)/ages_s**2)
+        np.sum((w*(ages-mu)**2)/ages_s**2)
     return mu, sig, mswd

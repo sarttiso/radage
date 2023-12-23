@@ -879,7 +879,7 @@ def plot_ellipses_76_86(ages, conf=0.95, patch_dict=None, ax=None):
 
     if ax == None:
         ax = plt.axes()
-    for age in ages:
+    for ii, age in enumerate(ages):
         cur_ell = age.ellipse_76_86(conf=conf, patch_dict=patch_dict[ii])
         ax.add_patch(cur_ell)
 

@@ -1219,7 +1219,8 @@ def age_rank_plot(ages, ages_2s, ranks=None, ax=None, wid=0.6, patch_dict=None):
     ax.spines['bottom'].set_visible(False)
 
 
-def ages_rank_plot_samples(samples_dict, sample_spacing=1, ax=None, **kwargs):
+def age_rank_plot_samples(samples_dict, sample_spacing=1, ax=None, 
+                          sample_fontsize=10, sample_label_loc='top', **kwargs):
     """plot age rank for multiple samples
 
     Args:
@@ -1232,6 +1233,11 @@ def ages_rank_plot_samples(samples_dict, sample_spacing=1, ax=None, **kwargs):
             'sig': uncertainty on weighted mean 
         sample_spacing (int, optional): spacing between samples. Defaults to 1.
         ax (matplotlib.Axes, optional): axis to plot into. Defaults to None.
+        sample_fontsize (float, optional): fontsize for labeling samples. Defaults to
+        10.
+        sample_label_loc (str, optional): location to label sample, 'top' or 'bottom'.
+        Defaults to 'top'.
+        kwargs: sent to age_rank_plot
     """
     if ax is None:
         ax = plt.axes()
@@ -1268,9 +1274,16 @@ def ages_rank_plot_samples(samples_dict, sample_spacing=1, ax=None, **kwargs):
         age_max = np.nanmax([age_max, cur_max])
         age_min = np.nanmin([age_min, cur_min])
         # annotate
-        ax.annotate(sample, (rank_start + n_ages/2 - 0.5, cur_min),
-                    xytext=(0, 5), textcoords='offset points',
-                    ha='center', va='bottom')
+        if sample_label_loc == 'top':
+            ax.annotate(sample, (rank_start + n_ages/2 - 0.5, cur_min),
+                        xytext=(0, 5), textcoords='offset points',
+                        ha='center', va='bottom', fontsize=sample_fontsize)
+        elif sample_label_loc == 'bottom':
+            ax.annotate(sample, (rank_start + n_ages/2 - 0.5, cur_max),
+                        xytext=(0, -1), textcoords='offset points',
+                        ha='center', va='top', fontsize=sample_fontsize)
+        else:
+            ValueError('sample_label_loc must be either "top" or "bottom"')
         # update rank start
         rank_start = rank_start + n_ages + sample_spacing
 

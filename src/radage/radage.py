@@ -27,7 +27,7 @@ u238u235 = 137.837
 
 def concordia(t):
     """
-    Concordia curve.
+    Wetherill concordia curve.
 
     207/235 and 206/238 ratios for given times.
 
@@ -79,8 +79,8 @@ def concordia_confint(t, conf=0.95):
     """
     Confidence intervals on concordia.
 
-    function giving 206/238, 207/235 ratios for bounds on confidence region around concordia at a given t
-    returns upper bound, then lower bound
+    Function giving 206/238, 207/235 ratios for bounds on confidence region around concordia at a given t
+    Returns upper bound, then lower bound
 
     Parameters:
     -----------
@@ -91,6 +91,10 @@ def concordia_confint(t, conf=0.95):
 
     Returns:
     --------
+    lower_bound : numpy.ndarray
+        Lower bound of confidence interval, first column is 207/235, second column is 206/238
+    upper_bound : numpy.ndarray
+        Upper bound of confidence interval, first column is 207/235, second column is 206/238
 
     """
     # slope of line tangent to concordia
@@ -123,25 +127,10 @@ def concordia_confint(t, conf=0.95):
         xtan_2[idx] = 0
         ytan_2[idx] = 0
 
-    return np.vstack([xtan_1, ytan_1]).T, np.vstack([xtan_2, ytan_2]).T
+    lower_bound = np.vstack([xtan_1, ytan_1]).T
+    upper_bound = np.vstack([xtan_2, ytan_2]).T
 
-
-def axlim_conc(tlims, ax=None):
-    """set x and y lims for conccordia plot base on age range
-
-    Args:
-        tlims (array-like): minimum and maximum age bounds to plot
-        ax (matplotlib axis, optional): axis to set the limits for. If none, plt.gca(). Defaults to None.
-    """
-    if ax is None:
-        ax = plt.gca()
-
-    tlims = np.array(tlims)
-
-    r75, r68 = concordia(tlims)
-
-    ax.set_xlim(r75)
-    ax.set_ylim(r68)
+    return lower_bound, upper_bound
 
 
 def t238(r38_06):
@@ -739,57 +728,6 @@ def annotate_concordia(ages, tw=False, ax=None, ann_style=None):
                     ha=ha)
 
 
-
-
-
-def patch_dict_validator(patch_dict, n):
-    """
-    Validate patch_dict and returns list for styling of plotted patches.
-
-    Parameters:
-    -----------
-        patch_dict : dict or list
-            If a dictionary, same style will be used for all patches. If a list of dictionaries, must have length equal to n, and each dictionary will be used for each patch.
-        n : int
-            Number of patches to style
-
-    Returns:
-    --------
-        patch_dict : list 
-            validated list
-    """
-    # set up a default stle
-    if patch_dict is None:
-        patch_dict = [{'facecolor': 'lightgray',
-                      'linewidth': 0.5,
-                      'edgecolor': 'k'}]
-    elif patch_dict is dict:
-        patch_dict = n * [patch_dict]
-    else:
-        assert len(patch_dict) == n, 'Need one style dictionary per age.'
-    return patch_dict
-
-
-def plot_ellipses_68_75(ages, conf=0.95, patch_dict=None, ax=None):
-    patch_dict = patch_dict_validator(patch_dict, len(ages))
-
-    if ax == None:
-        ax = plt.axes()
-    for ii, age in enumerate(ages):
-        cur_ell = age.ellipse_68_75(conf=conf, patch_dict=patch_dict[ii])
-        ax.add_patch(cur_ell)
-
-
-def plot_ellipses_76_86(ages, conf=0.95, patch_dict=None, ax=None):
-    patch_dict = patch_dict_validator(patch_dict, len(ages))
-
-    if ax == None:
-        ax = plt.axes()
-    for ii, age in enumerate(ages):
-        cur_ell = age.ellipse_76_86(conf=conf, patch_dict=patch_dict[ii])
-        ax.add_patch(cur_ell)
-
-
 def discordance_filter(ages,
                        method='relative',
                        threshold=0.03,
@@ -1070,134 +1008,6 @@ def get_sample(dfs, sample_name):
         cur_idx = df.iloc[:, 0].str.contains(sample_name)
         df_sample = pd.concat([df_sample, df.loc[cur_idx]])
     return df_sample
-
-
-def age_rank_plot(ages, ages_2s, ranks=None, ax=None, wid=0.6, patch_dict=None):
-    """rank-age plotting
-
-    Args:
-        ages (array-like): age means
-        ages_2s (array-like): (symmetric) age uncertainty to plot
-        ranks (array-like): manually specified ranks (if plotting several different
-            samples together). defaults to None
-        ax (matplotlib.axes, optional): axis to plot into. Defaults to None.
-        wid (float, optional): width of age bar. Defaults to 0.6.
-        patch_dict (list, optional): list of style dicts for Rectangle patches.
-            Defaults to None. If one is provided, same styling is used for all patches.
-            Otherwise, must be same length as ages.
-    """
-    # set up a default stle
-    patch_dict = patch_dict_validator(patch_dict, len(ages))
-
-    if ax is None:
-        ax = plt.axes()
-
-    # sort ages
-    idx_sort = np.argsort(-ages)
-    ages = ages[idx_sort]
-    ages_2s = ages_2s[idx_sort]
-    # also sort styling
-    patch_dict = [patch_dict[idx] for idx in idx_sort]
-
-    n_ages = len(ages)
-
-    if ranks is None:
-        ranks = np.arange(n_ages)
-
-    for ii in range(n_ages):
-        bot = ages[ii] - ages_2s[ii]
-        height = 2*ages_2s[ii]
-        cur_rect = Rectangle([ranks[ii]-wid/2, bot], wid, height, **patch_dict[ii])
-        ax.add_patch(cur_rect)
-
-    xlim = [0-wid, n_ages+wid-1]
-    vert_range = np.max(ages+ages_2s) - np.min(ages-ages_2s)
-    vert_fact = 0.05
-    ylim = [np.min(ages-ages_2s)-vert_fact*vert_range,
-            np.max(ages+ages_2s)+vert_fact*vert_range]
-
-    ax.set_xlim(xlim)
-    ax.set_ylim(ylim)
-    ax.invert_yaxis()
-    ax.set_xticks([])
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.spines['bottom'].set_visible(False)
-
-
-def age_rank_plot_samples(samples_dict, sample_spacing=1, ax=None, 
-                          sample_fontsize=10, sample_label_loc='top', **kwargs):
-    """plot age rank for multiple samples
-
-    Args:
-        samples_dict (dict): dictionary with samples. each sample key has another
-            dictionary with required keys 'ages', 'ages 2s' which have arrays of the
-            same length to plot ages. optional keys are 
-            'style': patch_dict for age_rank_plot
-            'mean': weighted mean; requires 'sig' and plots a box showing a weighted
-                mean across the other ages
-            'sig': uncertainty on weighted mean 
-        sample_spacing (int, optional): spacing between samples. Defaults to 1.
-        ax (matplotlib.Axes, optional): axis to plot into. Defaults to None.
-        sample_fontsize (float, optional): fontsize for labeling samples. Defaults to
-        10.
-        sample_label_loc (str, optional): location to label sample, 'top' or 'bottom'.
-        Defaults to 'top'.
-        kwargs: sent to age_rank_plot
-    """
-    if ax is None:
-        ax = plt.axes()
-
-    n_samples = len(samples_dict)
-
-    style_default = {}
-
-    # loop over samples
-    age_max, age_min = np.nan, np.nan  # keep track of min and max ages
-    rank_start = 0
-    for sample in samples_dict:
-        cur_samp = samples_dict[sample]
-        n_ages = len(cur_samp['ages'])
-        cur_ranks = np.arange(rank_start, n_ages+1+rank_start)
-        # set style
-        if 'style' in cur_samp:
-            style = cur_samp['style']
-        else:
-            style = style_default
-        # plot ranks
-        age_rank_plot(cur_samp['ages'], cur_samp['ages 2s'], ranks=cur_ranks,
-                      ax=ax, patch_dict=style, **kwargs)
-        # plot mean
-        if ('mean' in cur_samp) and ('sig' in cur_samp):
-            cur_rect = Rectangle([rank_start-0.5, cur_samp['mean']-cur_samp['sig']],
-                                 n_ages, 2*cur_samp['sig'],
-                                 color='gray', alpha=0.5, zorder=0)
-            ax.add_patch(cur_rect)
-
-        # update min and max
-        cur_max = np.max(cur_samp['ages']+cur_samp['ages 2s'])
-        cur_min = np.min(cur_samp['ages']-cur_samp['ages 2s'])
-        age_max = np.nanmax([age_max, cur_max])
-        age_min = np.nanmin([age_min, cur_min])
-        # annotate
-        if sample_label_loc == 'top':
-            ax.annotate(sample, (rank_start + n_ages/2 - 0.5, cur_min),
-                        xytext=(0, 5), textcoords='offset points',
-                        ha='center', va='bottom', fontsize=sample_fontsize)
-        elif sample_label_loc == 'bottom':
-            ax.annotate(sample, (rank_start + n_ages/2 - 0.5, cur_max),
-                        xytext=(0, -1), textcoords='offset points',
-                        ha='center', va='top', fontsize=sample_fontsize)
-        else:
-            ValueError('sample_label_loc must be either "top" or "bottom"')
-        # update rank start
-        rank_start = rank_start + n_ages + sample_spacing
-
-    # set limits
-    ax.set_xlim([-sample_spacing, rank_start+1])
-    ax.set_ylim([age_min, age_max])
-    ax.invert_yaxis()
-
 
 
 def weighted_mean(ages, ages_s):

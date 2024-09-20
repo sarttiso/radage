@@ -88,15 +88,11 @@ def plot_ages_concordia(ages=[],
             max5_age = np.max(np.array([age.age75()[0] + 3*age.age75()[1] for age in ages]))
             t2 = np.max([max68_age, max5_age])
 
-    # take some percentage below min age and above max age for plotting bounds of concordia
-    pct = 0.1
-    t1 = (1 - pct) * t1
-    t2 = (1 + pct) * t2
-
     # if not provided, make labels nice round numbers located within the desired range
     if labels is None:
         locator = MaxNLocator(nbins=max_t_labels, 
-                              steps=[1, 2, 5, 10])
+                              steps=[1, 2, 5, 10],
+                              prune='both')
         t_lab = locator.tick_values(t1, t2)
         n_t_labels = len(t_lab)
     else:
@@ -109,7 +105,8 @@ def plot_ages_concordia(ages=[],
         x_lab, y_lab = concordia(t_lab)
 
     # make concordia line
-    t_conc = np.linspace(t1, t2, 500)
+    dt = t2 - t1
+    t_conc = np.linspace(t1 - dt/2, t2 + dt/2, 500) # add buffer to make sure concordia is plotted fully
     if tw:
         x_conc, y_conc = concordia_tw(t_conc)
     else:
@@ -175,9 +172,7 @@ def plot_ages_concordia(ages=[],
         plot_ellipses_68_75(ages, ax=ax, patch_dict=patch_dict)
 
     # enforce limits
-    buf = 0.05
-    ax.set_xlim([np.min(x_conc) * (1 - buf), np.max(x_conc) * (1 + buf)])
-    ax.set_ylim([np.min(y_conc) * (1 - buf), np.max(y_conc) * (1 + buf)])
+    axlim_conc([t1, t2], ax=ax)
 
     if tw:
         ax.set_xlabel('$^{238}\mathrm{U}/^{206}\mathrm{Pb}$')
@@ -187,6 +182,28 @@ def plot_ages_concordia(ages=[],
         ax.set_ylabel('$^{206}\mathrm{Pb}/^{238}\mathrm{U}$')
 
     return ax
+
+
+def axlim_conc(tlims, ax=None):
+    """
+    Set x and y lims for conccordia plot base on age range
+
+    Parameters:
+    -----------
+        tlims : array-like
+            minimum and maximum age bounds to plot
+        ax : matplotlib.pyplot.axes, optional
+            Axis to set the limits for. If None, plt.gca(). Defaults to None.
+    """
+    if ax is None:
+        ax = plt.gca()
+
+    tlims = np.array(tlims)
+
+    r75, r68 = concordia(tlims)
+
+    ax.set_xlim(r75)
+    ax.set_ylim(r68)
 
 
 def age_rank_plot_samples(samples_dict, sample_spacing=1, ax=None, 
@@ -335,7 +352,7 @@ def patch_dict_validator(patch_dict, n):
     """
     # set up a default style
     patch_dict_def = {'facecolor': 'lightgray',
-                      'linewidth': 0.5,
+                      'linewidth': 1,
                       'edgecolor': 'k',
                       'alpha': 0.3}
     if patch_dict is None:

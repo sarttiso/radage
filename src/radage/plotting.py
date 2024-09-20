@@ -21,8 +21,8 @@ def plot_ages_concordia(ages=[],
     """
     Draw age ellipses on a labeled concordia plot.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     ages: 1d array-like
         list of UPb objects to plot
 
@@ -64,8 +64,8 @@ def plot_ages_concordia(ages=[],
     labels_text_style : dict, optional
         Dictionary of style parameters for text labels of ages.
 
-    Returns:
-    --------
+    Returns
+    -------
     ax : matplotlib.axes
         Axis object with plot.
     """
@@ -188,8 +188,8 @@ def axlim_conc(tlims, ax=None):
     """
     Set x and y lims for conccordia plot base on age range
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
         tlims : array-like
             minimum and maximum age bounds to plot
         ax : matplotlib.pyplot.axes, optional
@@ -208,24 +208,35 @@ def axlim_conc(tlims, ax=None):
 
 def age_rank_plot_samples(samples_dict, sample_spacing=1, ax=None, 
                           sample_fontsize=10, sample_label_loc='top', **kwargs):
-    """plot age rank for multiple samples
+    """Plot age rank diagrams for multiple samples
 
-    Args:
-        samples_dict (dict): dictionary with samples. each sample key has another
-            dictionary with required keys 'ages', 'ages 2s' which have arrays of the
-            same length to plot ages. optional keys are 
-            'style': patch_dict for age_rank_plot
+    Parameters
+    ----------
+    samples_dict : dict
+        Dictionary with samples as keys. Each key has another dictionary with required keys 'ages', 'ages 2s' which have arrays of the same length to plot ages. Optional keys are 
+            'style': patch_dict for age_rank_plot()
             'mean': weighted mean; requires 'sig' and plots a box showing a weighted
-                mean across the other ages
-            'sig': uncertainty on weighted mean 
-        sample_spacing (int, optional): spacing between samples. Defaults to 1.
-        ax (matplotlib.Axes, optional): axis to plot into. Defaults to None.
-        sample_fontsize (float, optional): fontsize for labeling samples. Defaults to
-        10.
-        sample_label_loc (str, optional): location to label sample, 'top' or 'bottom'.
-        Defaults to 'top'.
-        kwargs: sent to age_rank_plot
+            mean across the other ages
+            'sig': uncertainty on weighted mean
+            'xmin': Start coordinate for weighted mean box, in number of ages out of total for the sample.
+            'xmax': End coordinate for weighted mean box, in number of ages out of total for the sample.
+    sample_spacing : int, optional 
+        Spacing between samples. Defaults to 1.
+    ax : matplotlib.Axes, optional
+        Axis to plot into. If None, one is created. Defaults to None.
+    sample_fontsize : float, optional 
+        Fontsize for labeling samples. Defaults to 10.
+    sample_label_loc : str, optional
+        Location to label sample, 'top' or 'bottom'. Defaults to 'top'.
+    kwargs : dict
+        Additional keyword arguments sent to age_rank_plot().
+
+    Returns
+    -------
+    ax : matplotlib.Axes
+        Axis with plot
     """
+    # create axes if not provided
     if ax is None:
         ax = plt.axes()
 
@@ -238,20 +249,23 @@ def age_rank_plot_samples(samples_dict, sample_spacing=1, ax=None,
     rank_start = 0
     for sample in samples_dict:
         cur_samp = samples_dict[sample]
+        # number of ages in current sample
         n_ages = len(cur_samp['ages'])
         cur_ranks = np.arange(rank_start, n_ages+1+rank_start)
-        # set style
-        if 'style' in cur_samp:
-            style = cur_samp['style']
-        else:
-            style = style_default
+        # set up style
+        style = patch_dict_validator(cur_samp.get('style', None), n_ages)
         # plot ranks
         age_rank_plot(cur_samp['ages'], cur_samp['ages 2s'], ranks=cur_ranks,
                       ax=ax, patch_dict=style, **kwargs)
-        # plot mean
+        # plot weighted mean
         if ('mean' in cur_samp) and ('sig' in cur_samp):
-            cur_rect = Rectangle([rank_start-0.5, cur_samp['mean']-cur_samp['sig']],
-                                 n_ages, 2*cur_samp['sig'],
+            xmin = cur_samp.get('xmin', 0)
+            xmax = cur_samp.get('xmax', n_ages)
+            assert xmin < xmax, 'xmin must be less than xmax'
+            cur_rect = Rectangle([rank_start-0.5 + xmin, 
+                                  cur_samp['mean']-cur_samp['sig']],
+                                 xmax-xmin, 
+                                 2*cur_samp['sig'],
                                  color='gray', alpha=0.5, zorder=0)
             ax.add_patch(cur_rect)
 
@@ -279,12 +293,14 @@ def age_rank_plot_samples(samples_dict, sample_spacing=1, ax=None,
     ax.set_ylim([age_min, age_max])
     ax.invert_yaxis()
 
+    return ax
+
 
 def age_rank_plot(ages, ages_2s, ranks=None, ax=None, wid=0.6, patch_dict=None):
     """rank-age plotting
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
         ages (array-like): age means
         ages_2s (array-like): (symmetric) age uncertainty to plot
         ranks (array-like): manually specified ranks (if plotting several different
@@ -294,6 +310,11 @@ def age_rank_plot(ages, ages_2s, ranks=None, ax=None, wid=0.6, patch_dict=None):
         patch_dict (list, optional): list of style dicts for Rectangle patches.
             Defaults to None. If one is provided, same styling is used for all patches.
             Otherwise, must be same length as ages.
+
+    Returns
+    -------
+        ax : matplotlib.axes
+            axis with plot
     """
     # set up a default stle
     patch_dict = patch_dict_validator(patch_dict, len(ages))
@@ -333,6 +354,8 @@ def age_rank_plot(ages, ages_2s, ranks=None, ax=None, wid=0.6, patch_dict=None):
     ax.spines['right'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
 
+    return ax
+
 
 def patch_dict_validator(patch_dict, n):
     """
@@ -367,6 +390,24 @@ def patch_dict_validator(patch_dict, n):
 
 
 def plot_ellipses_68_75(ages, conf=0.95, patch_dict=None, ax=None):
+    """Plot uncertainty ellipses for 206/238-207/235 ages
+
+    Parameters
+    ----------
+    ages : list
+        List of radage.UPb objects
+    conf : float, optional
+        Confidence level of ellipses, by default 0.95
+    patch_dict : dict or list, optional
+        Styling dictionary or list of dictionaries. If None, default styling. If list, must be same length as ages. By default None
+    ax : matplotlib.pyplot.axes, optional
+        Axes object to plot into. If None, one is generated. By default None.
+    
+    Returns
+    -------
+    ax : matplotlib.pyplot.axes
+        Axes object with plot
+    """
     patch_dict = patch_dict_validator(patch_dict, len(ages))
 
     if ax == None:
@@ -374,9 +415,28 @@ def plot_ellipses_68_75(ages, conf=0.95, patch_dict=None, ax=None):
     for ii, age in enumerate(ages):
         cur_ell = age.ellipse_68_75(conf=conf, patch_dict=patch_dict[ii])
         ax.add_patch(cur_ell)
+    return ax
 
 
 def plot_ellipses_76_86(ages, conf=0.95, patch_dict=None, ax=None):
+    """Plot uncertainty ellipses for 207/206-238/206 ages
+
+    Parameters
+    ----------
+    ages : list
+        List of radage.UPb objects
+    conf : float, optional
+        Confidence level of ellipses, by default 0.95
+    patch_dict : dict or list, optional
+        Styling dictionary or list of dictionaries. If None, default styling. If list, must be same length as ages. By default None
+    ax : matplotlib.pyplot.axes, optional
+        Axes object to plot into. If None, one is generated. By default None.
+    
+    Returns
+    -------
+    ax : matplotlib.pyplot.axes
+        Axes object with plot
+    """
     patch_dict = patch_dict_validator(patch_dict, len(ages))
 
     if ax == None:
@@ -384,3 +444,4 @@ def plot_ellipses_76_86(ages, conf=0.95, patch_dict=None, ax=None):
     for ii, age in enumerate(ages):
         cur_ell = age.ellipse_76_86(conf=conf, patch_dict=patch_dict[ii])
         ax.add_patch(cur_ell)
+    return ax

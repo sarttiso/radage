@@ -12,6 +12,7 @@ import matplotlib.transforms as transforms
 
 import warnings
 # from helper import *
+# from .plotting import *
 
 import pdb
 
@@ -26,9 +27,22 @@ u238u235 = 137.837
 
 def concordia(t):
     """
-    t in My
-    returns ratios and times corresponding to those ratios in 206/238 vs
-    207/235 space over a given time interval.
+    Concordia curve.
+
+    207/235 and 206/238 ratios for given times.
+
+    Parameters:
+    -----------
+    t : array-like
+        time points in Myr
+
+    Returns:
+    --------
+    r207_235 : array-like
+        207/235 ratios for the given times
+    r206_238 : array-like
+        206/238 ratios for the given times
+
     """
     r206_238 = np.exp(l238 * t) - 1
     r207_235 = np.exp(l235 * t) - 1
@@ -38,10 +52,21 @@ def concordia(t):
 
 def concordia_tw(t):
     """
-    Tara-Wasserberg concordia
-    t in My
-    returns ratios and times corresponding to those ratios in 207/206 vs
-    238/206 space over a given time interval.
+    Tara-Wasserberg concordia curve.
+
+    238/206 and 207/206 ratios for given times.
+
+    Parameters:
+    -----------
+    t : array-like
+        time points in Myr
+
+    Returns:
+    --------
+    r238_206 : array-like
+        238/206 ratios for the given times
+    r207_206 : array-like
+        207/206 ratios for the given times
     """
     r206_238 = np.exp(l238 * t) - 1
     r238_206 = 1 / r206_238
@@ -52,8 +77,21 @@ def concordia_tw(t):
 
 def concordia_confint(t, conf=0.95):
     """
+    Confidence intervals on concordia.
+
     function giving 206/238, 207/235 ratios for bounds on confidence region around concordia at a given t
     returns upper bound, then lower bound
+
+    Parameters:
+    -----------
+    t : array-like
+        time points in Myr
+    conf : float, optional
+        confidence level for interval, defaults to 0.95
+
+    Returns:
+    --------
+
     """
     # slope of line tangent to concordia
     m = (l238 * np.exp(l238 * t)) / (l235 * np.exp(l235 * t))
@@ -701,164 +739,32 @@ def annotate_concordia(ages, tw=False, ax=None, ann_style=None):
                     ha=ha)
 
 
-def plot_concordia(ages=[],
-                   t_min=None,
-                   t_max=None,
-                   tw=False,
-                   labels=[],
-                   n_t_labels=5,
-                   uncertainty=False,
-                   concordia_conf=0.95,
-                   ax=None,
-                   patch_dict=None):
-    """
-    draw intelligent concordia plot
 
-    Parameters:
-    -----------
-    ages: 1d array like
-        list of UPbAges to plot
-
-    t_min : float
-
-    t_max : float
-
-    tw : boolean
-        Tera Wassergburg or conventional concordia
-
-    labels : 1d array_like
-        Time points to label on concordia. takes precedence over n_t_labels
-
-    n_t_labels : 
-        number of points on concordia to be labeled with ages in Ma. Rounds for easier 
-        reading, which may change t_min and t_max
-
-    uncertainty :
-        whether or not to include uncertainty on concordia
-
-    concordia_conf : 
-        confidence interval for concordia uncertainty
-
-    ax : axis to plot into if desired
-
-    patch_dict : list of dictionary of style parameters for the ellipse patch object
-
-    TO DO: change facecolor and other similar arguments to be *args
-    """
-
-    # set up a default stle
-    patch_dict = patch_dict_validator(patch_dict, len(ages))
-
-    if t_min == None or t_max == None:
-        t_min = 4500
-        t_max = 0
-
-        for age in ages:
-            if tw:
-                cur_age = age.age68()[0]
-            else:
-                cur_age = age.age75()[0]
-            t_min = np.min([t_min, cur_age])
-            t_max = np.max([t_max, cur_age])
-
-        # take some percentage below min age and above max age for plotting bounds of concordia
-        pct = 0.1
-        t_min = (1 - pct) * t_min
-        t_max = (1 + pct) * t_max
-
-    # if not provided, make labels nice round numbers located within the desired range
-    if len(labels) == 0:
-        delt = (t_max - t_min) / (n_t_labels - 1)
-        delt = np.round(delt, -int(np.floor(np.log10(delt))))
-        t_min_lab = np.round(
-            t_min - (delt * (n_t_labels - 1) - (t_max - t_min)) / 2,
-            -int(np.floor(np.log10(delt))))
-        t_lab = np.cumsum(delt * np.ones(n_t_labels)) - delt + t_min_lab
-        t_max_lab = t_lab[-1]
-
-        if t_min_lab < t_min:
-            t_min = t_min_lab
-        if t_max_lab > t_max:
-            t_max = t_max_lab
-    else:
-        t_lab = np.array(labels)
-        n_t_labels = len(t_lab)
-
-    if tw:
-        x_lab, y_lab = concordia_tw(t_lab)
-    else:
-        x_lab, y_lab = concordia(t_lab)
-
-    t = np.linspace(t_min, t_max, 500)
-    if tw:
-        x, y = concordia_tw(t)
-    else:
-        x, y = concordia(t)
-
-    if ax == None:
-        ax = plt.axes()
-
-    # concordia
-    ax.plot(x, y)
-
-    # uncertainty
-    if uncertainty:
-        ub, lb = concordia_confint(t, conf=concordia_conf)
-        ax.plot(lb[:, 0], lb[:, 1], color='gray', linewidth=0.25)
-        ax.plot(ub[:, 0], ub[:, 1], color='gray', linewidth=0.25)
-
-    # time labels
-    ax.plot(x_lab, y_lab, 'o')
-
-    for ii in range(n_t_labels):
-        if tw:
-            offset = (0, -15)
-            ha = 'right'
-        else:
-            offset = (0, 5)
-            ha = 'right'
-
-        ax.annotate(int(t_lab[ii]),
-                    xy=(x_lab[ii], y_lab[ii]),
-                    xytext=offset,
-                    textcoords='offset points',
-                    ha=ha)
-
-    if tw:
-        plot_ellipses_76_86(ages, ax=ax, patch_dict=patch_dict)
-    else:
-        plot_ellipses_68_75(ages, patch_dict=patch_dict, ax=ax)
-
-    # enforce limits
-    buf = 0.05
-    ax.set_xlim([np.min(x) * (1 - buf), np.max(x) * (1 + buf)])
-    ax.set_ylim([np.min(y) * (1 - buf), np.max(y) * (1 + buf)])
-
-    if tw:
-        ax.set_xlabel('$^{238}\mathrm{U}/^{206}\mathrm{Pb}$')
-        ax.set_ylabel('$^{207}\mathrm{Pb}/^{206}\mathrm{Pb}$')
-    else:
-        ax.set_xlabel('$^{207}\mathrm{Pb}/^{235}\mathrm{U}$')
-        ax.set_ylabel('$^{206}\mathrm{Pb}/^{238}\mathrm{U}$')
 
 
 def patch_dict_validator(patch_dict, n):
-    """validate patch_dict
+    """
+    Validate patch_dict and returns list for styling of plotted patches.
 
-    Args:
-        patch_dict (list): List of dictionaries
-        n (int): number of patches to style
+    Parameters:
+    -----------
+        patch_dict : dict or list
+            If a dictionary, same style will be used for all patches. If a list of dictionaries, must have length equal to n, and each dictionary will be used for each patch.
+        n : int
+            Number of patches to style
 
     Returns:
-        patch_dict: validated list
+    --------
+        patch_dict : list 
+            validated list
     """
     # set up a default stle
     if patch_dict is None:
-        patch_dict = [{'facecolor': 'wheat',
+        patch_dict = [{'facecolor': 'lightgray',
                       'linewidth': 0.5,
                       'edgecolor': 'k'}]
-    elif len(patch_dict) == 1:
-        patch_dict = n * patch_dict
+    elif patch_dict is dict:
+        patch_dict = n * [patch_dict]
     else:
         assert len(patch_dict) == n, 'Need one style dictionary per age.'
     return patch_dict

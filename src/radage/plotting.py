@@ -3,13 +3,14 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
 from .radage import *
+from .helper import *
 
 def plot_ages_concordia(ages=[],
                    t1=None,
                    t2=None,
                    tw=False,
                    labels=None,
-                   max_t_labels=5,
+                   max_t_labels=10,
                    concordia_env=False,
                    concordia_conf=0.95,
                    ax=None,
@@ -39,7 +40,7 @@ def plot_ages_concordia(ages=[],
         Time points to label on concordia. Takes precedence over n_t_labels, defaults to None.
 
     max_labels : int, optional
-        Maxmium number of points on concordia to be labeled with ages in Ma. Defaults to 5.
+        Maxmium number of points on concordia to be labeled with ages in Ma. Defaults to 10.
 
     concordia_env : boolean, optional
         Whether or not to plot uncertainty on concordia, defaults to False
@@ -47,7 +48,8 @@ def plot_ages_concordia(ages=[],
     concordia_conf : float, optional
         Confidence interval for concordia uncertainty. Defaults to 0.95
 
-    ax : axis to plot into if desired
+    ax : matplotlib.axes, optional
+        Axis to plot. If None, a new axis is created. Defaults to None.
 
     patch_dict : dict or list, optional
         list of dictionary of style parameters for the ellipse patch object. If a single dictionary is provided, it will be used for all ages. If None, a default style will be used.
@@ -71,21 +73,21 @@ def plot_ages_concordia(ages=[],
     """
 
     if t1 is None: 
-        min68_age = np.min(np.array([age.age68()[0] - 3*age.age68()[1] for age in ages]))
+        min68_age = np.min(np.array([age.date68()[0] - 3*age.date68()[1] for age in ages]))
         if tw:
-            min76_age = np.min(np.array([age.age76()[0] - 3*age.age76()[0] for age in ages]))
+            min76_age = np.min(np.array([age.date76(conf=None) - 3*age.date76(n=50)[1] for age in ages]))
             t1 = np.min([min68_age, min76_age])
         else:
-            min75_age = np.min(np.array([age.age75()[0] - 3*age.age75()[1] for age in ages]))
+            min75_age = np.min(np.array([age.date75()[0] - 3*age.date75()[1] for age in ages]))
             t1 = np.min([min68_age, min75_age])
 
     if t2 is None:
-        max68_age = np.max(np.array([age.age68()[0] + 3*age.age68()[1] for age in ages]))
+        max68_age = np.max(np.array([age.date68()[0] + 3*age.date68()[1] for age in ages]))
         if tw:
-            max76_age = np.max(np.array([age.age76()[0] + 3*age.age76()[0] for age in ages]))
+            max76_age = np.max(np.array([age.date76(conf=None) + 3*age.date76(n=50)[1] for age in ages]))
             t2 = np.max([max68_age, max76_age])
         else:
-            max5_age = np.max(np.array([age.age75()[0] + 3*age.age75()[1] for age in ages]))
+            max5_age = np.max(np.array([age.date75()[0] + 3*age.date75()[1] for age in ages]))
             t2 = np.max([max68_age, max5_age])
 
     # if not provided, make labels nice round numbers located within the desired range
@@ -172,7 +174,7 @@ def plot_ages_concordia(ages=[],
         plot_ellipses_68_75(ages, ax=ax, patch_dict=patch_dict)
 
     # enforce limits
-    axlim_conc([t1, t2], ax=ax)
+    axlim_conc([t1, t2], ax=ax, tw=tw)
 
     if tw:
         ax.set_xlabel('$^{238}\mathrm{U}/^{206}\mathrm{Pb}$')
@@ -183,27 +185,71 @@ def plot_ages_concordia(ages=[],
 
     return ax
 
-
-def axlim_conc(tlims, ax=None):
+def annotate_concordia(ages, tw=False, ax=None, ann_style=None):
     """
-    Set x and y lims for conccordia plot base on age range
+    use this function to annotate concordia plots with times
+
+    ages: list of numbers in Ma to annotate and plot on concordia
+    tw: tera wasserberg space?
+    ann_style: dict
+    """
+    n_ages = len(ages)
+    if tw:
+        x_lab, y_lab = concordia_tw(ages)
+    else:
+        x_lab, y_lab = concordia(ages)
+
+    if ax == None:
+        ax = plt.gca()
+
+    if ann_style is None:
+        ann_style = {'color': 'red',
+                     'marker': 'o',
+                     'linestyle': ''}
+
+    for ii in range(n_ages):
+        if tw:
+            offset = (0, -15)
+            ha = 'center'
+        else:
+            offset = (0, 5)
+            ha = 'right'
+
+    # time labels
+    ax.plot(x_lab, y_lab, **ann_style)
+
+    for ii in range(n_ages):
+        ax.annotate(int(ages[ii]),
+                    xy=(x_lab[ii], y_lab[ii]),
+                    xytext=offset,
+                    textcoords='offset points',
+                    ha=ha)
+
+def axlim_conc(tlims, ax=None, tw=False):
+    """Set x and y lims for conccordia plot based on age range
 
     Parameters
     ----------
-        tlims : array-like
-            minimum and maximum age bounds to plot
-        ax : matplotlib.pyplot.axes, optional
-            Axis to set the limits for. If None, plt.gca(). Defaults to None.
+    tlims : array-like
+        minimum and maximum age bounds to plot
+    ax : matplotlib.pyplot.axes, optional
+        Axis to set the limits for. If None, plt.gca(). Defaults to None.
+    tw : boolean, optional
+        Tera-Wasserburg concordia (True) or Wetherill (False) concordia. Defaults to False.
     """
     if ax is None:
         ax = plt.gca()
 
     tlims = np.array(tlims)
 
-    r75, r68 = concordia(tlims)
-
-    ax.set_xlim(r75)
-    ax.set_ylim(r68)
+    if tw:
+        r86, r76 = concordia_tw(tlims)
+        ax.set_xlim(np.flip(r86))
+        ax.set_ylim(r76)
+    else:
+        r75, r68 = concordia(tlims)
+        ax.set_xlim(r75)
+        ax.set_ylim(r68)
 
 
 def age_rank_plot_samples(samples_dict, sample_spacing=1, ax=None, 
@@ -239,10 +285,6 @@ def age_rank_plot_samples(samples_dict, sample_spacing=1, ax=None,
     # create axes if not provided
     if ax is None:
         ax = plt.axes()
-
-    n_samples = len(samples_dict)
-
-    style_default = {}
 
     # loop over samples
     age_max, age_min = np.nan, np.nan  # keep track of min and max ages
@@ -301,20 +343,20 @@ def age_rank_plot(ages, ages_2s, ranks=None, ax=None, wid=0.6, patch_dict=None):
 
     Parameters
     ----------
-        ages (array-like): age means
-        ages_2s (array-like): (symmetric) age uncertainty to plot
-        ranks (array-like): manually specified ranks (if plotting several different
-            samples together). defaults to None
-        ax (matplotlib.axes, optional): axis to plot into. Defaults to None.
-        wid (float, optional): width of age bar. Defaults to 0.6.
-        patch_dict (list, optional): list of style dicts for Rectangle patches.
-            Defaults to None. If one is provided, same styling is used for all patches.
-            Otherwise, must be same length as ages.
+    ages (array-like): age means
+    ages_2s (array-like): (symmetric) age uncertainty to plot
+    ranks (array-like): manually specified ranks (if plotting several different
+        samples together). defaults to None
+    ax (matplotlib.axes, optional): axis to plot into. Defaults to None.
+    wid (float, optional): width of age bar. Defaults to 0.6.
+    patch_dict (list, optional): list of style dicts for Rectangle patches.
+        Defaults to None. If one is provided, same styling is used for all patches.
+        Otherwise, must be same length as ages.
 
     Returns
     -------
-        ax : matplotlib.axes
-            axis with plot
+    ax : matplotlib.axes
+        axis with plot
     """
     # set up a default stle
     patch_dict = patch_dict_validator(patch_dict, len(ages))
@@ -357,36 +399,8 @@ def age_rank_plot(ages, ages_2s, ranks=None, ax=None, wid=0.6, patch_dict=None):
     return ax
 
 
-def patch_dict_validator(patch_dict, n):
-    """
-    Validate patch_dict and returns list for styling of plotted patches.
-
-    Parameters:
-    -----------
-        patch_dict : dict or list
-            If a dictionary, same style will be used for all patches. If a list of dictionaries, must have length equal to n, and each dictionary will be used for each patch.
-        n : int
-            Number of patches to style
-
-    Returns:
-    --------
-        patch_dict : list 
-            validated list
-    """
-    # set up a default style
-    patch_dict_def = {'facecolor': 'lightgray',
-                      'linewidth': 1,
-                      'edgecolor': 'k',
-                      'alpha': 0.3}
-    if patch_dict is None:
-        patch_dict = n * [patch_dict_def]
-    elif type(patch_dict) is dict:
-        patch_dict = patch_dict_def | patch_dict
-        patch_dict = n * [patch_dict]
-    else:
-        assert len(patch_dict) == n, 'Need one style dictionary per age.'
-
-    return patch_dict
+def kde_plot():
+    pass
 
 
 def plot_ellipses_68_75(ages, conf=0.95, patch_dict=None, ax=None):

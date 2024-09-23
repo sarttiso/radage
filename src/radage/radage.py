@@ -11,8 +11,7 @@ from matplotlib.patches import Ellipse, Rectangle
 import matplotlib.transforms as transforms
 
 import warnings
-# from helper import *
-# from .plotting import *
+from .helper import *
 
 import pdb
 
@@ -134,36 +133,53 @@ def concordia_confint(t, conf=0.95):
 
 
 def t238(r38_06):
-    """_summary_
+    """206/238 date
 
-    :param r38_06: _description_
-    :type r38_06: _type_
-    :return: _description_
-    :rtype: _type_
+    Parameters
+    ----------
+    r38_06 : float or numpy.ndarray
+        206/238 ratio
+
+    Returns
+    -------
+    t: float
+        Date in Myr
     """
     t = np.log((1 / r38_06) + 1) / l238
     return t
 
 
 def t235(r35_07):
-    """_summary_
+    """207/235 date
 
-    :param r35_07: _description_
-    :type r35_07: _type_
-    :return: _description_
-    :rtype: _type_
+    Parameters
+    ----------
+    r35_07 : float or numpy.ndarray
+        207/235 ratio
+
+    Returns
+    -------
+    t: float
+        Date in Myr
     """
     t = np.log((1 / r35_07) + 1) / l235
     return t
 
 
 def t207(r207_206, u238u235=u238u235):
-    """_summary_
+    """207/206 date
 
-    :param r207_206: _description_
-    :type r207_206: _type_
-    :return: _description_
-    :rtype: _type_
+    Parameters
+    ----------
+    r207_206 : float or numpy.ndarray
+        _description_
+    u238u235 : float, optional
+        Ratio of U238 to U235, by default u238u235
+
+    Returns
+    -------
+    date: float
+        Date in Myr
     """
     # ignore warning that occurs sometimes during optimization
     warnings.filterwarnings(
@@ -177,10 +193,10 @@ def t207(r207_206, u238u235=u238u235):
              cur207_206)**2
         return S
 
-    # compute age
-    age = minimize_scalar(cost, args=(r207_206), bounds=(0, 5000)).x
+    # compute date
+    date = minimize_scalar(cost, args=(r207_206), bounds=(0, 5000)).x
 
-    return age
+    return date
 
 
 class UPb:
@@ -189,17 +205,33 @@ class UPb:
     """
 
     def __init__(self,
-                 r206_238,
-                 r206_238_std,
-                 r207_235,
-                 r207_235_std,
-                 r207_206,
-                 r207_206_std,
-                 rho75_68,
-                 rho86_76,
+                 r206_238, r206_238_std,
+                 r207_235, r207_235_std,
+                 r207_206, r207_206_std,
+                 rho75_68, rho86_76,
                  name=None):
-        """
-        create object, just need means, stds, and correlations
+        """Create UPb object
+
+        Parameters
+        ----------
+        r206_238 : float
+            Pb206/U238 ratio
+        r206_238_std : float
+            Standard deviation of Pb206/U238 ratio
+        r207_235 : float
+            Pb207/U235 ratio
+        r207_235_std : float
+            Standard deviation of Pb207/U235 ratio
+        r207_206 : float
+            Pb207/Pb206 ratio
+        r207_206_std : float
+            Standard deviation of Pb207/Pb206 ratio
+        rho75_68 : float
+            Error correlation between 207/235 and 206/238 ratios. Must be between -1 and 1
+        rho86_76 : float
+            Error correlation between 206/238 and 207/206 ratios. Must be between -1 and 1
+        name : str, optional
+            Name for age, by default None. Useful for plotting
         """
         self.r206_238 = r206_238
         self.r206_238_std = r206_238_std
@@ -208,6 +240,12 @@ class UPb:
         self.r207_206 = r207_206
         self.r207_206_std = r207_206_std
 
+        # check that correlation coefficients are between 0 and 1
+        if rho75_68 < -1 or rho75_68 > 1:
+            raise ValueError('rho75_68 must be between 0 and 1')
+        if rho86_76 < -1 or rho86_76 > 1:
+            print(rho86_76)
+            raise ValueError('rho86_76 must be between 0 and 1')
         self.rho75_68 = rho75_68  # rho1
         self.rho86_76 = rho86_76  # rho2
 
@@ -250,16 +288,13 @@ class UPb:
     def ellipse_68_75(self,
                       conf=0.95,
                       patch_dict=None):
-        """
-        Generate uncertainty ellipse for desired confidence level for $^{206}$Pb/$^{238}$U
+        """Uncertainty ellipse for 206Pb/238U-207Pb/235U age
 
         [more here](https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Interval)
         """
         # set up a default stle
-        if patch_dict is None:
-            patch_dict = {'facecolor': 'wheat',
-                          'linewidth': 0.5,
-                          'edgecolor': 'k'}
+        patch_dict = patch_dict_validator(patch_dict, 1)
+
 
         r = stats.chi2.ppf(conf, 2)
         a1 = np.sqrt(self.eigval_235_238[0] * r)
@@ -273,7 +308,7 @@ class UPb:
                       width=a1 * 2,
                       height=a2 * 2,
                       angle=rotdeg,
-                      **patch_dict)
+                      **patch_dict[0])
 
         return ell
 
@@ -284,10 +319,7 @@ class UPb:
             [more here](https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Interval)
         """
         # set up a default stle
-        if patch_dict is None:
-            patch_dict = {'facecolor': 'wheat',
-                          'linewidth': 0.5,
-                          'edgecolor': 'k'}
+        patch_dict = patch_dict_validator(patch_dict, 1)
 
         r = stats.chi2.ppf(conf, 2)
         a1 = np.sqrt(self.eigval_238_207[0] * r)
@@ -301,7 +333,7 @@ class UPb:
                       width=a1 * 2,
                       height=a2 * 2,
                       angle=rotdeg,
-                      **patch_dict)
+                      **patch_dict[0])
 
         return ell
 
@@ -331,22 +363,22 @@ class UPb:
             d = 1 - (1 / self.r206_238) / r238_206_rad
             # d = l/L
         elif method == 'relative':
-            cur68_age = self.age68(conf=None)
+            cur68_age = self.date68(conf=None)
             # use 75 vs 68 for younger than 1 Ga
             if cur68_age < 1000:
-                d = 1 - cur68_age/self.age75(conf=None)
+                d = 1 - cur68_age/self.date75(conf=None)
             else:
-                d = 1 - cur68_age / self.age76(conf=None)
+                d = 1 - cur68_age / self.date76(conf=None)
         elif method == 'relative_76_68':
-            d = 1 - self.age68(conf=None) / self.age76(conf=None)
+            d = 1 - self.date68(conf=None) / self.date76(conf=None)
         elif method == 'absolute_76_68':
-            d = np.abs(self.age76(conf=None) - self.age68(conf=None))
+            d = np.abs(self.date76(conf=None) - self.date68(conf=None))
         elif method == 'relative_68_75':
-            d = 1 - self.age68(conf=None) / self.age75(conf=None)
+            d = 1 - self.date68(conf=None) / self.date75(conf=None)
         elif method == 'absolute_68_75':
-            d = np.abs(self.age75(conf=None) - self.age68(conf=None))
+            d = np.abs(self.date75(conf=None) - self.date68(conf=None))
         elif method == 'p_68_75':
-            tc = self.age_235_238_concordia()[0]
+            tc = self.date_235_238_concordia()[0]
             v = np.array([[
                 self.r207_235 - np.exp(l235 * tc) + 1,
                 self.r206_238 - np.exp(l238 * tc) + 1
@@ -374,9 +406,9 @@ class UPb:
                                                       (np.exp(l235 * t) - 1) /
                                                       (np.exp(l238 * t) - 1))
 
-            d = dx(self.age76(conf=None)) * np.sin(
+            d = dx(self.date76(conf=None)) * np.sin(
                 np.arctan(
-                    dy(self.age68(conf=None)) / dx(self.age76(conf=None))))
+                    dy(self.date68(conf=None)) / dx(self.date76(conf=None))))
         elif method == 'aitchison_68_75':
 
             def dx(t):
@@ -385,9 +417,9 @@ class UPb:
             def dy(t):
                 return np.log(self.r206_238) - np.log(np.exp(l238 * t) - 1)
 
-            d = dx(self.age68(conf=None)) * np.sin(
+            d = dx(self.date68(conf=None)) * np.sin(
                 np.arctan(
-                    dy(self.age75(conf=None)) / dx(self.age68(conf=None))))
+                    dy(self.date75(conf=None)) / dx(self.date68(conf=None))))
 
         return d
 
@@ -449,7 +481,7 @@ class UPb:
         # pdb.set_trace()
         return t, t_std, MSWD
 
-    def age_235_238_concordia(self):
+    def date_235_238_concordia(self):
         """
         Generate $^{207}$Pb/$^{235}$U - $^{206}$Pb/$^{238}$U concordia age as per Ludwig (1998), with uncertainty and MSWD.
 
@@ -505,44 +537,78 @@ class UPb:
 
         return t, t_std, MSWD
 
-    def age68(self, conf=0.95, n=1e5):
+    def date68(self, conf=0.95):
+        """206/238 date with uncertainty.
+
+        Parameters
+        ----------
+        conf : float or None, optional
+            Confidence level for interval, by default 0.95. If None, only the age is returned.
+
+        Returns
+        -------
+        date : float
+            Date in Myr
+        sig : float
+            Standard deviation of date
+        confint : float
+            Confidence interval at desired confidence level
         """
-        return 206/238 age with interval for desired confidence
-        """
-        n = int(n)
-        age = np.log(self.r206_238 + 1) / l238
+        date = np.log(self.r206_238 + 1) / l238
         if conf == None:
-            return age
+            return date
         else:
-            # sig = np.std(
-            #     np.log(
-            #         stats.norm.rvs(self.r206_238, self.r206_238_std, size=n) +
-            #         1) / l238)
             sig = (1/l238) * self.r206_238_std/(self.r206_238 + 1)
             conf = 1 - (1 - conf) / 2
-            confint = stats.norm.ppf(conf, age, sig) - age
-            return age, sig, confint
+            confint = stats.norm.ppf(conf, date, sig) - date
+            return date, sig, confint
 
-    def age75(self, conf=0.95, n=1e5):
+    def date75(self, conf=0.95):
+        """207/235 date with uncertainty.
+
+        Parameters
+        ----------
+        conf : float or None, optional
+            Confidence level for interval, by default 0.95. If None, only the age is returned.
+
+        Returns
+        -------
+        date : float
+            Date in Myr
+        sig : float
+            Standard deviation of date
+        confint : float
+            Confidence interval at desired confidence level.
         """
-        return 207/235 age with interval for desired confidence
-        """
-        n = int(n)
-        age = np.log(self.r207_235 + 1) / l235
+        date = np.log(self.r207_235 + 1) / l235
         if conf == None:
-            return age
+            return date
         else:
-            sig = np.std(
-                np.log(
-                    stats.norm.rvs(self.r207_235, self.r207_235_std, size=n) +
-                    1) / l235)
+            sig = (1/l235) * self.r207_235_std/(self.r207_235 + 1)
             conf = 1 - (1 - conf) / 2
-            confint = stats.norm.ppf(conf, age, sig) - age
-            return age, sig, confint
+            confint = stats.norm.ppf(conf, date, sig) - date
+            return date, sig, confint
 
-    def age76(self, conf=0.95, n=1e3, u238u235=u238u235):
-        """
-        return 207/206 age with interval for desired confidence
+    def date76(self, conf=0.95, n=1e3, u238u235=u238u235):
+        """207/206 date with uncertainty.
+
+        Parameters
+        ----------
+        conf : float or None, optional
+            Confidence level for interval, by default 0.95. If None, only the age is returned.
+        n : int, optional
+            Number of Monte Carlo samples to draw for uncertainty estimation, by default 1e3.
+        u238u235 : float, optional
+            Ratio of U238 to U235, by default u238u235
+
+        Returns
+        -------
+        date : float
+            Date in Myr
+        sig : float
+            Standard deviation of date
+        confint : float
+            Confidence interval at desired confidence level.
         """
         # ignore warning that occurs sometimes during optimization
         warnings.filterwarnings(
@@ -559,10 +625,10 @@ class UPb:
             return S
 
         # compute age
-        age = minimize_scalar(cost, args=(self.r207_206), bounds=(0, 4500)).x
+        date = minimize_scalar(cost, args=(self.r207_206), bounds=(0, 4500)).x
 
         if conf == None:
-            return age
+            return date
         else:
             # now Monte Carlo solutions for t given uncertainty on the 207/206 ratio
             ages = np.zeros(n)
@@ -572,38 +638,44 @@ class UPb:
             for ii in range(n):
                 res = minimize_scalar(cost,
                                       args=(r207_206_samp[ii]),
-                                      bounds=(0, 4500))
+                                      bounds=(0, 5000))
                 ages[ii] = res.x
             sig = np.std(ages)
             conf = 1 - (1 - conf) / 2
-            confint = stats.norm.ppf(conf, age, sig) - age
-            return age, sig, confint
+            confint = stats.norm.ppf(conf, date, sig) - date
+            return date, sig, confint
 
 
 def sk_pb(t, t0=4.57e3, t1=3.7e3, mu1=7.19, mu2=9.74, x0=9.307, y0=10.294):
-    """
-    common lead model from Stacey and Kramers (1975)
+    """Common lead model from Stacey and Kramers (1975)
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     t : 1d array like
-        time (in Ma) for which to return isotopic ratios for the linear mixing model from concordia to mantle
+        Time(s) (in Ma) for which to return isotopic ratios for the linear mixing model from concordia to mantle
 
-    t0 : float
-        age of earth in My
+    t0 : float, optional
+        Age of earth in Myr, by default 4570.
 
-    t1 : float 
-        time for transition between model stages
-
-    x0 : float
-        206Pb/204Pb ratio for troilite lead
-
-    y0 : float
-        207Pb/204Pb ratio for troilite lead
+    t1 : float, optional
+        Age of transition between model stages, by default 3700.
 
     mu1 : float
 
     mu2 : float
+
+    x0 : float, optional
+        206Pb/204Pb ratio for troilite lead, by default 9.307.
+
+    y0 : float, optional
+        207Pb/204Pb ratio for troilite lead, by default 10.294.
+
+    Returns
+    -------
+    r206_204 : 1d array
+        206/204 ratio(s) for the given time(s)
+    r207_204 : 1d array
+        207/204 ratio(s) for the given time(s)
     """
 
     t = np.reshape(np.array([t]), -1)
@@ -687,47 +759,6 @@ def Pb_mix_plot(t, ax=None, **kwargs):
             np.array([r207_206_0, r207_206_rad]))
 
 
-def annotate_concordia(ages, tw=False, ax=None, ann_style=None):
-    """
-    use this function to annotate concordia plots with times
-
-    ages: list of numbers in Ma to annotate and plot on concordia
-    tw: tera wasserberg space?
-    ann_style: dict
-    """
-    n_ages = len(ages)
-    if tw:
-        x_lab, y_lab = concordia_tw(ages)
-    else:
-        x_lab, y_lab = concordia(ages)
-
-    if ax == None:
-        ax = plt.gca()
-
-    if ann_style is None:
-        ann_style = {'color': 'red',
-                     'marker': 'o',
-                     'linestyle': ''}
-
-    for ii in range(n_ages):
-        if tw:
-            offset = (0, -15)
-            ha = 'center'
-        else:
-            offset = (0, 5)
-            ha = 'right'
-
-    # time labels
-    ax.plot(x_lab, y_lab, **ann_style)
-
-    for ii in range(n_ages):
-        ax.annotate(int(ages[ii]),
-                    xy=(x_lab[ii], y_lab[ii]),
-                    xytext=offset,
-                    textcoords='offset points',
-                    ha=ha)
-
-
 def discordance_filter(ages,
                        method='relative',
                        threshold=0.03,
@@ -756,7 +787,7 @@ def discordance_filter(ages,
     ages_conc = []
     if system_threshold:
         for age in ages:
-            if age.age76(conf=None) > 1000:
+            if age.date76(conf=None) > 1000:
                 cur_method = method + '_76_68'
             else:
                 cur_method = method + '_68_75'
@@ -804,9 +835,10 @@ def discordia_age_76_86(m, b, precision=3):
 
 
 def kde(ages, t,
-        kernel='gau',
-        bw='scott',
-        systems='auto'):
+        kernel='epa',
+        bw='adaptive',
+        systems='auto',
+        **kwargs):
     """
     evaluate kde for ages at times t
 
@@ -816,13 +848,14 @@ def kde(ages, t,
         list of radages.
     t : arraylike
         times at which to evaluate the kde.
+    bw : str or float, optional
+        Bandwidth, by default 'adaptive'. Valid strings are 'adaptive', 'scott'. If float, specifies a fixed bandwidth directly.
     kernel : str, optional
-        Type of kernel. The default is 'gau'.
-    bw : str, optional
-        bandwidth. The default is 'scott'.
+        Kernel function to use, by default 'epa'. Valid strings are 'epa', 'gauss'.
     systems : str, optional
-        systems to use. The default is 'auto,' which uses 76 after 1 Ga and 68
-        before
+        systems to use. The default is 'auto,' which uses 207-206 ages after 1 Ga and 206-238 ages before. Valid strings are 'auto', '68'. Weights are computed from uncertainties on selected systems.
+    **kwargs : dict, optional
+        Additional arguments to pass to helper.kde_base
 
     Returns
     -------
@@ -832,15 +865,25 @@ def kde(ages, t,
     """
     # determine ages to use as input based on systems requested
     if systems == 'auto':
-        ages76 = np.array([age.age76(conf=None) for age in ages])
-        ages68 = np.array([age.age68(conf=None) for age in ages])
+        ages76 = np.array([age.date76(conf=None) for age in ages])
+        ages68 = np.array([age.date68(conf=None) for age in ages])
+        ages76_sig = np.array([age.r207_206_std for age in ages])
+        ages68_sig = np.array([age.r206_238_std for age in ages])
 
-        ages_in = np.concatenate([ages68[ages68 < 1000],
-                                  ages76[ages76 > 1000]])
+        # use 207/206 ages for ages > 1 Ga
+        idx = ages76 > 1000
+        ages_in = np.concatenate([ages68[~idx],
+                                  ages76[idx]])
+        w = np.concatenate([1/ages68_sig[~idx]**2,
+                            1/ages76_sig[idx]**2])
+    elif systems == '68':
+        ages_in = np.array([age.date68(conf=None) for age in ages])
+        w = np.array([1/age.r206_238_std**2 for age in ages])
+    else:
+        raise ValueError('systems must be auto or 68')
 
-    cur_kde = sm.nonparametric.KDEUnivariate(ages_in).fit(kernel=kernel, bw=bw)
-
-    kde_est = cur_kde.evaluate(t)
+    # evaluate kde
+    kde_est = kde_base(ages_in, t, kernel=kernel, bw=bw, w=w, **kwargs)
 
     return kde_est
 
@@ -875,17 +918,17 @@ def kdes(ages,
     """
     kdes_by_system = []
     if 'r68' in systems:
-        ages68 = [age.age68(conf=None) for age in ages]
+        ages68 = [age.date68(conf=None) for age in ages]
         # ages_by_system.append(ages68)
         kdes_by_system.append(
             sm.nonparametric.KDEUnivariate(ages68).fit(kernel=kernel, bw=bw))
     if 'r76' in systems:
-        ages76 = [age.age76(conf=None) for age in ages]
+        ages76 = [age.date76(conf=None) for age in ages]
         # ages_by_system.append(ages76)
         kdes_by_system.append(
             sm.nonparametric.KDEUnivariate(ages76).fit(kernel=kernel, bw=bw))
     if 'r75' in systems:
-        ages75 = [age.age75(conf=None) for age in ages]
+        ages75 = [age.date75(conf=None) for age in ages]
         # ages_by_system.append(ages75)
         kdes_by_system.append(
             sm.nonparametric.KDEUnivariate(ages75).fit(kernel=kernel, bw=bw))
@@ -902,63 +945,41 @@ def kdes(ages,
     return kdes_by_system
 
 
-def propagate_standard_uncertainty():
-    """
-    for a dataframe export from iolite, propagate uncertainty into all observations such that each standard population has MSWD <= 1
-
-    UNFINISHED
-    """
-    stand_strs = ['AusZ', 'GJ1', 'Plesovice', '9435', '91500', 'Temora']
-
-    # files = glob.glob('exports/*run[0-9].xlsx')
-
-    dfs = []
-    for file in files:
-        dfs.append(pd.read_excel(file, sheet_name='Data', index_col=0))
-
-    # for each run, scale standard standard errors to enforce MSWD<=1
-    for ii in range(len(files)):
-        cur_scale = 1
-        for jj in range(len(stand_strs)):
-            # find standard analyses
-            idx = dfs[ii].index.str.match(stand_strs[jj])
-            curdat = dfs[ii][idx]
-            mu = np.mean(curdat['Final Pb206/U238 age_mean'])
-            mswd = np.sum((curdat['Final Pb206/U238 age_mean']-mu)**2 /
-                          (curdat['Final Pb206/U238 age_2SE(prop)']/2*cur_scale)**2)/(np.sum(idx)-1)
-            while mswd > 1:
-                cur_scale = cur_scale + 0.01
-                mswd = np.sum((curdat['Final Pb206/U238 age_mean']-mu)**2 /
-                              (curdat['Final Pb206/U238 age_2SE(prop)']/2*cur_scale)**2)/(np.sum(idx)-1)
-        # rescale all uncertainties
-        dfs[ii][list(dfs[ii].filter(like='2SE'))] = cur_scale * dfs[ii][list(
-            dfs[ii].filter(like='2SE'))]
-        dfs[ii][list(dfs[ii].filter(like='2SD'))] = cur_scale * dfs[ii][list(
-            dfs[ii].filter(like='2SD'))]
-
-    # concatenate
-    dat = pd.concat(dfs, axis=0)
-
-    n_dat = len(dat)
-
-
 def yorkfit(x, y, wx, wy, r, thres=1e-3):
     """
     Implementation of York 1969 10.1016/S0012-821X(68)80059-7
 
-    IN:
-    x: mean x-values
-    y: mean y-values
-    wx: weights for x-values (typically 1/sigma^2)
-    wy: weights for y-values (typically 1/sigma^2)
-    r: correlation coefficient between sigma_x and sigma_y
-    OUT:
-    b: maximum likelihood estimate for slope of line
-    a: maximum likelihood estimate for intercept of line
-    b_sig: standard deviation of slope for line
-    a_sig: standard deviation of intercept for line
-    mswd: reduced chi-squared statistic for residuals with respect to the maximum likelihood linear model
+    Parameters
+    ----------
+    x : array-like 
+        Mean x-values
+    y : array-like
+        Mean y-values
+    wx : array-like
+        Weights for x-values (typically 1/sigma^2)
+    wy : array-like 
+        Weights for y-values (typically 1/sigma^2)
+    r : float
+        Correlation coefficient of errors in x and y, must be between -1 and 1
+    
+    Returns
+    -------
+    b : float
+        Maximum likelihood estimate for slope of line
+    a : float 
+        Maximum likelihood estimate for intercept of line
+    b_sig : float
+        Standard deviation of slope for line
+    a_sig : float
+        Standard deviation of intercept for line
+    mswd : float
+        Reduced chi-squared statistic for residuals with respect to the maximum likelihood linear model
     """
+    assert len(x) == len(y), 'x and y must be the same length'
+    assert len(wx) == len(x), 'wx must be the same length as x'
+    assert len(wy) == len(y), 'wy must be the same length as y'
+    assert np.abs(r) <= 1, 'r must be between -1 and 1'
+    
     n = len(x)
     # get first guess for b
     b = stats.linregress(x, y)[0]
@@ -997,17 +1018,6 @@ def yorkfit(x, y, wx, wy, r, thres=1e-3):
     mswd = np.sum(W * (y - b * x - a)**2) / (n - 2)
 
     return b, a, b_sig, a_sig, mswd
-
-
-def get_sample(dfs, sample_name):
-    """
-    get entries in dataframes corresponding to a sample
-    """
-    df_sample = pd.DataFrame(columns=list(dfs[0]))
-    for df in dfs:
-        cur_idx = df.iloc[:, 0].str.contains(sample_name)
-        df_sample = pd.concat([df_sample, df.loc[cur_idx]])
-    return df_sample
 
 
 def weighted_mean(ages, ages_s):

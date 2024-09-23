@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import radage
+import scipy.stats as stats
 
 """
 Give, two x,y curves this gives intersection points,
@@ -89,3 +89,135 @@ x,y=intersection(x1,y1,x2,y2)
     xy0 = T[2:, in_range]
     xy0 = xy0.T
     return xy0[:, 0], xy0[:, 1]
+
+
+def patch_dict_validator(patch_dict, n):
+    """
+    Validate patch_dict and returns list for styling of plotted patches.
+
+    Parameters:
+    -----------
+    patch_dict : dict or list
+        If a dictionary, same style will be used for all patches. If a list of dictionaries, must have length equal to n, and each dictionary will be used for each patch.
+    n : int
+        Number of patches to style
+
+    Returns:
+    --------
+    patch_dict : list 
+        validated list
+    """
+    # set up a default style
+    patch_dict_def = {'facecolor': 'lightgray',
+                      'linewidth': 1,
+                      'edgecolor': 'k',
+                      'alpha': 0.3}
+    if patch_dict is None:
+        patch_dict = n * [patch_dict_def]
+    elif type(patch_dict) is dict:
+        patch_dict = patch_dict_def | patch_dict
+        patch_dict = n * [patch_dict]
+    else:
+        assert len(patch_dict) == n, 'Need one style dictionary per age.'
+
+    return patch_dict
+
+
+def epa_kern(u):
+    """Epanechnikov kernel function.
+
+    Parameters
+    ----------
+    u : array_like
+        Array of values at which to evaluate the kernel function.
+
+    Returns
+    -------
+    array_like
+        Values of the kernel function at the given points.
+    """
+    return np.where(u**2 <= 1, 0.75 * (1 - u**2), 0)
+
+
+def gauss_kern(u):
+    """Gaussian kernel function.
+
+    Parameters
+    ----------
+    u : array_like
+        Array of values at which to evaluate the kernel function.
+
+    Returns
+    -------
+    array_like
+        Values of the kernel function at the given points.
+    """
+    return 1 / np.sqrt(2 * np.pi) * np.exp(-0.5 * u**2)
+
+
+def kde_base(x, x_eval, bw='adaptive', kernel='epa', w=None, n_steps=1):
+    """Kernel density estimation.
+
+    Parameters
+    ----------
+    x : array_like
+        Observed data points.
+    x_eval : array_like
+        Points at which to evaluate the KDE.
+    bw : str or float, optional
+        Bandwidth, by default 'adaptive'. Valid strings are 'adaptive', 'scott'.
+    kernel : str, optional
+        Kernel function to use, by default 'epa'. Valid strings are 'epa', 'gauss'.
+    w : array-like, optional
+        Observation weights, by default None. If None, all weights are set to 1. Must be the same length as x.
+    n_steps : int, optional
+        Number of steps for adaptive bandwidth estimation, by default 1.
+
+    Returns
+    -------
+    """
+    
+    # weights are ones if not specified
+    if w is None:
+        w = np.ones_like(x)
+
+    n_eff = np.sum(w)**2 / np.sum(w**2)
+    sig_eff = np.min([np.std(x), 
+                      (np.diff(np.percentile(x, [25, 75]))/1.34)[0]])
+
+    # set bandwidth using Scott's rule; use for first estimate for adaptive model
+    if bw == 'scott' or bw == 'adaptive':
+        h = 1.06 * sig_eff * n_eff**(-1/5)
+    else:
+        h = bw
+    
+    # set up kernel
+    if kernel == 'epa':
+        kern = epa_kern
+    elif kernel == 'gauss':
+        kern = gauss_kern
+    else:
+        raise ValueError('Invalid kernel function.')
+
+    # if adaptive bandwidth
+    if bw == 'adaptive':
+        # determine localized bandwidths
+        for ii in range(n_steps):
+            u = (x - x[:, np.newaxis]) / h
+            f_hat = 1/np.sum(w) * np.sum(kern(u) * w, axis=1) / h
+            G = stats.gmean(f_hat)
+            # get new localized bandwidths
+            lam = np.sqrt(G/f_hat)
+            h = h * lam
+
+    # set up evaluation grid
+    x_eval = np.atleast_1d(x_eval)
+    u = (x - x_eval[:, np.newaxis]) / h
+
+    # compute KDE
+    if bw == 'adaptive':
+        f_hat = 1/np.sum(w) * np.sum(kern(u) * w/h, axis=1)
+    else:
+        f_hat = 1/np.sum(w) * np.sum(kern(u) * w, axis=1) / h
+
+    return f_hat

@@ -849,7 +849,7 @@ def kde(ages, t,
     t : arraylike
         times at which to evaluate the kde.
     bw : str or float, optional
-        Bandwidth, by default 'adaptive'. Valid strings are 'adaptive', 'scott'. If float, specifies a fixed bandwidth directly.
+        Bandwidth, by default 'adaptive'. Valid strings are 'adaptive', 'scott', 'botev'. If float, specifies a fixed bandwidth directly.
     kernel : str, optional
         Kernel function to use, by default 'epa'. Valid strings are 'epa', 'gauss'.
     systems : str, optional

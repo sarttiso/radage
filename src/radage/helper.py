@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
+from scipy.fft import dct
+from scipy.optimize import root_scalar
 
 """
 Give, two x,y curves this gives intersection points,
@@ -155,6 +157,92 @@ def gauss_kern(u):
     return 1 / np.sqrt(2 * np.pi) * np.exp(-0.5 * u**2)
 
 
+def botev(x, n=None):
+    """Botev et al. bandwidth selection algorithm.
+
+    See Botev, Grotowski, and Kroese (2010) for details, in particular page 2932
+    doi: 10.1214/10-AOS799
+
+    Largely drawn from the MATLAB implementation by Botev, available at:
+    http://web1.maths.unsw.edu.au/~zdravkobotev/php/kde_m.php
+
+    Parameters
+    ----------
+    x : array_like
+        Data for which to estimate the bandwidth.
+    n : int, optional
+        Number of gridded coordinates, must be power of 2. If None, 1024. By default None.
+
+    Returns
+    -------
+    float
+        Bandwidth for the given data.
+    """
+
+    x = np.asarray(x).flatten()
+    if n is None:
+        n = 2**10
+    n = int(2**np.ceil(np.log2(n)))  # Round up n to the next power of 2
+
+    x_min = np.min(x)
+    x_max = np.max(x)
+    Dx = x_max - x_min
+
+    # from Botev MATLAB, add buffer below and above min and max
+    MIN = x_min - Dx/5
+    MAX = x_max + Dx/5
+    R = MAX - MIN
+    # set up evaluation grid
+    dx = R / n
+    xmesh = MIN + np.arange(0, R+dx, dx)
+    
+    N = len(np.unique(x)) # check for duplicates?
+    
+    # Create a histogram
+    initial_data = np.histogram(x, bins=xmesh)[0] / N
+    initial_data = initial_data / np.sum(initial_data)
+    
+    # Discrete cosine transform of initial data
+    a = dct(initial_data)
+
+    I = np.arange(1, n)**2
+    a2 = (a[1:] / 2)**2
+
+    # Define the fixed point function
+    def fixed_point(t, N, I, a2):
+
+        # from https://github.com/tommyod/KDEpy/blob/ae1c23c2dc50b91b93dfb982030f0127ce83e447/KDEpy/bw_selection.py#L21
+        I = np.asfarray(I, dtype=float)
+        a2 = np.asfarray(a2, dtype=float)
+
+        l = 7
+        # Initial f calculation
+        f = 2 * (np.pi**(2 * l)) * np.sum((I**l) * a2 * np.exp(-I * (np.pi**2) * t))
+        
+        # Loop for decreasing s values from l-1 to 2
+        for s in range(l-1, 1, -1):
+            K0 = np.prod(np.arange(1, 2 * s + 1, 2)) / np.sqrt(2 * np.pi)
+            const = (1 + (1/2)**(s + 0.5)) / 3
+            # print(s)
+            time = (2 * const * K0 / (N * f))**(2 / (3 + 2 * s))            
+            f = 2 * (np.pi**(2 * s)) * np.sum((I**s) * a2 * np.exp(-I * (np.pi**2) * time))
+        
+        # Final output calculation
+        out = t - (2 * N * np.sqrt(np.pi) * f)**(-2/5)
+        return out
+
+    # Use root to solve the equation t = zeta * gamma^[5](t)
+    result = root_scalar(lambda t: fixed_point(t, N, I, a2), 
+                         bracket=[0, 0.01], method='brentq')
+    t_star = result.root
+
+    # compute bandwidth
+    bandwidth = np.sqrt(t_star) * R
+    
+    return bandwidth
+
+
+
 def kde_base(x, x_eval, bw='adaptive', kernel='epa', w=None, n_steps=1):
     """Kernel density estimation.
 
@@ -165,7 +253,7 @@ def kde_base(x, x_eval, bw='adaptive', kernel='epa', w=None, n_steps=1):
     x_eval : array_like
         Points at which to evaluate the KDE.
     bw : str or float, optional
-        Bandwidth, by default 'adaptive'. Valid strings are 'adaptive', 'scott'.
+        Bandwidth, by default 'adaptive'. Valid strings are 'adaptive', 'scott', 'botev'
     kernel : str, optional
         Kernel function to use, by default 'epa'. Valid strings are 'epa', 'gauss'.
     w : array-like, optional
@@ -175,6 +263,8 @@ def kde_base(x, x_eval, bw='adaptive', kernel='epa', w=None, n_steps=1):
 
     Returns
     -------
+    f_hat : array_like
+        Kernel density estimate at the given points.
     """
     
     # weights are ones if not specified
@@ -186,7 +276,9 @@ def kde_base(x, x_eval, bw='adaptive', kernel='epa', w=None, n_steps=1):
                       (np.diff(np.percentile(x, [25, 75]))/1.34)[0]])
 
     # set bandwidth using Scott's rule; use for first estimate for adaptive model
-    if bw == 'scott' or bw == 'adaptive':
+    if bw == 'botev' or bw == 'adaptive':
+        h = botev(x)
+    elif bw == 'scott':
         h = 1.06 * sig_eff * n_eff**(-1/5)
     else:
         h = bw

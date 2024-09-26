@@ -829,12 +829,13 @@ def discordia_age_76_86(m, b, precision=3):
 
 
 def kde(radages, t,
-        kernel='epa',
+        kernel='gauss',
         bw='adaptive',
-        systems='auto',
+        weights='uncertainty',
         **kwargs):
-    """
-    evaluate kde for ages at times t
+    """Evaluate kde for radages at times t. 
+    
+    The 238/206 - 207/206 concordia ages are used for plotting, and the associated uncertainties are used as weights.
 
     Parameters
     ----------
@@ -846,8 +847,8 @@ def kde(radages, t,
         Bandwidth, by default 'adaptive'. Valid strings are 'adaptive', 'scott', 'botev'. If float, specifies a fixed bandwidth directly.
     kernel : str, optional
         Kernel function to use, by default 'epa'. Valid strings are 'epa', 'gauss'.
-    systems : str, optional
-        systems to use. The default is 'auto,' which uses 207-206 ages after 1 Ga and 206-238 ages before. Valid strings are 'auto', '68'. Weights are computed from uncertainties on selected systems.
+    weights : arraylike or None or str, optional
+        Weights for each age, by default 'uncertainty'. Valid values are 'uncertainty', None, or an array of floats of the same length as radages.
     **kwargs : dict, optional
         Additional arguments to pass to helper.kde_base
 
@@ -857,86 +858,21 @@ def kde(radages, t,
         DESCRIPTION.
 
     """
-    # determine ages to use as input based on systems requested
-    if systems == 'auto':
-        ages76 = np.array([age.date76(conf=None) for age in ages])
-        ages68 = np.array([age.date68(conf=None) for age in ages])
-        ages76_sig = np.array([age.r207_206_std for age in ages])
-        ages68_sig = np.array([age.r206_238_std for age in ages])
+    # compute concordia ages
+    dates_conc = np.array([age.date_207_238_concordia()[0:2] for age in radages])
+    ages_in = dates_conc[:, 0]
 
-        # use 207/206 ages for ages > 1 Ga
-        idx = ages76 > 1000
-        ages_in = np.concatenate([ages68[~idx],
-                                  ages76[idx]])
-        w = np.concatenate([1/ages68_sig[~idx]**2,
-                            1/ages76_sig[idx]**2])
-    elif systems == '68':
-        ages_in = np.array([age.date68(conf=None) for age in ages])
-        w = np.array([1/age.r206_238_std**2 for age in ages])
+    if weights is None:
+        w = np.ones(len(ages_in))
+    elif weights == 'uncertainty':
+        w = 1 / dates_conc[:, 1]**2
     else:
-        raise ValueError('systems must be auto or 68')
+        assert len(weights) == len(ages_in), 'Weights must be the same length as radages'
 
     # evaluate kde
     kde_est = kde_base(ages_in, t, kernel=kernel, bw=bw, w=w, **kwargs)
 
     return kde_est
-
-
-def kdes(ages,
-         kernel='gau',
-         bw='scott',
-         systems=['r68', 'r76', 'r75']):
-    """
-    generate kde's for a given list of ages
-
-    Parameters:
-    -----------
-    ages : 1d array like of UPb objects
-        ages from which to estimate KDE
-
-    kernel : string
-        statsmodels.nonparametric.kde.KDEUnivariate.fit() kernel
-
-    bw : string or float
-        statsmodels.nonparametric.kde.KDEUnivariate.fit() bw
-
-    systems : list containing some combination of 'r68', 'r76', 'r75'
-        Which isotopic systems to plot KDE's for
-
-    Returns:
-    --------
-    kdes_by_system : list
-        list of kdes objects, one for every requested system, but ordered as 'r68',
-        'r76', 'r75'
-
-    """
-    kdes_by_system = []
-    if 'r68' in systems:
-        ages68 = [age.date68(conf=None) for age in ages]
-        # ages_by_system.append(ages68)
-        kdes_by_system.append(
-            sm.nonparametric.KDEUnivariate(ages68).fit(kernel=kernel, bw=bw))
-    if 'r76' in systems:
-        ages76 = [age.date76(conf=None) for age in ages]
-        # ages_by_system.append(ages76)
-        kdes_by_system.append(
-            sm.nonparametric.KDEUnivariate(ages76).fit(kernel=kernel, bw=bw))
-    if 'r75' in systems:
-        ages75 = [age.date75(conf=None) for age in ages]
-        # ages_by_system.append(ages75)
-        kdes_by_system.append(
-            sm.nonparametric.KDEUnivariate(ages75).fit(kernel=kernel, bw=bw))
-
-    # index isotopic systems in order provided by user
-    # systems_def = ['r68', 'r76', 'r75']
-    # idx = np.zeros(len(systems)).astype(int)
-    # for ii, system in enumerate(systems):
-    #     idx[ii] = np.argwhere(np.array(systems_def)==system).squeeze() - (3-len(systems))
-
-    # kdes_by_system = [kdes_by_system[x] for x in idx]
-    # ages_by_system = [ages_by_system[x] for x in idx]
-
-    return kdes_by_system
 
 
 def yorkfit(x, y, wx, wy, r, thres=1e-3):

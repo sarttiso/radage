@@ -242,8 +242,7 @@ def botev(x, n=None):
     return bandwidth
 
 
-
-def kde_base(x, x_eval, bw='adaptive', kernel='epa', w=None, n_steps=1):
+def kde_base(x, x_eval, bw='adaptive', kernel='gauss', w=None, n_steps=1):
     """Kernel density estimation.
 
     Parameters

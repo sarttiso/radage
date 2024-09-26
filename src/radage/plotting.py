@@ -400,8 +400,88 @@ def age_rank_plot(ages, ages_2s, ranks=None, ax=None, wid=0.6, patch_dict=None):
     return ax
 
 
-def kde_plot():
-    pass
+def kde_plot(radages, t=None, bw='adaptive', kernel='gauss', weights='uncertainty',
+             ax=None, fill=False, rug=True, 
+             kde_style=None, kde_base_args=None, patch_dict=None, 
+             rug_style=None):
+    
+    # useful to precompute dates
+    if t is None or rug:
+        dates_conc = np.array([age.date_207_238_concordia()[0:2] for age in radages])
+
+    # set up default time range if not provided
+    if t is None:
+        t_min = np.min(dates_conc[:, 0] - 3*dates_conc[:, 1])
+        t_max = np.max(dates_conc[:, 0] + 3*dates_conc[:, 1])
+        t_range = t_max - t_min
+        t_min = t_min - 0.05*t_range
+        t_max = t_max + 0.05*t_range
+        t = np.linspace(t_min, t_max, 1000)
+
+    # set up axis
+    if ax is None:
+        ax = plt.axes()
+
+    # set up base arguments for kde
+    if kde_base_args is None:
+        kde_base_args = {}
+
+    # plot fill_between if requested
+    cur_kde = kde(radages, t, bw=bw, kernel=kernel, weights=weights,
+                  **kde_base_args) # call once
+    if fill:
+        # set up different default style
+        patch_dict_def = {'facecolor': 'darkgray', 'alpha': 1}
+        if patch_dict is None:
+            patch_dict = patch_dict_def
+        else:
+            patch_dict = patch_dict_def | patch_dict
+        patch_dict = patch_dict_validator(patch_dict, 1)
+        ax.fill_between(t, cur_kde, **patch_dict[0], zorder=2)
+        # if fill, make default style for kde invisible
+        kde_style_def = {'linestyle': ''}
+    else:
+        kde_style_def = {'color': 'k', 'linestyle': '-'}
+
+    # set up kde style
+    if kde_style is None:
+        kde_style = kde_style_def
+    else:
+        kde_style = kde_style_def | kde_style
+
+    # plot kde
+    ax.plot(t, cur_kde, **kde_style)
+    if rug:
+        rug_style_def = {'color': 'k', 'linewidth': 0.2}
+        if rug_style is None:
+            rug_style = rug_style_def
+        else:
+            rug_style = rug_style_def | rug_style
+        # use weights to scale opacity for rug plot lines
+        w = 1/dates_conc[:, 1]**2
+        w = w/np.max(w)
+        # get current y limits, plot rug under kde
+        ylim = ax.get_ylim()
+        yrange = ylim[1] - ylim[0]
+        yfact = 0.05
+        # plot rug
+        for ii, date in enumerate(dates_conc[:, 0]):
+            ax.plot([date, date], [-yrange*yfact, 0], alpha=1, 
+                    zorder=3, **rug_style)
+        ax.set_ylim([-yfact*yrange, ylim[1]])
+        ax.axhspan(-yfact*yrange, 0, facecolor='white', edgecolor='k',
+                   zorder=2, alpha=1)
+
+    
+    # format axes
+    ax.minorticks_on()
+    ax.grid(which='minor', axis='x', linewidth=0.5)
+    ax.grid(which='major', axis='x', linewidth=1.25)
+    ax.set_xlim([np.min(t), np.max(t)])
+    ax.set_yticks([])
+    ax.set_xlabel('Age (Ma)')
+
+    return ax
 
 
 def plot_ellipses_68_75(ages, conf=0.95, patch_dict=None, ax=None):

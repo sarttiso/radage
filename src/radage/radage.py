@@ -239,6 +239,7 @@ class UPb:
         self.r207_235_std = r207_235_std
         self.r207_206 = r207_206
         self.r207_206_std = r207_206_std
+        self.r238_206 = 1 / r206_238
 
         # check that correlation coefficients are between 0 and 1
         if rho75_68 < -1 or rho75_68 > 1:
@@ -269,7 +270,7 @@ class UPb:
 
         # compute eigen decomposition of covariance matrix for 238/206, 207/206
         self.r238_206_std = (self.r206_238_std /
-                             self.r206_238) * (1 / self.r206_238)
+                             self.r206_238) * (self.r238_206)
         self.cov_238_207 = np.array(
             [[
                 self.r238_206_std**2,

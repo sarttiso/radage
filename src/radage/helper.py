@@ -245,6 +245,8 @@ def botev(x, n=None):
 def kde_base(x, x_eval, bw='adaptive', kernel='gauss', w=None, n_steps=1):
     """Kernel density estimation.
 
+    If number of data are fewer than 30, use Scott's rule for initial bandwidth estimation.
+
     Parameters
     ----------
     x : array_like
@@ -275,9 +277,10 @@ def kde_base(x, x_eval, bw='adaptive', kernel='gauss', w=None, n_steps=1):
                       (np.diff(np.percentile(x, [25, 75]))/1.34)[0]])
 
     # set bandwidth using Scott's rule; use for first estimate for adaptive model
-    if bw == 'botev' or bw == 'adaptive':
+    n_thres = 30
+    if (bw == 'botev' or bw == 'adaptive') and (len(x) > n_thres):
         h = botev(x)
-    elif bw == 'scott':
+    elif bw == 'scott' or (len(x) <= n_thres):
         h = 1.06 * sig_eff * n_eff**(-1/5)
     else:
         h = bw

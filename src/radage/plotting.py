@@ -165,16 +165,33 @@ def plot_ages_concordia(ages=[],
                     textcoords='offset points',
                     ha=ha,
                     **labels_text_style)
+    
+    # enforce limits
+    xlim, ylim = axlim_conc([t1, t2], ax=ax, tw=tw)
 
     # plot age ellipses
-    patch_dict = patch_dict_validator(patch_dict, len(ages))
     if tw:
-        plot_ellipses_76_86(ages, ax=ax, patch_dict=patch_dict)
+        # only plot visible ellipses
+        ages_plot = []
+        for ii, age in enumerate(ages):
+            if age.r238_206 - 3*age.r238_206_std < xlim[1] \
+               and age.r238_206 + 3*age.r238_206_std > xlim[0] \
+               and age.r207_206 - 3*age.r207_206_std < ylim[1] \
+               and age.r207_206 + 3*age.r207_206_std > ylim[0]:
+                ages_plot.append(age)
+        patch_dict = patch_dict_validator(patch_dict, len(ages_plot))
+        plot_ellipses_76_86(ages_plot, ax=ax, patch_dict=patch_dict)
     else:
-        plot_ellipses_68_75(ages, ax=ax, patch_dict=patch_dict)
-
-    # enforce limits
-    axlim_conc([t1, t2], ax=ax, tw=tw)
+        # only plot visible ellipses
+        ages_plot = []
+        for ii, age in enumerate(ages):
+            if age.r207_235 - 3*age.r207_235_std < xlim[1] \
+               and age.r207_235 + 3*age.r207_235_std > xlim[0] \
+               and age.r206_238 - 3*age.r206_238_std < ylim[1] \
+               and age.r206_238 + 3*age.r206_238_std > ylim[0]:
+                ages_plot.append(age)
+        patch_dict = patch_dict_validator(patch_dict, len(ages_plot))
+        plot_ellipses_68_75(ages_plot, ax=ax, patch_dict=patch_dict)
 
     if tw:
         ax.set_xlabel('$^{238}\mathrm{U}/^{206}\mathrm{Pb}$')
@@ -237,6 +254,13 @@ def axlim_conc(tlims, ax=None, tw=False):
         Axis to set the limits for. If None, plt.gca(). Defaults to None.
     tw : boolean, optional
         Tera-Wasserburg concordia (True) or Wetherill (False) concordia. Defaults to False.
+
+    Returns
+    -------
+    xlim : array-like
+        x limits set
+    ylim : array-like
+        y limits set
     """
     if ax is None:
         ax = plt.gca()
@@ -247,10 +271,12 @@ def axlim_conc(tlims, ax=None, tw=False):
         r86, r76 = concordia_tw(tlims)
         ax.set_xlim(np.flip(r86))
         ax.set_ylim(r76)
+        return r86, r76
     else:
         r75, r68 = concordia(tlims)
         ax.set_xlim(r75)
         ax.set_ylim(r68)
+        return r75, r68
 
 
 def age_rank_plot_samples(samples_dict, sample_spacing=1, ax=None, 
@@ -401,7 +427,7 @@ def age_rank_plot(ages, ages_2s, ranks=None, ax=None, wid=0.6, patch_dict=None):
 
 
 def kde_plot(radages, t=None, bw='adaptive', kernel='gauss', weights='uncertainty',
-             ax=None, fill=False, rug=True, 
+             ax=None, fill=True, rug=True, 
              kde_style=None, kde_base_args=None, patch_dict=None, 
              rug_style=None):
     

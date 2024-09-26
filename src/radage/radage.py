@@ -132,12 +132,12 @@ def concordia_confint(t, conf=0.95):
     return lower_bound, upper_bound
 
 
-def t238(r38_06):
+def t238(r06_38):
     """206/238 date
 
     Parameters
     ----------
-    r38_06 : float or numpy.ndarray
+    r06_38 : float or numpy.ndarray
         206/238 ratio
 
     Returns
@@ -145,16 +145,16 @@ def t238(r38_06):
     t: float
         Date in Myr
     """
-    t = np.log((1 / r38_06) + 1) / l238
+    t = np.log(r06_38 + 1) / l238
     return t
 
 
-def t235(r35_07):
+def t235(r07_35):
     """207/235 date
 
     Parameters
     ----------
-    r35_07 : float or numpy.ndarray
+    r07_35 : float or numpy.ndarray
         207/235 ratio
 
     Returns
@@ -162,7 +162,7 @@ def t235(r35_07):
     t: float
         Date in Myr
     """
-    t = np.log((1 / r35_07) + 1) / l235
+    t = np.log(r07_35 + 1) / l235
     return t
 
 
@@ -172,7 +172,7 @@ def t207(r207_206, u238u235=u238u235):
     Parameters
     ----------
     r207_206 : float or numpy.ndarray
-        _description_
+        207/206 ratio(s)
     u238u235 : float, optional
         Ratio of U238 to U235, by default u238u235
 
@@ -554,7 +554,7 @@ class UPb:
         confint : float
             Confidence interval at desired confidence level
         """
-        date = np.log(self.r206_238 + 1) / l238
+        date = t238(self.r206_238)
         if conf == None:
             return date
         else:
@@ -580,7 +580,7 @@ class UPb:
         confint : float
             Confidence interval at desired confidence level.
         """
-        date = np.log(self.r207_235 + 1) / l235
+        date = t235(self.r207_235)
         if conf == None:
             return date
         else:
@@ -589,15 +589,13 @@ class UPb:
             confint = stats.norm.ppf(conf, date, sig) - date
             return date, sig, confint
 
-    def date76(self, conf=0.95, n=1e3, u238u235=u238u235):
+    def date76(self, conf=0.95, u238u235=u238u235):
         """207/206 date with uncertainty.
 
         Parameters
         ----------
         conf : float or None, optional
             Confidence level for interval, by default 0.95. If None, only the age is returned.
-        n : int, optional
-            Number of Monte Carlo samples to draw for uncertainty estimation, by default 1e3.
         u238u235 : float, optional
             Ratio of U238 to U235, by default u238u235
 
@@ -610,37 +608,14 @@ class UPb:
         confint : float
             Confidence interval at desired confidence level.
         """
-        # ignore warning that occurs sometimes during optimization
-        warnings.filterwarnings(
-            'ignore', message='invalid value encountered in double_scalars')
+        date = t207(self.r207_206, u238u235)
 
         n = int(n)
-
-        def cost(t, cur207_206):
-            """
-            cost function for solving for t
-            """
-            S = (1 / u238u235 * (np.exp(l235 * t) - 1) /
-                 (np.exp(l238 * t) - 1) - cur207_206)**2
-            return S
-
-        # compute age
-        date = minimize_scalar(cost, args=(self.r207_206), bounds=(0, 4500)).x
 
         if conf == None:
             return date
         else:
-            # now Monte Carlo solutions for t given uncertainty on the 207/206 ratio
-            ages = np.zeros(n)
-            r207_206_samp = stats.norm.rvs(self.r207_206,
-                                           self.r207_206_std,
-                                           size=n)
-            for ii in range(n):
-                res = minimize_scalar(cost,
-                                      args=(r207_206_samp[ii]),
-                                      bounds=(0, 5000))
-                ages[ii] = res.x
-            sig = np.std(ages)
+            sig = t207(self.r207_206 + self.r207_206_std) - date
             conf = 1 - (1 - conf) / 2
             confint = stats.norm.ppf(conf, date, sig) - date
             return date, sig, confint
@@ -826,7 +801,7 @@ def discordia_age_76_86(m, b, precision=3):
     y = y[idx]
 
     # get age for given ratios
-    t_x = t238(x)
+    t_x = t238(1/x) # x is 238/206, so invert for use in t238
     t_y = t207(y)
 
     age = np.mean([t_x, t_y])

@@ -75,7 +75,7 @@ def plot_ages_concordia(ages=[],
     if t1 is None: 
         min68_age = np.min(np.array([age.date68()[0] - 3*age.date68()[1] for age in ages]))
         if tw:
-            min76_age = np.min(np.array([age.date76(conf=None) - 3*age.date76(n=50)[1] for age in ages]))
+            min76_age = np.min(np.array([age.date76(conf=None) - 3*age.date76()[1] for age in ages]))
             t1 = np.min([min68_age, min76_age])
         else:
             min75_age = np.min(np.array([age.date75()[0] - 3*age.date75()[1] for age in ages]))
@@ -84,7 +84,7 @@ def plot_ages_concordia(ages=[],
     if t2 is None:
         max68_age = np.max(np.array([age.date68()[0] + 3*age.date68()[1] for age in ages]))
         if tw:
-            max76_age = np.max(np.array([age.date76(conf=None) + 3*age.date76(n=50)[1] for age in ages]))
+            max76_age = np.max(np.array([age.date76(conf=None) + 3*age.date76()[1] for age in ages]))
             t2 = np.max([max68_age, max76_age])
         else:
             max5_age = np.max(np.array([age.date75()[0] + 3*age.date75()[1] for age in ages]))
@@ -224,6 +224,7 @@ def annotate_concordia(ages, tw=False, ax=None, ann_style=None):
                     xytext=offset,
                     textcoords='offset points',
                     ha=ha)
+        
 
 def axlim_conc(tlims, ax=None, tw=False):
     """Set x and y lims for conccordia plot based on age range

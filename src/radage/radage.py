@@ -341,9 +341,10 @@ class UPb:
         """
         compute the discordance by some metric of this age
 
-        Paramters:
+        Parameters
         ----------
-        method : String
+        method : str, optional
+            Method for computing discordance, by default 'relative'. Valid strings are:
             'SK': mixture model with Stacey and Kramers' (1975) common lead model
             'p_238_235': use the probability of fit from the concordia age
             'relative': relative age different, where the 206/238 vs 207/235 ages are
@@ -352,6 +353,10 @@ class UPb:
             'relative_68_76': relative age difference using only the 206/238 and 206/207
                 ages, computed as 1-(t68/t76)
 
+        Returns
+        -------
+        d : float
+            discordance
         """
         if method == 'SK':
             t = Pb_mix_find_t(self.r207_206, 1 / self.r206_238)
@@ -423,46 +428,57 @@ class UPb:
 
         return d
 
-    def age_207_238_concordia(self):
+    def date_207_238_concordia(self):
         """
         Generate $^{207}$Pb/$^{206}$Pb - $^{206}$Pb/$^{238}$U concordia age as per Ludwig (1998), with uncertainty and MSWD.
 
-        DOES NOT WORK
+        Utilizes the error transformation for 207/235 computed from 206/238 and 207/206 as per Appendix A of Ludwig (1998).
+
+        Returns:
+        --------
+        t: float
+            Concordia date (Myr) for 207/206 - 206/238
+        t_std: float
+            standard deviation of age
+        poc: float
+            Probability of concordance. 
         """
+        # relative errors
+        SX = self.r206_238_std / self.r206_238
+        SY = self.r207_206_std / self.r207_206
+        # Sx = self.r207_235_std / self.r207_235
+        Sy = self.r206_238_std / self.r206_238
+        rhoXY = self.rho86_76
+        # error transformation for 207/235 computed from 206/238 and 207/206
+        Sx = np.sqrt(SX**2 + SY**2 - 2 * SX * SY * rhoXY)
+        rhoxy = (SX**2 - SX * SY * rhoXY) / (Sx * Sy)
+        # 207/235 computed from 206/238 and 207/206
+        x = self.r207_206 * self.r206_238 * u238u235
+        y = self.r206_238
+        sigx = x * Sx
+        sigy = self.r206_238_std
 
         # get omega for a given t
         def get_omega(t):
             """
             note that this function uses the error transformations in Appendix A of Ludwig (1998)
             """
-            # relative errors
-            SX = self.r206_238_std / self.r206_238
-            SY = self.r207_206_std / self.r207_206
-            Sx = self.r207_235_std / self.r207_235
-            Sy = self.r206_238_std / self.r206_238
-            rhoXY = self.rho86_76
-            sigx = self.r207_235 * np.sqrt(SX**2 + SY**2 - 2 * SX * SY * rhoXY)
-            rhoxy = (SX**2 - SX * SY * rhoXY) / (Sx * Sy)
-            sigy = self.r206_238_std
-
-            P235 = t * np.exp(l235 * t)
-            P238 = t * np.exp(l238 * t)
+            Px = t * np.exp(l235 * t)
+            Py = t * np.exp(l238 * t)
 
             cov_mod = np.array(
-                [[sigx**2 + P235**2 * l235_std**2, rhoxy * sigx * sigy],
-                 [rhoxy * sigx * sigy, sigy**2 + P238**2 * l238_std**2]])
+                [[sigx**2 + Px**2 * l235_std**2, rhoxy * sigx * sigy],
+                 [rhoxy * sigx * sigy, sigy**2 + Py**2 * l238_std**2]])
             omega = np.linalg.inv(cov_mod)
             return omega
 
         def S_cost(t):
             omega = get_omega(t)
 
-            R = self.r207_206 * u238u235 * self.r206_238 - (np.exp(l235 * t) -
-                                                            1)
-            r = self.r206_238 - np.exp(l238 * t) + 1
+            R = x - np.exp(l235 * t) + 1
+            r = y - np.exp(l238 * t) + 1
 
-            S = omega[0, 0] * R**2 + omega[1, 1] * r**2 + 2 * R * r * omega[0,
-                                                                            1]
+            S = omega[0,0] * R**2 + omega[1,1] * r**2 + 2 * R * r * omega[0,1]
 
             return S
 
@@ -477,9 +493,10 @@ class UPb:
         t_std = np.sqrt((Q235**2 * omega[0, 0] + Q238**2 * omega[1, 1] +
                          2 * Q235 * Q238 * omega[0, 1])**(-1))
 
-        MSWD = 1 - stats.chi2.cdf(opt.fun, 1)
+        # probability of concordance
+        poc = 1 - stats.chi2.cdf(opt.fun, 1)
         # pdb.set_trace()
-        return t, t_std, MSWD
+        return t, t_std, poc
 
     def date_235_238_concordia(self):
         """
@@ -487,10 +504,14 @@ class UPb:
 
         [![Ludwig 1998](https://img.shields.io/badge/DOI-10.1016%2FS0016--7037(98)00059--3-blue?link=http://doi.org/10.1016/S0016-7037(98)00059-3&style=flat-square)](http://doi.org/10.1016/S0016-7037(98)00059-3)
 
-        Returns:
-        - t: age
-        - t_std: standard deviation of age
-        - MSWD: exceedance probability of misfit for concordance, corresponds to a 1-MSWD confidence level for accepting the observed misfit. Lower values permit more discordant ages.
+        Returns
+        -------
+        t : float
+            Concordia date (Myr) for 207/235 - 206/238
+        t_std : float
+            Standard deviation of age
+        poc : float
+            Probability of concordance.
         """
 
         # get omega for a given t
@@ -517,8 +538,7 @@ class UPb:
             R = self.r207_235 - np.exp(l235 * t) + 1
             r = self.r206_238 - np.exp(l238 * t) + 1
 
-            S = omega[0, 0] * R**2 + omega[1, 1] * r**2 + 2 * R * r * omega[0,
-                                                                            1]
+            S = omega[0,0] * R**2 + omega[1,1] * r**2 + 2 * R * r * omega[0,1]
 
             return S
 
@@ -533,9 +553,10 @@ class UPb:
         t_std = np.sqrt((Q235**2 * omega[0, 0] + Q238**2 * omega[1, 1] +
                          2 * Q235 * Q238 * omega[0, 1])**(-1))
 
-        MSWD = 1 - stats.chi2.cdf(opt.fun, 1)
+        # probability of concordance
+        poc = 1 - stats.chi2.cdf(opt.fun, 1)
 
-        return t, t_std, MSWD
+        return t, t_std, poc
 
     def date68(self, conf=0.95):
         """206/238 date with uncertainty.
@@ -609,8 +630,6 @@ class UPb:
             Confidence interval at desired confidence level.
         """
         date = t207(self.r207_206, u238u235)
-
-        n = int(n)
 
         if conf == None:
             return date
@@ -809,7 +828,7 @@ def discordia_age_76_86(m, b, precision=3):
     return age
 
 
-def kde(ages, t,
+def kde(radages, t,
         kernel='epa',
         bw='adaptive',
         systems='auto',
@@ -819,7 +838,7 @@ def kde(ages, t,
 
     Parameters
     ----------
-    ages : arraylike
+    radages : arraylike
         list of radages.
     t : arraylike
         times at which to evaluate the kde.

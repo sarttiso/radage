@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 from matplotlib.ticker import MaxNLocator
 
 from .radage import *
@@ -366,24 +367,28 @@ def age_rank_plot_samples(samples_dict, sample_spacing=1, ax=None,
 
 
 def age_rank_plot(ages, ages_2s, ranks=None, ax=None, wid=0.6, patch_dict=None):
-    """rank-age plotting
+    """Rank-age plotting
 
     Parameters
     ----------
-    ages (array-like): age means
-    ages_2s (array-like): (symmetric) age uncertainty to plot
-    ranks (array-like): manually specified ranks (if plotting several different
+    ages : array-like 
+        age means
+    ages_2s : array-like
+        (symmetric) age uncertainty to plot, 2-sigma. Same length as ages.
+    ranks : array-like, optional
+        Manually specified ranks (if plotting several different
         samples together). defaults to None
-    ax (matplotlib.axes, optional): axis to plot into. Defaults to None.
-    wid (float, optional): width of age bar. Defaults to 0.6.
-    patch_dict (list, optional): list of style dicts for Rectangle patches.
-        Defaults to None. If one is provided, same styling is used for all patches.
-        Otherwise, must be same length as ages.
+    ax : matplotlib.plot.axes, optional 
+        Axis to plot into. Defaults to None. If none, one is created.
+    wid : float, optional
+        Width of age bar. Defaults to 0.6.
+    patch_dict : dict or list or None, optional
+        Style for Rectangle patches. Defaults to None. If one is provided, same styling is used for all patches. Otherwise, must be same length as ages.
 
     Returns
     -------
-    ax : matplotlib.axes
-        axis with plot
+    ax : matplotlib.plot.axes
+        Axis with plot
     """
     # set up a default stle
     patch_dict = patch_dict_validator(patch_dict, len(ages))

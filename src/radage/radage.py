@@ -7,13 +7,10 @@ from scipy.optimize import minimize_scalar
 import statsmodels.api as sm
 
 import matplotlib.pyplot as plt
-from matplotlib.patches import Ellipse, Rectangle
-import matplotlib.transforms as transforms
+from matplotlib.patches import Ellipse
 
 import warnings
 from .helper import *
-
-import pdb
 
 # in My
 l238 = 1.55125e-10 * 1e6
@@ -648,20 +645,14 @@ def sk_pb(t, t0=4.57e3, t1=3.7e3, mu1=7.19, mu2=9.74, x0=9.307, y0=10.294):
     ----------
     t : 1d array like
         Time(s) (in Ma) for which to return isotopic ratios for the linear mixing model from concordia to mantle
-
     t0 : float, optional
         Age of earth in Myr, by default 4570.
-
     t1 : float, optional
         Age of transition between model stages, by default 3700.
-
-    mu1 : float
-
-    mu2 : float
-
+    mu1 : float, optional
+    mu2 : float, optional
     x0 : float, optional
         206Pb/204Pb ratio for troilite lead, by default 9.307.
-
     y0 : float, optional
         207Pb/204Pb ratio for troilite lead, by default 10.294.
 
@@ -761,23 +752,28 @@ def discordance_filter(ages,
     """
     function to filter on discordance
 
-    Parameters:
-    -----------
-    filter_method : string
+    Parameters
+    ----------
+    ages : list
+        List of UPb.radage objects
+    method : string
         'relative', 'absolute', 'aitchison'
         discordance metric to use. Discordance is evaluated between
         207/206-238/206 ages for samples with 207/206 ages > 1 Ga, and 
         206/238-207/235 ages for sample with 207/206 ages < 1 Ga
-
-    filter_threshold : float
+    threshold : float, optional
         discordance value for chosen filtering method above which to flag
         ages as discordant
-
-    system_threshold : boolean
+    system_threshold : boolean, optional
         whether or not to switch discordance metrics between the 207/206-238/206 
         and 206/238-207/235 systems at 1 Ga. If false, then discordance is always
         computed between the 207/206-238/206 systems. If true, only works for 
         aithison, relative, and absolute discordance metrics.
+
+    Returns
+    -------
+    ages_conc : list
+        List of UPb.radage objects that pass the discordance filter
     """
     ages_conc = []
     if system_threshold:
@@ -855,9 +851,8 @@ def kde(radages, t,
 
     Returns
     -------
-    kde_est : TYPE
-        DESCRIPTION.
-
+    kde_est : arraylike
+        KDE estimate at times t
     """
     # compute concordia ages
     dates_conc = np.array([age.date_207_238_concordia()[0:2] for age in radages])
@@ -952,14 +947,23 @@ def yorkfit(x, y, wx, wy, r, thres=1e-3):
 
 
 def weighted_mean(ages, ages_s):
-    """weighted mean age computation
+    """Weighted-mean age computation
 
-    Args:
-        ages (array-like): age means
-        ages_s (array-like): age standard deviations (same length as ages)
+    Parameters
+    ----------
+    ages : array-like
+        Age means
+    ages_s : array-like
+        Age standard deviations (same length as ages)
 
-    Returns:
-        _type_: _description_
+    Returns
+    -------
+    mu : float
+        Weighted mean age
+    sig : float
+        Standard error of weighted mean age
+    mswd : float
+        Reduced chi-squared statistic for residuals with respect to the weighted mean
     """
     # weights
     w = 1/(ages_s**2)

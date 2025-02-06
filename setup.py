@@ -1,17 +1,21 @@
-import setuptools
+"""
+    Setup file for radage.
+    Use setup.cfg to configure your project.
 
-with open("README.md", "r", encoding="utf-8") as fh:
-    long_description = fh.read()
+    This file was generated with PyScaffold 4.1.4.
+    PyScaffold helps you to put up the scaffold of your new Python project.
+    Learn more under: https://pyscaffold.org/
+"""
+from setuptools import setup
 
-setuptools.setup(
-    name="Rad-Age", # Replace with your own username
-    version="0.0.1",
-    author="Adrian Tasistro-Hart",
-    description="This python package provides classes and functions for working with isotopic measurements of uranium, thorium, and lead to produce radiometric ages.",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://github.com/sarttiso/rad-age",
-    packages=setuptools.find_packages(),
-    license="GPL v3",
-    install_requires=[]
-)
+if __name__ == "__main__":
+    try:
+        setup(use_scm_version={"version_scheme": "no-guess-dev"})
+    except:  # noqa
+        print(
+            "\n\nAn error occurred while building the project, "
+            "please ensure you have the most updated version of setuptools, "
+            "setuptools_scm and wheel with:\n"
+            "   pip install -U setuptools setuptools_scm wheel\n\n"
+        )
+        raise

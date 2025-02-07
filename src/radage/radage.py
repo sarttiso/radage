@@ -965,7 +965,7 @@ def weighted_mean(ages, ages_s, sig_method='naive', standard_error=False):
     mu : float
         Weighted mean age
     sig : float
-        Standard error of weighted mean age
+        Standard deviation or error of weighted mean age, depending on standard_error value
     mswd : float
         Reduced chi-squared statistic for residuals with respect to the weighted mean
     """
@@ -986,7 +986,6 @@ def weighted_mean(ages, ages_s, sig_method='naive', standard_error=False):
     elif sig_method == 'unbiased':
         sig2 = np.sum(w)/(np.sum(w)**2-np.sum(w**2))*np.sum(w*(ages-mu)**2)
         n = np.sum(w)**2/np.sum(w**2)
-        # se = np.sqrt(sig2/neff) # standard error
     # biased
     elif sig_method == 'biased':
         n = len(ages)

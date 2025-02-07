@@ -946,7 +946,7 @@ def yorkfit(x, y, wx, wy, r, thres=1e-3):
     return b, a, b_sig, a_sig, mswd
 
 
-def weighted_mean(ages, ages_s):
+def weighted_mean(ages, ages_s, sig_method='naive', standard_error=False):
     """Weighted-mean age computation
 
     Parameters
@@ -955,6 +955,10 @@ def weighted_mean(ages, ages_s):
         Age means
     ages_s : array-like
         Age standard deviations (same length as ages)
+    sig_method : str, optional
+        Method for computing the standard error of the weighted mean, by default 'naive'. Valid strings are 'naive', 'unbiased'
+    standard_error : bool, optional
+        Whether to return the standard error of the weighted mean, by default False. If sig_method is 'naive', then this parameter is True by default.
 
     Returns
     -------
@@ -967,16 +971,35 @@ def weighted_mean(ages, ages_s):
     """
     # weights
     w = 1/(ages_s**2)
+    # weighted mean
     mu = np.sum(ages*w)/np.sum(w)
+    # verify sig_method is valid
+    assert sig_method in ['naive', 'unbiased', 'biased'], 'sig_method must be one of naive, unbiased, biased'
+    # ignore standard error if sig_method is naive
+    if sig_method == 'naive':
+        standard_error = True
     # naive
-    # sig = np.sqrt(1/np.sum(w))
+    if sig_method == 'naive':
+        sig2 = 1/np.sum(w)
+        n = 1
     # unbiased
-    sig2 = np.sum(w)/(np.sum(w)**2-np.sum(w**2))*np.sum(w*(ages-mu)**2)
+    elif sig_method == 'unbiased':
+        sig2 = np.sum(w)/(np.sum(w)**2-np.sum(w**2))*np.sum(w*(ages-mu)**2)
+        n = np.sum(w)**2/np.sum(w**2)
+        # se = np.sqrt(sig2/neff) # standard error
     # biased
-    # sig2 = (np.sum(w*ages**2)*np.sum(w) - np.sum(w*ages)**2)/np.sum(w)**2
-    sig = np.sqrt(sig2)
+    elif sig_method == 'biased':
+        n = len(ages)
+        sig2 = (np.sum(w*(ages-mu)**2)/np.sum(w)) * n / (n-1)
+    
+    if standard_error:
+       sig = np.sqrt(sig2/n)
+    else:
+        sig = np.sqrt(sig2)
+
     mswd = np.sum(w)/(np.sum(w)**2-np.sum(w**2)) * \
         np.sum((w*(ages-mu)**2)/ages_s**2)
+    
     return mu, sig, mswd
 
 

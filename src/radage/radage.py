@@ -946,7 +946,7 @@ def yorkfit(x, y, wx, wy, r, thres=1e-3):
     return b, a, b_sig, a_sig, mswd
 
 
-def weighted_mean(ages, ages_s, sig_method='naive', standard_error=False):
+def weighted_mean(ages, ages_s, sig_method='naive', standard_error=True):
     """Weighted-mean age computation
 
     Parameters
@@ -957,8 +957,11 @@ def weighted_mean(ages, ages_s, sig_method='naive', standard_error=False):
         Age standard deviations (same length as ages)
     sig_method : str, optional
         Method for computing the standard error of the weighted mean, by default 'naive'. Valid strings are 'naive', 'unbiased'
+        For unbiased, see 
+            https://en.wikipedia.org/wiki/Weighted_arithmetic_mean#Reliability_weights,
+            https://seismo.berkeley.edu/~kirchner/Toolkits/Toolkit_12.pdf 
     standard_error : bool, optional
-        Whether to return the standard error of the weighted mean, by default False. If sig_method is 'naive', then this parameter is True by default.
+        Whether to return the standard error of the weighted mean, by default True. If sig_method is 'naive', then this parameter is True.
 
     Returns
     -------
@@ -981,14 +984,14 @@ def weighted_mean(ages, ages_s, sig_method='naive', standard_error=False):
     # naive
     if sig_method == 'naive':
         sig2 = 1/np.sum(w)
-        n = 1
+        n = 1  
     # unbiased
     elif sig_method == 'unbiased':
         sig2 = np.sum(w)/(np.sum(w)**2-np.sum(w**2))*np.sum(w*(ages-mu)**2)
-        n = np.sum(w)**2/np.sum(w**2)
+        n = np.sum(w)**2/np.sum(w**2)   # effective sample size
     # biased
     elif sig_method == 'biased':
-        n = len(ages)
+        n = len(ages)   # sample size
         sig2 = (np.sum(w*(ages-mu)**2)/np.sum(w)) * n / (n-1)
     
     if standard_error:

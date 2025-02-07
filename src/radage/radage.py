@@ -22,18 +22,17 @@ u238u235 = 137.837
 
 
 def concordia(t):
-    """
-    Wetherill concordia curve.
+    """Wetherill concordia curve.
 
     207/235 and 206/238 ratios for given times.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     t : array-like
         time points in Myr
 
-    Returns:
-    --------
+    Returns
+    -------
     r207_235 : array-like
         207/235 ratios for the given times
     r206_238 : array-like
@@ -47,18 +46,17 @@ def concordia(t):
 
 
 def concordia_tw(t):
-    """
-    Tara-Wasserberg concordia curve.
+    """Tara-Wasserberg concordia curve.
 
     238/206 and 207/206 ratios for given times.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     t : array-like
         time points in Myr
 
-    Returns:
-    --------
+    Returns
+    -------
     r238_206 : array-like
         238/206 ratios for the given times
     r207_206 : array-like
@@ -72,21 +70,20 @@ def concordia_tw(t):
 
 
 def concordia_confint(t, conf=0.95):
-    """
-    Confidence intervals on concordia.
+    """Confidence intervals on concordia.
 
     Function giving 206/238, 207/235 ratios for bounds on confidence region around concordia at a given t
     Returns upper bound, then lower bound
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     t : array-like
         time points in Myr
     conf : float, optional
         confidence level for interval, defaults to 0.95
 
-    Returns:
-    --------
+    Returns
+    -------
     lower_bound : numpy.ndarray
         Lower bound of confidence interval, first column is 207/235, second column is 206/238
     upper_bound : numpy.ndarray
@@ -199,6 +196,42 @@ def t207(r207_206, u238u235=u238u235):
 class UPb:
     """
     class for handling U-Pb ages, where data are given as isotopic ratios and their uncertainties
+
+    Parameters
+    ----------
+    r206_238 : float
+        Pb206/U238 ratio
+    r206_238_std : float
+        Standard deviation of Pb206/U238 ratio
+    r207_235 : float
+        Pb207/U235 ratio
+    r207_235_std : float
+        Standard deviation of Pb207/U235 ratio
+    r207_206 : float
+        Pb207/Pb206 ratio
+    r207_206_std : float
+        Standard deviation of Pb207/Pb206 ratio
+    rho75_68 : float
+        Error correlation between 207/235 and 206/238 ratios. Must be between -1 and 1
+    rho86_76 : float
+        Error correlation between 206/238 and 207/206 ratios. Must be between -1 and 1
+    name : str, optional
+        Name for age, by default None. Useful for plotting
+
+    Attributes
+    ----------
+    cov_235_238 : numpy.ndarray
+        Covariance matrix for 206/238 and 207/235 ratios
+    eigval_235_238 : numpy.ndarray
+        Eigenvalues of covariance matrix for 206/238 and 207/235 ratios
+    eigvec_235_238 : numpy.ndarray
+        Eigenvectors of covariance matrix for 206/238 and 207/235 ratios
+    cov_238_207 : numpy.ndarray
+        Covariance matrix for 238/206 and 207/206 ratios
+    eigval_238_207 : numpy.ndarray
+        Eigenvalues of covariance matrix for 238/206 and 207/206 ratios
+    eigvec_238_207 : numpy.ndarray
+        Eigenvectors of covariance matrix for 238/206 and 207/206 ratios
     """
 
     def __init__(self,
@@ -208,27 +241,6 @@ class UPb:
                  rho75_68, rho86_76,
                  name=None):
         """Create UPb object
-
-        Parameters
-        ----------
-        r206_238 : float
-            Pb206/U238 ratio
-        r206_238_std : float
-            Standard deviation of Pb206/U238 ratio
-        r207_235 : float
-            Pb207/U235 ratio
-        r207_235_std : float
-            Standard deviation of Pb207/U235 ratio
-        r207_206 : float
-            Pb207/Pb206 ratio
-        r207_206_std : float
-            Standard deviation of Pb207/Pb206 ratio
-        rho75_68 : float
-            Error correlation between 207/235 and 206/238 ratios. Must be between -1 and 1
-        rho86_76 : float
-            Error correlation between 206/238 and 207/206 ratios. Must be between -1 and 1
-        name : str, optional
-            Name for age, by default None. Useful for plotting
         """
         self.r206_238 = r206_238
         self.r206_238_std = r206_238_std
@@ -286,9 +298,9 @@ class UPb:
     def ellipse_68_75(self,
                       conf=0.95,
                       patch_dict=None):
-        """Uncertainty ellipse for 206Pb/238U-207Pb/235U age
+        """Uncertainty ellipse for 206Pb/238U-207Pb/235U date
 
-        [more here](https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Interval)
+        See `here <https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Interval>`__ for more information
         """
         # set up a default stle
         patch_dict = patch_dict_validator(patch_dict, 1)
@@ -984,7 +996,7 @@ def weighted_mean(ages, ages_s, sig_method='naive', standard_error=True):
     # naive
     if sig_method == 'naive':
         sig2 = 1/np.sum(w)
-        n = 1  
+        n = 1  # hacky
     # unbiased
     elif sig_method == 'unbiased':
         sig2 = np.sum(w)/(np.sum(w)**2-np.sum(w**2))*np.sum(w*(ages-mu)**2)

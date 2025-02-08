@@ -5,6 +5,7 @@ radage
 This is the documentation of **radage**.
 
 To install **radage**, run:
+
 .. code-block:: console
 
    pip install radage
@@ -17,7 +18,7 @@ Contents
    :caption: Usage
    :maxdepth: 2
 
-   U-Pb <U-Pb>
+   U-Pb <UPb>
 
 .. toctree::
    :name: Package Info

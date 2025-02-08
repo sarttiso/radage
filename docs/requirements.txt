@@ -9,3 +9,4 @@ scipy
 statsmodels
 matplotlib
 myst-nb
+furo

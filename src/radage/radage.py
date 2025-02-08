@@ -300,11 +300,17 @@ class UPb:
                       patch_dict=None):
         """Uncertainty ellipse for 206Pb/238U-207Pb/235U date
 
-        See `here <https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Interval>`__ for more information
+        See `here <https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Interval>`__ for more information.
+
+        Parameters
+        ----------
+        conf : float, optional
+            Confidence level for interval, by default 0.95
+        patch_dict : dict, optional
+            Dictionary of keyword arguments for the ellipse, by default None. If None, a default style is used.
         """
         # set up a default stle
         patch_dict = patch_dict_validator(patch_dict, 1)
-
 
         r = stats.chi2.ppf(conf, 2)
         a1 = np.sqrt(self.eigval_235_238[0] * r)
@@ -325,8 +331,9 @@ class UPb:
     def ellipse_76_86(self,
                       conf=0.95,
                       patch_dict=None,):
-        """
-            [more here](https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Interval)
+        """Uncertainty ellipse for 207Pb/206Pb-238U/206Pb date
+
+        See `here <https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Interval>`__ for more information.
         """
         # set up a default stle
         patch_dict = patch_dict_validator(patch_dict, 1)
@@ -348,19 +355,21 @@ class UPb:
         return ell
 
     def discordance(self, method='relative'):
-        """
-        compute the discordance by some metric of this age
+        """Date discordance.
+
+        Compute discordance according to a given method.
 
         Parameters
         ----------
         method : str, optional
             Method for computing discordance, by default 'relative'. Valid strings are:
-            'SK': mixture model with Stacey and Kramers' (1975) common lead model
-            'p_238_235': use the probability of fit from the concordia age
-            'relative': relative age different, where the 206/238 vs 207/235 ages are
+
+            - 'SK': mixture model with Stacey and Kramers' (1975) common lead model
+            - 'p_238_235': use the probability of fit from the concordia age
+            - 'relative': relative age different, where the 206/238 vs 207/235 ages are
                 used for 206/238 ages younger than 1 Ga, and the 207/206 vs 206/238
                 ages are used for ages older than 1 Ga
-            'relative_68_76': relative age difference using only the 206/238 and 206/207
+            - 'relative_68_76': relative age difference using only the 206/238 and 206/207
                 ages, computed as 1-(t68/t76)
 
         Returns
@@ -439,17 +448,18 @@ class UPb:
         return d
 
     def date_207_238_concordia(self):
-        """
-        Generate $^{207}$Pb/$^{206}$Pb - $^{206}$Pb/$^{238}$U concordia age as per Ludwig (1998), with uncertainty and MSWD.
+        """207Pb/206Pb - 206Pb/238U concordia date 
+        
+        The date is calculate as per `Ludwig (1998) <http://doi.org/10.1016/S0016-7037(98)00059-3>`__, with uncertainty and MSWD.
 
-        Utilizes the error transformation for 207/235 computed from 206/238 and 207/206 as per Appendix A of Ludwig (1998).
+        Utilizes the error transformation for 207Pb/235U computed from 206Pb/238U and 207Pb/206Pb as per Appendix A of Ludwig (1998).
 
-        Returns:
-        --------
+        Returns
+        -------
         t: float
-            Concordia date (Myr) for 207/206 - 206/238
+            Concordia date (Myr) for 207Pb/206Pb - 206Pb/238U
         t_std: float
-            standard deviation of age
+            Standard deviation of age
         poc: float
             Probability of concordance. 
         """
@@ -471,7 +481,7 @@ class UPb:
         # get omega for a given t
         def get_omega(t):
             """
-            note that this function uses the error transformations in Appendix A of Ludwig (1998)
+            This function uses the error transformations in Appendix A of Ludwig (1998)
             """
             Px = t * np.exp(l235 * t)
             Py = t * np.exp(l238 * t)
@@ -505,19 +515,18 @@ class UPb:
 
         # probability of concordance
         poc = 1 - stats.chi2.cdf(opt.fun, 1)
-        # pdb.set_trace()
+
         return t, t_std, poc
 
     def date_235_238_concordia(self):
-        """
-        Generate $^{207}$Pb/$^{235}$U - $^{206}$Pb/$^{238}$U concordia age as per Ludwig (1998), with uncertainty and MSWD.
-
-        [![Ludwig 1998](https://img.shields.io/badge/DOI-10.1016%2FS0016--7037(98)00059--3-blue?link=http://doi.org/10.1016/S0016-7037(98)00059-3&style=flat-square)](http://doi.org/10.1016/S0016-7037(98)00059-3)
+        """207Pb/235U - 206Pb/238U concordia date 
+        
+        The date is calculate as per `Ludwig (1998) <http://doi.org/10.1016/S0016-7037(98)00059-3>`__, with uncertainty and MSWD.
 
         Returns
         -------
         t : float
-            Concordia date (Myr) for 207/235 - 206/238
+            Concordia date (Myr) for 207Pb/235U - 206Pb/238U
         t_std : float
             Standard deviation of age
         poc : float
@@ -651,7 +660,29 @@ class UPb:
 
 
 def sk_pb(t, t0=4.57e3, t1=3.7e3, mu1=7.19, mu2=9.74, x0=9.307, y0=10.294):
-    """Common lead model from Stacey and Kramers (1975)
+    """Common lead model from `Stacey and Kramers (1975) <https://doi.org/10.1016/0012-821X(75)90088-6>`__.
+
+    This model implements a two stage process for the evolution of common lead.
+
+    For times before :math:`t_1 = 3.7` Ga, the following equations describe the temporal evolution of common lead:
+
+    .. math::
+
+        \\begin{align}
+            \\frac{^{206}\\text{Pb}}{^{204}\\text{Pb}}(t) &= \\left(\\frac{^{206}\\text{Pb}}{^{204}\\text{Pb}}\\right)_0 + \\mu_1\\,\\left(e^{\\lambda_{238}t_0}-e^{\\lambda_{238}t}\\right) \\\\
+            \\frac{^{207}\\text{Pb}}{^{204}\\text{Pb}}(t) &= \\left(\\frac{^{207}\\text{Pb}}{^{204}\\text{Pb}}\\right)_0 + \\frac{^{235}\\text{U}}{^{238}\\text{U}} \\, \\mu_1\\, \\left(e^{\\lambda_{235}t_0}-e^{\\lambda_{235}t}\\right)
+        \\end{align}
+
+    For times after :math:`t_1 = 3.7` Ga, the following equations describe the temporal evolution of common lead:
+
+    .. math::
+            
+        \\begin{align}
+        \\frac{^{206}\\text{Pb}}{^{204}\\text{Pb}}(t) &= \\left(\\frac{^{206}\\text{Pb}}{^{204}\\text{Pb}}\\right)_1 + \\mu_2\\,\\left(e^{\\lambda_{238}t_1}-e^{\\lambda_{238}t}\\right) \\\\
+        \\frac{^{207}\\text{Pb}}{^{204}\\text{Pb}}(t) &= \\left(\\frac{^{207}\\text{Pb}}{^{204}\\text{Pb}}\\right)_1 + \\frac{^{235}\\text{U}}{^{238}\\text{U}} \\, \\mu_2\\, \\left(e^{\\lambda_{235}t_1}-e^{\\lambda_{235}t}\\right)
+        \end{align}
+
+    where :math:`\\left(\\frac{^{206}\\text{Pb}}{^{204}\\text{Pb}}\\right)_1` and :math:`\\left(\\frac{^{207}\\text{Pb}}{^{204}\\text{Pb}}\\right)_1` are the above equations evaluated at :math:`t=t_1`.
 
     Parameters
     ----------
@@ -662,6 +693,7 @@ def sk_pb(t, t0=4.57e3, t1=3.7e3, mu1=7.19, mu2=9.74, x0=9.307, y0=10.294):
     t1 : float, optional
         Age of transition between model stages, by default 3700.
     mu1 : float, optional
+
     mu2 : float, optional
     x0 : float, optional
         206Pb/204Pb ratio for troilite lead, by default 9.307.
@@ -674,6 +706,25 @@ def sk_pb(t, t0=4.57e3, t1=3.7e3, mu1=7.19, mu2=9.74, x0=9.307, y0=10.294):
         206/204 ratio(s) for the given time(s)
     r207_204 : 1d array
         207/204 ratio(s) for the given time(s)
+
+    Examples
+    --------
+    .. plot::
+        :include-source:
+
+        import radage
+        import numpy as np
+        import matplotlib.pyplot as plt
+        t = np.linspace(0, 4500, 50)
+        r206_204, r207_204 = radage.sk_pb(t)
+        plt.figure(figsize=(6, 4))
+        plt.plot(r206_204, r207_204, linewidth=4)
+        plt.grid()
+        plt.xlabel(r'${}^{206}\mathrm{Pb}/{}^{204}\mathrm{Pb}$')
+        plt.ylabel(r'${}^{207}\mathrm{Pb}/{}^{204}\mathrm{Pb}$')
+        plt.title('Stacey and Kramers (1975) Common Lead Model')
+        plt.show()
+
     """
 
     t = np.reshape(np.array([t]), -1)

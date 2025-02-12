@@ -1139,3 +1139,62 @@ def get_ages(df):
                               df.iloc[ii][cols[6]],
                               df.iloc[ii][cols[7]], name=df.index[ii]))
     return ages
+
+
+###
+### HAFNIUM
+###
+
+# Vervoort et al. 2018 values
+# Lu_DM = 0.03976 
+# Hf_DM = 0.283238
+
+Hf_DM = 0.283225
+Lu_DM = 0.0383
+
+# Vervoort & Blichert-Toft 1999
+Hf_CHUR = 0.282772
+Lu_CHUR = 0.0332
+
+lam_Lu = 1.867e-5 # My-1
+
+def eHf(Hf176Hf177, Lu176Hf177, t, Hf_CHUR=Hf_CHUR, Lu_CHUR=Lu_CHUR):
+    """epsilon hafnium 
+    
+    for a given set of ratios
+
+    Parameters
+    ----------
+    Hf176Hf177 : array-like
+        176Hf/177Hf ratio(s)
+    Lu176Hf177 : array-like
+        176Lu/177Hf ratio(s)
+    t : array-like 
+        age(s) in Myr. If float, then the same age is used for all ratios.
+    Hf_CHUR : float, optional
+        176Hf/177Hf ratio for CHUR, by default Hf_CHUR
+    Lu_CHUR : float, optional
+        176Lu/177Hf ratio for CHUR, by default Lu_CHUR
+
+    Returns
+    -------
+    eHf : array-like
+        epsilon hafnium value(s)
+    """
+    return 10000*((Hf176Hf177 - Lu176Hf177*(np.exp(lam_Lu*t)-1)) / \
+                  (Hf_CHUR - Lu_CHUR*(np.exp(lam_Lu*t)-1)) - 1)
+                  
+def eHf_DM(t):
+    """epsilon Hafnium for depleted mantle
+
+    Parameters
+    ----------
+    t : array-like
+        Age(s) in Myr
+
+    Returns
+    -------
+    eHf : array-like
+        epsilon hafnium value(s) for depleted mantle
+    """
+    return eHf(Hf_DM, Lu_DM, t)

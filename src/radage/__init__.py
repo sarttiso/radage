@@ -17,5 +17,3 @@ finally:
 
 from .radage import *
 from . import plotting
-
-__all__ = ['UPb']

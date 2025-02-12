@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 import scipy.stats as stats
 from scipy.fft import dct
 from scipy.optimize import root_scalar

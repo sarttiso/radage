@@ -1,10 +1,7 @@
-import pandas as pd
 import numpy as np
 
 import scipy.stats as stats
 from scipy.optimize import minimize_scalar
-
-import statsmodels.api as sm
 
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
@@ -752,20 +749,52 @@ def sk_pb(t, t0=4.57e3, t1=3.7e3, mu1=7.19, mu2=9.74, x0=9.307, y0=10.294):
     return r206_204.squeeze(), r207_204.squeeze()
 
 
-def Pb_mix_find_t(r207_206, r238_206):
+def Pb_mix_t(r207_206, r238_206, Pbc='SK'):
+    """Solve for age given a pair of 207/206 & 238/206 isotopic ratios and a common lead model.
+
+    Given a pair of 207/206 & 238/206 isotopic ratios, this function solves for the age such that one has a lead mixing model that results in identical Stacey & Kramers' (1975) common lead model and lower intercept concordia ages while also passing through the observed pair of ratios.
+
+    Parameters
+    ----------
+    r207_206 : float
+        207/206 ratio
+    r238_206 : float
+        238/206 ratio
+    Pbc : str or float, optional
+        Initial common lead model to use, by default 'SK'. If float, then the common lead model is defined by the input value.
+    
+    Returns
+    -------
+    t : float
+        Age in Myr
+
+    Examples
+    --------
+    .. plot::
+        :include-source:
+
+        import radage
     """
-    given a pair of 207/206 & 238/206 isotopic ratios, solve for the age such that one has a lead mixing model that 
-    results in identical Stacey & Kramers' (1975) common lead model ages and radiogenic concordia ages
-    while also passing through the observed ratios.
-    """
+
+    if Pbc == 'SK':
+        def Pbc0(t): 
+            r206_204, r207_204 = sk_pb(t)
+            r207_206_0 = r207_204 / r206_204
+            return r207_206_0
+    else:
+        # check value is a float
+        assert isinstance(Pbc, float), 'Pbc must be a float or "SK"'
+        # make sure value is greater than zero and less than 2
+        assert Pbc > 0 and Pbc < 2, 'Pbc must be between 0 and 2'
+        def Pbc0(t):
+            r207_206_0 = Pbc
+            return r207_206_0
 
     def cost(t):
         """
         defines a cost metric to search over appropriate times
         """
-        r206_204, r207_204 = sk_pb(t)
-        # intercept (common lead)
-        r207_206_0 = r207_204 / r206_204
+        r207_206_0 = Pbc0(t)
         r238_206_0 = 0
 
         # concordia (radiogenic component)

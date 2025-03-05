@@ -248,11 +248,15 @@ def botev(x, n=None):
     tol = 1e-12 + 0.01 * (N_eff - 50) / 1000
     while not converged:
         t_values = np.linspace(0, tol, 50)
+        # find roots (approximately)
         root_approx = np.where(np.diff(np.sign(fixed_point_t(t_values))))[0]
         if len(root_approx) > 0 and len(root_approx) < 2:
             converged = True
+        # if more than one root, decrease range
         elif len(root_approx) > 1:
-            tol = tol / 1.5
+            # take halfway between the first two roots
+            tol = (t_values[root_approx[0]] + t_values[root_approx[1]]) / 2
+            # tol = tol / 1.5
         else:
             tol = tol * 2
 

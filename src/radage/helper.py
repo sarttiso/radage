@@ -9,6 +9,8 @@ autor: Sukhbinder
 5 April 2017
 Based on: http://uk.mathworks.com/matlabcentral/fileexchange/11837-fast-and-robust-curve-intersections
 """
+
+
 def _rect_inter_inner(x1, x2):
     n1 = x1.shape[0]-1
     n2 = x2.shape[0]-1
@@ -188,56 +190,84 @@ def botev(x, n=None):
     Dx = x_max - x_min
 
     # from Botev MATLAB, add buffer below and above min and max
-    MIN = x_min - Dx/5
-    MAX = x_max + Dx/5
+    MIN = x_min - Dx/2
+    MAX = x_max + Dx/2
     R = MAX - MIN
     # set up evaluation grid
     dx = R / n
     xmesh = MIN + np.arange(0, R+dx, dx)
-    
-    N = len(np.unique(x)) # check for duplicates?
-    
+
+    N = len(np.unique(x))  # check for duplicates?
+
     # Create a histogram
     initial_data = np.histogram(x, bins=xmesh)[0] / N
     initial_data = initial_data / np.sum(initial_data)
-    
+
     # Discrete cosine transform of initial data
     a = dct(initial_data)
 
-    I = np.arange(1, n)**2
-    a2 = (a[1:] / 2)**2
+    I = np.arange(1, n, dtype=np.float64)**2
+    a2 = (a[1:])**2
 
     # Define the fixed point function
     def fixed_point(t, N, I, a2):
 
         # from https://github.com/tommyod/KDEpy/blob/ae1c23c2dc50b91b93dfb982030f0127ce83e447/KDEpy/bw_selection.py#L21
-        I = np.asfarray(I, dtype=float)
-        a2 = np.asfarray(a2, dtype=float)
+        # https://github.com/tommyod/KDEpy/issues/95
+        I = np.asfarray(I, dtype=np.float64)
+        a2 = np.asfarray(a2, dtype=np.float64)
 
         l = 7
         # Initial f calculation
-        f = 2 * (np.pi**(2 * l)) * np.sum((I**l) * a2 * np.exp(-I * (np.pi**2) * t))
-        
+        f = 1/2 * (np.pi**(2 * l)) * np.sum((I**l) * a2 * np.exp(-I * (np.pi**2) * t))
+
         # Loop for decreasing s values from l-1 to 2
         for s in range(l-1, 1, -1):
-            K0 = np.prod(np.arange(1, 2 * s + 1, 2)) / np.sqrt(2 * np.pi)
-            const = (1 + (1/2)**(s + 0.5)) / 3
+            K0 = np.prod(np.arange(1, 2 * s + 1, 2),
+                         dtype=np.float64) / np.sqrt(2 * np.pi)
+            K1 = (1 + (1/2)**(s + 0.5)) / 3
             # print(s)
-            time = (2 * const * K0 / (N * f))**(2 / (3 + 2 * s))            
-            f = 2 * (np.pi**(2 * s)) * np.sum((I**s) * a2 * np.exp(-I * (np.pi**2) * time))
-        
+            time = (2 * K1 * K0 / (N * f))**(2 / (3 + 2 * s))
+            f = 1/2 * (np.pi**(2 * s)) * np.sum((I**s) *
+                                                a2 * np.exp(-I * (np.pi**2) * time))
+
         # Final output calculation
         out = t - (2 * N * np.sqrt(np.pi) * f)**(-2/5)
         return out
 
     # Use root to solve the equation t = zeta * gamma^[5](t)
-    result = root_scalar(lambda t: fixed_point(t, N, I, a2), 
-                         bracket=[0, 0.01], method='brentq')
+    # find tolerance
+    def fixed_point_t(t):
+        t = np.atleast_1d(t)
+        output = np.zeros_like(t)
+        for ii in range(len(t)):
+            output[ii] = fixed_point(t[ii], N, I, a2)
+        return output
+    converged = False
+    N_eff = 50 * (N <= 50) + 1050 * (N >= 1050) + N*((N < 1050) & (N > 50))
+    tol = 1e-12 + 0.01 * (N_eff - 50) / 1000
+    while not converged:
+        t_values = np.linspace(0, tol, 50)
+        root_approx = np.where(np.diff(np.sign(fixed_point_t(t_values))))[0]
+        if len(root_approx) > 0 and len(root_approx) < 2:
+            converged = True
+        elif len(root_approx) > 1:
+            tol = tol / 1.5
+        else:
+            tol = tol * 2
+
+    try:
+        result = root_scalar(lambda t: fixed_point(t, N, I, a2),
+                             bracket=[0, tol], method='brentq')
+        # if no root, expand the bracket
+    except ValueError:
+        raise ValueError('No root found.')
+
     t_star = result.root
 
     # compute bandwidth
     bandwidth = np.sqrt(t_star) * R
-    
+
     return bandwidth
 
 
@@ -266,15 +296,18 @@ def kde_base(x, x_eval, bw='adaptive', kernel='gauss', w=None, n_steps=1):
     f_hat : array_like
         Kernel density estimate at the given points.
     """
-    
+
     # weights are ones if not specified
     if w is None:
         w = np.ones_like(x)
 
     n_eff = np.sum(w)**2 / np.sum(w**2)
-    sig_eff = np.min([np.std(x), 
+    sig_eff = np.min([np.std(x),
                       (np.diff(np.percentile(x, [25, 75]))/1.34)[0]])
 
+    # check that bw is valid if it's a string
+    if type(bw) is str and bw not in ['adaptive', 'scott', 'botev']:
+        raise ValueError('Invalid bandwidth method.')
     # set bandwidth using Scott's rule; use for first estimate for adaptive model
     n_thres = 30
     if (bw == 'botev' or bw == 'adaptive') and (len(x) > n_thres):
@@ -283,7 +316,7 @@ def kde_base(x, x_eval, bw='adaptive', kernel='gauss', w=None, n_steps=1):
         h = 1.06 * sig_eff * n_eff**(-1/5)
     else:
         h = bw
-    
+
     # set up kernel
     if kernel == 'epa':
         kern = epa_kern

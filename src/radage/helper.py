@@ -314,13 +314,14 @@ def kde_base(x, x_eval, bw='adaptive', kernel='gauss', w=None, n_steps=1):
         raise ValueError('Invalid bandwidth method.')
     # set bandwidth using Scott's rule; use for first estimate for adaptive model
     n_thres = 30
-    if (bw == 'botev' or bw == 'adaptive') and (len(x) > n_thres):
+    if (bw in ['botev', 'adaptive']) and (len(x) > n_thres):
         h = botev(x)
-    elif bw == 'scott' or (len(x) <= n_thres):
+    elif bw == 'scott' or ((len(x) <= n_thres) and (bw in ['botev', 'adaptive'])):
         h = 1.06 * sig_eff * n_eff**(-1/5)
     else:
         h = bw
 
+    print(h)
     # set up kernel
     if kernel == 'epa':
         kern = epa_kern

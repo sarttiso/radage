@@ -866,10 +866,14 @@ def discordance_filter(ages,
     -------
     ages_conc : list
         List of UPb.radage objects that pass the discordance filter
+    idx : np.ndarray
+        Indices of the ages that pass the discordance filter
     """
     ages_conc = []
+    idx = np.zeros(len(ages), dtype=bool)
+
     if system_threshold:
-        for age in ages:
+        for ii, age in enumerate(ages):
             if age.date76(conf=None) > 1000:
                 cur_method = method + '_76_68'
             else:
@@ -877,12 +881,15 @@ def discordance_filter(ages,
             d = np.abs(age.discordance(method=cur_method))
             if d < threshold:
                 ages_conc.append(age)
+                idx[ii] = True
+
     else:
-        for age in ages:
+        for ii, age in enumerate(ages):
             d = np.abs(age.discordance(method=method + '_76_68'))
             if d < threshold:
                 ages_conc.append(age)
-    return ages_conc
+                idx[ii] = True
+    return ages_conc, idx
 
 
 def discordia_age_76_86(m, b, precision=3):

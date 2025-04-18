@@ -16,7 +16,7 @@ Contents
 .. toctree::
    :name: Usage
    :caption: Usage
-   :maxdepth: 2
+   :maxdepth: 3
 
    U-Pb <UPb>
 

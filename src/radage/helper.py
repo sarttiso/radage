@@ -321,7 +321,6 @@ def kde_base(x, x_eval, bw='adaptive', kernel='gauss', w=None, n_steps=1):
     else:
         h = bw
 
-    print(h)
     # set up kernel
     if kernel == 'epa':
         kern = epa_kern

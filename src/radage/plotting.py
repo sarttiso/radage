@@ -435,6 +435,40 @@ def kde_plot(radages, t=None, bw='adaptive', kernel='gauss', weights='uncertaint
              ax=None, fill=True, rug=True, 
              kde_style=None, kde_base_args=None, patch_dict=None, 
              rug_style=None):
+    """Plot a kernel density estimate of ages
+
+    Parameters
+    ----------
+    radages : list
+        List of radage.UPb objects to include in the kde
+    t : array-like, optional
+        Time points to evaluate the kde at. If None, a default range is used. Defaults to None.
+    bw : str, optional
+        Bandwidth method to use. Defaults to 'adaptive'. Valid options are 'adaptive', 'scott', or a float that directly specifies a fixed bandwidth.
+    kernel : str, optional
+        Kernel to use. Defaults to 'gauss'. Valid options are 'gauss', 'epa'
+    weights : str, optional
+        Weights to use for the kde. Defaults to 'uncertainty'. Valid options are 'uncertainty', 'uniform', or a 1d array of weights with same length as radages.
+    ax : matplotlib.pyplot.axes, optional
+        Axes object to plot into. If None, one is created. Defaults to None.
+    fill : bool, optional
+        Whether to fill the kde area under the curve. Defaults to True.
+    rug : bool, optional
+        Whether to plot a rug plot of the ages below the kde. Defaults to True.
+    kde_style : dict, optional
+        Dictionary of style parameters for the kde line. Defaults to None. If None, a default style is used.
+    kde_base_args : dict, optional
+        Dictionary of base arguments for the kde function. Defaults to None.
+    patch_dict : dict or list, optional
+        Dictionary of style parameters for the fill_between patch. Defaults to None. If None, a default style is used.
+    rug_style : dict, optional
+        Dictionary of style parameters for the rug plot lines. Defaults to None. If None, a default style is used.
+
+    Returns
+    -------
+    ax : matplotlib.pyplot.axes
+        Axes object with plot
+    """
     
     # useful to precompute dates
     if t is None or rug:

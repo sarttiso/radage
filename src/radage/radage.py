@@ -368,6 +368,7 @@ class UPb:
                 ages are used for ages older than 1 Ga
             - 'relative_68_76': relative age difference using only the 206/238 and 206/207
                 ages, computed as 1-(t68/t76)
+            - 'concordia-distance': as defined in Equation 8 of `Vermeesch (2021) <http://doi.org/10.5194/gchron-3-247-2021>`__ (see corrigendum).
 
         Returns
         -------
@@ -375,7 +376,7 @@ class UPb:
             discordance
         """
         if method == 'SK':
-            t = Pb_mix_find_t(self.r207_206, 1 / self.r206_238)
+            t = Pb_mix_t(self.r207_206, 1 / self.r206_238)
             r238_206_rad = 1 / (np.exp(l238 * t) - 1)
             # r207_206_rad = 1/u238u235 * (np.exp(l235*t)-1)/(np.exp(l238*t)-1)
             # r207_206_cm = sk_pb(t)[1]/sk_pb(t)[0]
@@ -390,6 +391,13 @@ class UPb:
                 d = 1 - cur68_age/self.date75(conf=None)
             else:
                 d = 1 - cur68_age / self.date76(conf=None)
+        elif method == 'concordia-distance':
+            tc = self.date_207_238_concordia()[0]
+            R68tc = np.exp(l238 * tc) - 1
+            R75tc = np.exp(l235 * tc) - 1
+            dx = 1/np.sqrt(2) * (np.log(self.r238_206) + np.log(R68tc))
+            dy = np.sqrt(2/3) * (np.log(self.r207_206) - np.log((1/u238u235)*R75tc/R68tc))
+            d = 100*np.sqrt(dx**2 + dy**2)
         elif method == 'relative_76_68':
             d = 1 - self.date68(conf=None) / self.date76(conf=None)
         elif method == 'absolute_76_68':
@@ -677,7 +685,7 @@ def sk_pb(t, t0=4.57e3, t1=3.7e3, mu1=7.19, mu2=9.74, x0=9.307, y0=10.294):
         \\begin{align}
         \\frac{^{206}\\text{Pb}}{^{204}\\text{Pb}}(t) &= \\left(\\frac{^{206}\\text{Pb}}{^{204}\\text{Pb}}\\right)_1 + \\mu_2\\,\\left(e^{\\lambda_{238}t_1}-e^{\\lambda_{238}t}\\right) \\\\
         \\frac{^{207}\\text{Pb}}{^{204}\\text{Pb}}(t) &= \\left(\\frac{^{207}\\text{Pb}}{^{204}\\text{Pb}}\\right)_1 + \\frac{^{235}\\text{U}}{^{238}\\text{U}} \\, \\mu_2\\, \\left(e^{\\lambda_{235}t_1}-e^{\\lambda_{235}t}\\right)
-        \end{align}
+        \\end{align}
 
     where :math:`\\left(\\frac{^{206}\\text{Pb}}{^{204}\\text{Pb}}\\right)_1` and :math:`\\left(\\frac{^{207}\\text{Pb}}{^{204}\\text{Pb}}\\right)_1` are the above equations evaluated at :math:`t=t_1`.
 
@@ -717,8 +725,8 @@ def sk_pb(t, t0=4.57e3, t1=3.7e3, mu1=7.19, mu2=9.74, x0=9.307, y0=10.294):
         plt.figure(figsize=(6, 4))
         plt.plot(r206_204, r207_204, linewidth=4)
         plt.grid()
-        plt.xlabel(r'${}^{206}\mathrm{Pb}/{}^{204}\mathrm{Pb}$')
-        plt.ylabel(r'${}^{207}\mathrm{Pb}/{}^{204}\mathrm{Pb}$')
+        plt.xlabel(r'${}^{206}\\mathrm{Pb}/{}^{204}\\mathrm{Pb}$')
+        plt.ylabel(r'${}^{207}\\mathrm{Pb}/{}^{204}\\mathrm{Pb}$')
         plt.title('Stacey and Kramers (1975) Common Lead Model')
         plt.show()
 

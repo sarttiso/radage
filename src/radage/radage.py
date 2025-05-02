@@ -992,8 +992,8 @@ def yorkfit(x, y, wx, wy, r, thres=1e-3):
         Weights for x-values (typically 1/sigma^2)
     wy : array-like 
         Weights for y-values (typically 1/sigma^2)
-    r : float
-        Correlation coefficient of errors in x and y, must be between -1 and 1
+    r : array-like
+        Correlation coefficients of errors in x and y, must be between -1 and 1
     
     Returns
     -------
@@ -1011,7 +1011,7 @@ def yorkfit(x, y, wx, wy, r, thres=1e-3):
     assert len(x) == len(y), 'x and y must be the same length'
     assert len(wx) == len(x), 'wx must be the same length as x'
     assert len(wy) == len(y), 'wy must be the same length as y'
-    assert np.abs(r) <= 1, 'r must be between -1 and 1'
+    assert np.all(np.abs(r) <= 1), 'r must be between -1 and 1'
     
     n = len(x)
     # get first guess for b

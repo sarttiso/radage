@@ -1,7 +1,7 @@
 import numpy as np
 
 import scipy.stats as stats
-from scipy.optimize import minimize_scalar
+from scipy.optimize import minimize_scalar, root
 
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
@@ -900,36 +900,33 @@ def discordance_filter(ages,
     return ages_conc, idx
 
 
-def discordia_age_76_86(m, b, precision=3):
-    """give 207/206 vs 238/206 age for a line with slope m and intercept b
+def discordia_date_76_86(m, b, precision=3):
+    """Lower intercept date in Tera-Wasserburg space
 
-    :param m: _description_
-    :type m: _type_
-    :param b: _description_
-    :type b: _type_
+    Parameters
+    ----------
+    m : float
+        slope of the line in Tera-Wasserburg space
+    b : float
+        intercept of the line in Tera-Wasserburg space
+
+    Returns
+    -------
+    date : float
+        Date in Ma corresponding to the lower intercept of the line in Tera-Wasserburg space.
     """
-    n = 1 * 10**precision
-    t = np.linspace(2, 4500, n)
-    r238_206_conc, r207_206_conc = concordia_tw(t)
-    # line
-    r238_206_ax = np.linspace(np.min(r238_206_conc), np.max(r238_206_conc), n)
-    r207_206_ax = m * r238_206_ax + b
+    
+    # define root function
+    def root_fun(r238_206, m, b):
+        r207_206_conc = concordia_tw(t238(1/r238_206))[1]
+        r207_206_disc = m*r238_206 + b
+        return r207_206_conc - r207_206_disc
+    
+    # find root, initial 238/206 = 100
+    sol = root(root_fun, 100, args=(m, b), method='hybr')
+    date = t238(1/sol.x)
 
-    # compute intersection
-    x, y = intersection(r238_206_ax, r207_206_ax, r238_206_conc, r207_206_conc)
-
-    # take larger x value
-    idx = np.argmax(x)
-    x = x[idx]
-    y = y[idx]
-
-    # get age for given ratios
-    t_x = t238(1/x) # x is 238/206, so invert for use in t238
-    t_y = t207(y)
-
-    age = np.mean([t_x, t_y])
-
-    return age
+    return date
 
 
 def kde(radages, t,

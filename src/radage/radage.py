@@ -1,7 +1,7 @@
 import numpy as np
 
 import scipy.stats as stats
-from scipy.optimize import minimize_scalar, root
+from scipy.optimize import minimize_scalar, root_scalar
 
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
@@ -15,7 +15,7 @@ l238_std = 0.5 * l238 * 0.107 / 100  # see Schoene 2014 pg. 359
 l235 = 9.8485e-10 * 1e6
 l235_std = 0.5 * l235 * 0.137 / 100
 l232 = 0.049475e-9 * 1e6  # probably needs to be updated, from Stacey and Kramers 1975
-u238u235 = 137.837
+u238u235 = 138.818  # Heiss 2012
 
 
 def concordia(t):
@@ -923,8 +923,8 @@ def discordia_date_76_86(m, b, precision=3):
         return r207_206_conc - r207_206_disc
     
     # find root, initial 238/206 = 100
-    sol = root(root_fun, 100, args=(m, b), method='hybr')
-    date = t238(1/sol.x)
+    sol = root_scalar(root_fun, args=(m, b), x0=100, method='newton')
+    date = t238(1/sol.root)
 
     return date
 

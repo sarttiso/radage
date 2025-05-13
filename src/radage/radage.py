@@ -929,6 +929,51 @@ def discordia_date_76_86(m, b, precision=3):
     return date
 
 
+def wc1_corr(wc1_UPbs):
+    """Correct 238/206 ratios of WC1 analyses to achieve lower intercept age of 254 Ma with fixed common Pb 207/206 ratio of 0.85.
+
+    Parameters
+    ----------
+    wc1_UPbs : list
+        List of UPb.radage objects for WC1 analyses
+
+    Returns
+    -------
+    factor: float
+        Factor by which to multiply 238/206 ratios to achieve lower intercept age of 254 Ma with fixed common Pb 207/206 ratio of 0.85.
+    """
+    # relevant ratios
+    r238_206 = np.array([wc.r238_206 for wc in wc1_UPbs])
+    r238_206_std = np.array([wc.r238_206_std for wc in wc1_UPbs])
+    r207_206 = np.array([wc.r207_206 for wc in wc1_UPbs])
+    r207_206_std = np.array([wc.r207_206_std for wc in wc1_UPbs])
+    rho = np.array([wc.rho86_76 for wc in wc1_UPbs])
+
+    # append common lead (0, 0.85)
+    r238_206 = np.append(r238_206, 0)
+    r238_206_std = np.append(r238_206_std, 0.0001)
+    r207_206 = np.append(r207_206, 0.85)
+    r207_206_std = np.append(r207_206_std, 0.0001)
+    rho = np.append(rho, 0.0)
+
+    # compute slope and intercept of line in Tera-Wasserburg space
+    m, b, _, _, _ = yorkfit(r238_206, r207_206,
+                            1/r238_206_std**2, 1/r207_206_std**2, rho)
+    # confirm intercept is close to 0.85
+    assert np.isclose(b, 0.85, atol=0.01), 'Intercept is not close to 0.85'
+
+    def cost(factor):
+        """Cost function for finding factor to multiply 238/206 ratios by"""
+        # compute lower intercept date
+        date = discordia_date_76_86(m*factor, 0.85)
+        return (date - 254)**2
+    
+    # find factor that minimizes cost function
+    factor = minimize_scalar(cost, bounds=(0, 2), method='bounded').x
+
+    return factor
+
+
 def kde(radages, t,
         kernel='gauss',
         bw='adaptive',

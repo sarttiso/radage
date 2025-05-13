@@ -211,7 +211,7 @@ class UPb:
     rho75_68 : float
         Error correlation between 207/235 and 206/238 ratios. Must be between -1 and 1
     rho86_76 : float
-        Error correlation between 206/238 and 207/206 ratios. Must be between -1 and 1
+        Error correlation between 238/206 and 207/206 ratios. Must be between -1 and 1
     name : str, optional
         Name for age, by default None. Useful for plotting
 
@@ -249,10 +249,10 @@ class UPb:
 
         # check that correlation coefficients are between 0 and 1
         if rho75_68 < -1 or rho75_68 > 1:
-            raise ValueError('rho75_68 must be between 0 and 1')
+            raise ValueError('rho75_68 must be between -1 and 1')
         if rho86_76 < -1 or rho86_76 > 1:
             print(rho86_76)
-            raise ValueError('rho86_76 must be between 0 and 1')
+            raise ValueError('rho86_76 must be between -1 and 1')
         self.rho75_68 = rho75_68  # rho1
         self.rho86_76 = rho86_76  # rho2
 
@@ -343,10 +343,10 @@ class UPb:
         rotdeg = np.rad2deg(np.arccos(self.eigvec_238_207[0, 0]))
 
         # create
-        ell = Ellipse((1 / self.r206_238, self.r207_206),
+        ell = Ellipse((self.r238_206, self.r207_206),
                       width=a1 * 2,
                       height=a2 * 2,
-                      angle=rotdeg,
+                      angle=-rotdeg,
                       **patch_dict[0])
 
         return ell

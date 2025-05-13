@@ -88,8 +88,8 @@ def plot_ages_concordia(ages=[],
             max76_age = np.max(np.array([age.date76(conf=None) + 3*age.date76()[1] for age in ages]))
             t2 = np.max([max68_age, max76_age])
         else:
-            max5_age = np.max(np.array([age.date75()[0] + 3*age.date75()[1] for age in ages]))
-            t2 = np.max([max68_age, max5_age])
+            max75_age = np.max(np.array([age.date75()[0] + 3*age.date75()[1] for age in ages]))
+            t2 = np.max([max68_age, max75_age])
 
     # if not provided, make labels nice round numbers located within the desired range
     if labels is None:
@@ -270,7 +270,8 @@ def axlim_conc(tlims, ax=None, tw=False):
 
     if tw:
         r86, r76 = concordia_tw(tlims)
-        ax.set_xlim(np.flip(r86))
+        r86 = np.flip(r86)
+        ax.set_xlim(r86)
         ax.set_ylim(r76)
         return r86, r76
     else:

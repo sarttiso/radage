@@ -195,11 +195,11 @@ def plot_ages_concordia(ages=[],
         plot_ellipses_68_75(ages_plot, ax=ax, patch_dict=patch_dict)
 
     if tw:
-        ax.set_xlabel('$^{238}\mathrm{U}/^{206}\mathrm{Pb}$')
-        ax.set_ylabel('$^{207}\mathrm{Pb}/^{206}\mathrm{Pb}$')
+        ax.set_xlabel('$^{238}\\mathrm{U}/^{206}\\mathrm{Pb}$')
+        ax.set_ylabel('$^{207}\\mathrm{Pb}/^{206}\\mathrm{Pb}$')
     else:
-        ax.set_xlabel('$^{207}\mathrm{Pb}/^{235}\mathrm{U}$')
-        ax.set_ylabel('$^{206}\mathrm{Pb}/^{238}\mathrm{U}$')
+        ax.set_xlabel('$^{207}\\mathrm{Pb}/^{235}\\mathrm{U}$')
+        ax.set_ylabel('$^{206}\\mathrm{Pb}/^{238}\\mathrm{U}$')
 
     return ax
 

@@ -965,7 +965,7 @@ def wc1_corr(wc1_UPbs):
     def cost(factor):
         """Cost function for finding factor to multiply 238/206 ratios by"""
         # compute lower intercept date
-        date = discordia_date_76_86(m*factor, 0.85)
+        date = discordia_date_76_86(m/factor, 0.85)
         return (date - 254)**2
     
     # find factor that minimizes cost function

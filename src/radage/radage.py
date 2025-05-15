@@ -944,9 +944,9 @@ def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None):
             Slope of the line in Tera-Wasserburg space.
         slope_std : float
             Standard deviation of the slope.
-        Pbc : float
+        intercept : float
             Common lead ratio determined in the calculation. Returns same value as input if Pbc is a float.
-        Pbc_std : float
+        intercept_std : float
             Standard deviation of the common lead ratio.
         mswd : float
             Mean square weighted deviation of the fit.
@@ -1030,10 +1030,11 @@ def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None):
         confint = None
 
     result = {'date': date, 
-              'Pbc': b, 
               'slope': m,
-              'slope_std': m_sig,
-              'Pbc_std': b_sig, 
+              'slope_sig': m_sig,
+              'intercept': b, 
+              'intercept_sig': b_sig, 
+              'x_bar': np.mean(r238_206),
               'mswd': mswd,
               'confint': confint}
 
@@ -1219,8 +1220,8 @@ def yorkfit(x, y, wx, wy, r, thres=1e-3):
     x_adj_bar = np.sum(W * x_adj) / np.sum(W)
     u = x_adj - x_adj_bar
     # compute parameter uncertainties
-    b_sig = 1 / np.sum(W * u**2)
-    a_sig = 1 / np.sum(W) + x_adj_bar**2 * b_sig**2
+    b_sig = np.sqrt(1 / np.sum(W * u**2))
+    a_sig = np.sqrt(1 / np.sum(W) + x_adj_bar**2 * b_sig**2)
     # compute goodness of fit (reduced chi-squared statistic)
     mswd = line_mswd(b, a, x, y, wx, wy, r)
 

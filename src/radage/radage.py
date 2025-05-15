@@ -900,6 +900,25 @@ def discordance_filter(ages,
     return ages_conc, idx
 
 
+def root_fun_76_86(r238_206, m, b):
+    """Root function for finding the lower intercept date in Tera-Wasserburg space
+    Parameters
+    ----------
+    r238_206 : float
+        238/206 ratio
+    m : float
+        Slope of the line in Tera-Wasserburg space
+    b : float
+        Intercept of the line in Tera-Wasserburg space
+    Returns
+    -------
+    r207_206_conc - r207_206_disc : float
+        Difference between the concordia and discordia ratios
+    """
+    r207_206_conc = concordia_tw(t238(1/r238_206))[1]
+    r207_206_disc = m*r238_206 + b
+    return r207_206_conc - r207_206_disc
+
 def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None):
     """Lower intercept date in Tera-Wasserburg space
 
@@ -921,6 +940,10 @@ def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None):
         Dictionary containing the following:
         date : float
             Date in Ma corresponding to the lower intercept of the line in Tera-Wasserburg space.
+        slope : float
+            Slope of the line in Tera-Wasserburg space.
+        slope_std : float
+            Standard deviation of the slope.
         Pbc : float
             Common lead ratio determined in the calculation. Returns same value as input if Pbc is a float.
         Pbc_std : float
@@ -989,12 +1012,7 @@ def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None):
                                     rho_fit)
     # compute MSWD using just input data
     mswd = line_mswd(m, b, r238_206, r207_206, 1/r238_206_std**2, 1/r207_206_std**2, rho)
-    
-    # define root function for solving for lower intercept date
-    def root_fun(r238_206, m, b):
-        r207_206_conc = concordia_tw(t238(1/r238_206))[1]
-        r207_206_disc = m*r238_206 + b
-        return r207_206_conc - r207_206_disc
+
     
     # find root, initial 238/206 = 500
     if conf is not None:
@@ -1002,17 +1020,19 @@ def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None):
         b_mc = np.random.normal(b, b_sig, n_mc)
         dates = np.zeros(n_mc)
         for ii in range(n_mc):
-            sol = root_scalar(root_fun, args=(m_mc[ii], b_mc[ii]), x0=500, method='newton')
+            sol = root_scalar(root_fun_76_86, args=(m_mc[ii], b_mc[ii]), x0=500, method='newton')
             dates[ii] = t238(1/sol.root)
         confint = np.quantile(dates, [(1-conf)/2, 1-(1-conf)/2])
         date = np.mean(dates)
     else:
-        sol = root_scalar(root_fun, args=(m, b), x0=500, method='newton')
+        sol = root_scalar(root_fun_76_86, args=(m, b), x0=500, method='newton')
         date = t238(1/sol.root)
         confint = None
 
     result = {'date': date, 
               'Pbc': b, 
+              'slope': m,
+              'slope_std': m_sig,
               'Pbc_std': b_sig, 
               'mswd': mswd,
               'confint': confint}
@@ -1033,30 +1053,17 @@ def wc1_corr(wc1_UPbs):
     factor: float
         Factor by which to multiply 238/206 ratios to achieve lower intercept age of 254 Ma with fixed common Pb 207/206 ratio of 0.85.
     """
-    # relevant ratios
-    r238_206 = np.array([wc.r238_206 for wc in wc1_UPbs])
-    r238_206_std = np.array([wc.r238_206_std for wc in wc1_UPbs])
-    r207_206 = np.array([wc.r207_206 for wc in wc1_UPbs])
-    r207_206_std = np.array([wc.r207_206_std for wc in wc1_UPbs])
-    rho = np.array([wc.rho86_76 for wc in wc1_UPbs])
-
-    # append common lead (0, 0.85)
-    r238_206 = np.append(r238_206, 0)
-    r238_206_std = np.append(r238_206_std, 0.0001)
-    r207_206 = np.append(r207_206, 0.85)
-    r207_206_std = np.append(r207_206_std, 0.0001)
-    rho = np.append(rho, 0.0)
-
-    # compute slope and intercept of line in Tera-Wasserburg space
-    m, b, _, _, _ = yorkfit(r238_206, r207_206,
-                            1/r238_206_std**2, 1/r207_206_std**2, rho)
-    # confirm intercept is close to 0.85
-    assert np.isclose(b, 0.85, atol=0.01), 'Intercept is not close to 0.85'
+    # compute slope with fixed common lead ratio of 0.85
+    b = 0.85
+    result = discordia_date_76_86(wc1_UPbs, Pbc=b)
+    m = result['slope']
 
     def cost(factor):
         """Cost function for finding factor to multiply 238/206 ratios by"""
         # compute lower intercept date
-        date = discordia_date_76_86(m/factor, 0.85)
+        sol = root_scalar(root_fun_76_86, args=(m/factor, b), x0=500, method='newton')
+        date = t238(1/sol.root)
+
         return (date - 254)**2
     
     # find factor that minimizes cost function

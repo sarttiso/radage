@@ -938,54 +938,57 @@ def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None):
     r207_206_std = np.array([x.r207_206_std for x in UPbs])
     rho = np.array([x.rho86_76 for x in UPbs])
 
+    # helper function to append fixed common lead ratios to the data
+    def Pbc_append(Pbc):
+        """Append common lead ratio to the data"""
+        r238_206_app = np.append(r238_206, 0)
+        r238_206_std_app = np.append(r238_206_std, 0.00001)
+        r207_206_app = np.append(r207_206, Pbc)
+        r207_206_std_app = np.append(r207_206_std, 0.00001)
+        rho_app = np.append(rho, 0.0)
+        return r238_206_app, r238_206_std_app, r207_206_app, r207_206_std_app, rho_app
+
     # if anchoring to a common lead ratio, append it to the data
     if (Pbc is not None) and (Pbc != 'SK'):
         # check value is a float
         assert isinstance(Pbc, float), 'Pbc must be a float or "SK"'
         # make sure value is greater than zero and less than 2
         assert Pbc > 0 and Pbc < 2, 'Pbc must be between 0 and 2'
-        r238_206 = np.append(r238_206, 0)
-        r238_206_std = np.append(r238_206_std, 0.00001)
-        r207_206 = np.append(r207_206, Pbc)
-        r207_206_std = np.append(r207_206_std, 0.00001)
-        rho = np.append(rho, 0.0)
-    
+        # append common lead ratio to the data
+        r238_206_fit, r238_206_std_fit, r207_206_fit, r207_206_std_fit, rho_fit = Pbc_append(Pbc)
     # if using SK, solve for slope and intercept such that the common lead ratio is equal to the Stacey and Kramers (1975) common lead ratio at the lower intercept date
-    if Pbc == 'SK':
+    elif Pbc == 'SK':
         def cost(t):
             """Cost function for finding optimal t that fits data and common lead model"""
             r206_204, r207_204 = sk_pb(t)
             Pbc = r207_204 / r206_204
-            x = np.append(r238_206, 0)
-            x_sig = np.append(r238_206_std, 0.00001)
-            y = np.append(r207_206, Pbc)
-            y_sig = np.append(r207_206_std, 0.00001)
-            r = np.append(rho, 0.0)
-            _, _, _, _, mswd = yorkfit(x, 
+            x, x_sig, y, y_sig, r = Pbc_append(Pbc)
+            wx = 1/x_sig**2
+            wy = 1/y_sig**2
+            m, b, _, _, _ = yorkfit(x, 
                                        y,
-                                       1/x_sig**2,
-                                       1/y_sig**2,
+                                       wx,
+                                       wy,
                                        r)
+            # don't include fixed point in the fit
+            mswd = line_mswd(m, b, x[0:-1], y[0:-1], wx[0:-1], wy[0:-1], r[0:-1])
             return mswd
         # find optimal t that fits data and common lead model
         t_opt = minimize_scalar(cost, bounds=(0, 5000), method='bounded').x
         Pbc = sk_pb(t_opt)[1] / sk_pb(t_opt)[0]
         # append Pbc at t_opt to the data
-        r238_206 = np.append(r238_206, 0)
-        r238_206_std = np.append(r238_206_std, 0.00001)
-        r207_206 = np.append(r207_206, Pbc)
-        r207_206_std = np.append(r207_206_std, 0.00001)
-        rho = np.append(rho, 0.0)
+        r238_206_fit, r238_206_std_fit, r207_206_fit, r207_206_std_fit, rho_fit = Pbc_append(Pbc)
+    else:
+        r238_206_fit, r238_206_std_fit, r207_206_fit, r207_206_std_fit, rho_fit = r238_206, r238_206_std, r207_206, r207_206_std, rho
 
     # compute slope and intercept of line in Tera-Wasserburg space
-    m, b, m_sig, b_sig, mswd = yorkfit(r238_206, 
-                                        r207_206,
-                                        1/r238_206_std**2, 
-                                        1/r207_206_std**2, 
-                                        rho)
-    
-    # output common lead ratio
-    Pbc_out = b
+    m, b, m_sig, b_sig, _ = yorkfit(r238_206_fit, 
+                                    r207_206_fit,
+                                    1/r238_206_std_fit**2,
+                                    1/r207_206_std_fit**2, 
+                                    rho_fit)
+    # compute MSWD using just input data
+    mswd = line_mswd(m, b, r238_206, r207_206, 1/r238_206_std**2, 1/r207_206_std**2, rho)
     
     # define root function for solving for lower intercept date
     def root_fun(r238_206, m, b):
@@ -1009,7 +1012,7 @@ def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None):
         confint = None
 
     result = {'date': date, 
-              'Pbc': Pbc_out, 
+              'Pbc': b, 
               'Pbc_std': b_sig, 
               'mswd': mswd,
               'confint': confint}
@@ -1108,6 +1111,40 @@ def kde(radages, t,
     return kde_est
 
 
+def line_mswd(m, b, x, y, wx, wy, r):
+    """Reduced chi-squared statistic for a linear fit to data with errors in both x and y.
+    This
+
+    Parameters
+    ----------
+    m : float
+        Slope of line
+    b : float
+        Intercept of line
+    x : array-like
+        x-values
+    y : array-like
+        y-values
+    wx : array-like
+        Weights for x-values (typically 1/sigma^2)
+    wy : array-like
+        Weights for y-values (typically 1/sigma^2)
+    r : array-like
+        Correlation coefficients of errors in x and y, must be between -1 and 1
+
+    Returns
+    -------
+    mswd : float
+        Reduced chi-squared statistic for residuals with respect to the line
+    """
+    # for variable meanings, see yorkfit()
+    n = len(x)
+    assert len(x) == len(y), 'x and y must be the same length'
+    alpha = np.sqrt(wx * wy)
+    W = (wx * wy) / (wx + m**2 * wy - 2 * m * r * alpha)
+    mswd = np.sum(W * (y - m * x - b)**2) / (n - 2)
+    return mswd
+
 def yorkfit(x, y, wx, wy, r, thres=1e-3):
     """
     Implementation of York 1969 10.1016/S0012-821X(68)80059-7
@@ -1178,7 +1215,7 @@ def yorkfit(x, y, wx, wy, r, thres=1e-3):
     b_sig = 1 / np.sum(W * u**2)
     a_sig = 1 / np.sum(W) + x_adj_bar**2 * b_sig**2
     # compute goodness of fit (reduced chi-squared statistic)
-    mswd = np.sum(W * (y - b * x - a)**2) / (n - 2)
+    mswd = line_mswd(b, a, x, y, wx, wy, r)
 
     return b, a, b_sig, a_sig, mswd
 

@@ -900,33 +900,121 @@ def discordance_filter(ages,
     return ages_conc, idx
 
 
-def discordia_date_76_86(m, b, precision=3):
+def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None):
     """Lower intercept date in Tera-Wasserburg space
 
     Parameters
     ----------
-    m : float
-        slope of the line in Tera-Wasserburg space
-    b : float
-        intercept of the line in Tera-Wasserburg space
+    UPbs : list
+        List of UPb.radage objects
+    conf : float, optional
+        Confidence level for interval, by default None. If None, only the lower intercept date is returned. Otherwise, a range corresponding to the confidence level is returned.
+        Valid values are between 0 and 1.
+    n_mc : int, optional
+        Number of Monte Carlo iterations to use for estimating uncertainty, by default 1000. This is only used if conf is not None.
+    Pbc : float, optional
+        Common lead ratio to use, by default None. If None, the common lead ratio is estimated from the data. If a float, the common lead ratio is fixed to this value. If 'SK', the common lead ratio is determined such that it is equal to the Stacey and Kramers (1975) common lead ratio at the lower intercept date.
 
     Returns
     -------
-    date : float
-        Date in Ma corresponding to the lower intercept of the line in Tera-Wasserburg space.
+    result : dict
+        Dictionary containing the following:
+        date : float
+            Date in Ma corresponding to the lower intercept of the line in Tera-Wasserburg space.
+        Pbc : float
+            Common lead ratio determined in the calculation. Returns same value as input if Pbc is a float.
+        Pbc_std : float
+            Standard deviation of the common lead ratio.
+        mswd : float
+            Mean square weighted deviation of the fit.
+        confint : list
+            List of lower and upper bounds of the confidence interval for the lower intercept date. This is only computed if conf is not None.
     """
     
-    # define root function
+    # gather relevant ratios
+    r238_206 = np.array([x.r238_206 for x in UPbs])
+    r238_206_std = np.array([x.r238_206_std for x in UPbs])
+    r207_206 = np.array([x.r207_206 for x in UPbs])
+    r207_206_std = np.array([x.r207_206_std for x in UPbs])
+    rho = np.array([x.rho86_76 for x in UPbs])
+
+    # if anchoring to a common lead ratio, append it to the data
+    if (Pbc is not None) and (Pbc != 'SK'):
+        # check value is a float
+        assert isinstance(Pbc, float), 'Pbc must be a float or "SK"'
+        # make sure value is greater than zero and less than 2
+        assert Pbc > 0 and Pbc < 2, 'Pbc must be between 0 and 2'
+        r238_206 = np.append(r238_206, 0)
+        r238_206_std = np.append(r238_206_std, 0.00001)
+        r207_206 = np.append(r207_206, Pbc)
+        r207_206_std = np.append(r207_206_std, 0.00001)
+        rho = np.append(rho, 0.0)
+    
+    # if using SK, solve for slope and intercept such that the common lead ratio is equal to the Stacey and Kramers (1975) common lead ratio at the lower intercept date
+    if Pbc == 'SK':
+        def cost(t):
+            """Cost function for finding optimal t that fits data and common lead model"""
+            r206_204, r207_204 = sk_pb(t)
+            Pbc = r207_204 / r206_204
+            x = np.append(r238_206, 0)
+            x_sig = np.append(r238_206_std, 0.00001)
+            y = np.append(r207_206, Pbc)
+            y_sig = np.append(r207_206_std, 0.00001)
+            r = np.append(rho, 0.0)
+            _, _, _, _, mswd = yorkfit(x, 
+                                       y,
+                                       1/x_sig**2,
+                                       1/y_sig**2,
+                                       r)
+            return mswd
+        # find optimal t that fits data and common lead model
+        t_opt = minimize_scalar(cost, bounds=(0, 5000), method='bounded').x
+        Pbc = sk_pb(t_opt)[1] / sk_pb(t_opt)[0]
+        # append Pbc at t_opt to the data
+        r238_206 = np.append(r238_206, 0)
+        r238_206_std = np.append(r238_206_std, 0.00001)
+        r207_206 = np.append(r207_206, Pbc)
+        r207_206_std = np.append(r207_206_std, 0.00001)
+        rho = np.append(rho, 0.0)
+
+    # compute slope and intercept of line in Tera-Wasserburg space
+    m, b, m_sig, b_sig, mswd = yorkfit(r238_206, 
+                                        r207_206,
+                                        1/r238_206_std**2, 
+                                        1/r207_206_std**2, 
+                                        rho)
+    
+    # output common lead ratio
+    Pbc_out = b
+    
+    # define root function for solving for lower intercept date
     def root_fun(r238_206, m, b):
         r207_206_conc = concordia_tw(t238(1/r238_206))[1]
         r207_206_disc = m*r238_206 + b
         return r207_206_conc - r207_206_disc
     
-    # find root, initial 238/206 = 100
-    sol = root_scalar(root_fun, args=(m, b), x0=100, method='newton')
-    date = t238(1/sol.root)
+    # find root, initial 238/206 = 500
+    if conf is not None:
+        m_mc = np.random.normal(m, m_sig, n_mc)
+        b_mc = np.random.normal(b, b_sig, n_mc)
+        dates = np.zeros(n_mc)
+        for ii in range(n_mc):
+            sol = root_scalar(root_fun, args=(m_mc[ii], b_mc[ii]), x0=500, method='newton')
+            dates[ii] = t238(1/sol.root)
+        confint = np.quantile(dates, [(1-conf)/2, 1-(1-conf)/2])
+        date = np.mean(dates)
+    else:
+        sol = root_scalar(root_fun, args=(m, b), x0=500, method='newton')
+        date = t238(1/sol.root)
+        confint = None
 
-    return date
+    result = {'date': date, 
+              'Pbc': Pbc_out, 
+              'Pbc_std': b_sig, 
+              'mswd': mswd,
+              'confint': confint}
+
+    return result
 
 
 def wc1_corr(wc1_UPbs):

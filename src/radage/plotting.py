@@ -606,3 +606,62 @@ def plot_ellipses_76_86(ages, conf=0.95, patch_dict=None, ax=None):
         cur_ell = age.ellipse_76_86(conf=conf, patch_dict=patch_dict[ii])
         ax.add_patch(cur_ell)
     return ax
+
+
+def discordia_array(fit, ax=None, conf=0.95, n_mc=1000):
+    """Plot line and confidence interval for fitted discordia array
+
+    Parameters
+    ----------
+    fit : dict
+        Dictionary with following keys (as output by :func:`radage.discordia_date_76_86`):
+        slope : float
+            Slope of discordia line
+        slope_sig : float
+            Uncertainty on slope of discordia line
+        intercept : float
+            Intercept of discordia line
+        intercept_sig : float
+            Uncertainty on intercept of discordia line
+        slope_intercept_cov : float
+            Covariance of slope and intercept
+        x_bar : float
+            centroid in x-direction
+    ax : matplotlib.pyplot.axes, optional
+        Axes object to plot into. If None, one is generated. By default None.
+    conf : float or None, optional
+        Confidence level for envelope, by default 0.95. If None, no envelope is plotted.
+    n_mc : int, optional
+        Number of monte carlo simulations to run for confidence interval, by default 1000
+    """
+    if ax is None:
+        ax = plt.gca()
+
+    m = fit['slope']
+    b = fit['intercept']
+    m_sig = fit['slope_sig']
+    b_sig = fit['intercept_sig']
+    mb_cov = fit['slope_intercept_cov']
+
+    # get limits over which to plot discordia line
+    xlim = ax.get_xlim()
+
+    # get discordia line
+    x = np.linspace(xlim[0], xlim[1], 100)
+    y = m*x + b
+
+    # plot discordia line
+    ax.plot(x, y, color='k', linestyle='-', linewidth=1)
+
+    if conf is not None:
+        # monte carlo simulation of confidence interval
+        mod_mc = np.matmul(np.linalg.cholesky(np.array([[m_sig**2, mb_cov], [mb_cov, b_sig**2]])),
+                        np.random.randn(2, n_mc)) + np.array([[m], [b]])
+        y_mc = mod_mc[0]*x.reshape(-1, 1) + mod_mc[1]
+        lower = np.percentile(y_mc, 100*(1-conf)/2, axis=1)
+        upper = np.percentile(y_mc, 100*(1+conf)/2, axis=1)
+
+        # plot confidence interval
+        ax.fill_between(x, lower, upper, color='gray', alpha=0.5)
+
+    return ax

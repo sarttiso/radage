@@ -988,7 +988,7 @@ def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None):
             x, x_sig, y, y_sig, r = Pbc_append(Pbc)
             wx = 1/x_sig**2
             wy = 1/y_sig**2
-            m, b, _, _, _ = yorkfit(x, 
+            m, b, _, _, _, _ = yorkfit(x, 
                                        y,
                                        wx,
                                        wy,
@@ -1005,7 +1005,7 @@ def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None):
         r238_206_fit, r238_206_std_fit, r207_206_fit, r207_206_std_fit, rho_fit = r238_206, r238_206_std, r207_206, r207_206_std, rho
 
     # compute slope and intercept of line in Tera-Wasserburg space
-    m, b, m_sig, b_sig, _ = yorkfit(r238_206_fit, 
+    m, b, m_sig, b_sig, _, _ = yorkfit(r238_206_fit, 
                                     r207_206_fit,
                                     1/r238_206_std_fit**2,
                                     1/r207_206_std_fit**2, 
@@ -1182,6 +1182,8 @@ def yorkfit(x, y, wx, wy, r, thres=1e-3):
         Standard deviation of intercept for line
     mswd : float
         Reduced chi-squared statistic for residuals with respect to the maximum likelihood linear model
+    ab_cov : float
+        Covariance of slope and intercept for line
     """
     assert len(x) == len(y), 'x and y must be the same length'
     assert len(wx) == len(x), 'wx must be the same length as x'
@@ -1222,10 +1224,11 @@ def yorkfit(x, y, wx, wy, r, thres=1e-3):
     # compute parameter uncertainties
     b_sig = np.sqrt(1 / np.sum(W * u**2))
     a_sig = np.sqrt(1 / np.sum(W) + x_adj_bar**2 * b_sig**2)
+    ab_cov = -x_adj_bar * b_sig**2
     # compute goodness of fit (reduced chi-squared statistic)
     mswd = line_mswd(b, a, x, y, wx, wy, r)
 
-    return b, a, b_sig, a_sig, mswd
+    return b, a, b_sig, a_sig, mswd, ab_cov
 
 
 def weighted_mean(ages, ages_s, sig_method='naive', standard_error=True):

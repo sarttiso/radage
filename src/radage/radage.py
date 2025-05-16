@@ -948,6 +948,8 @@ def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None):
             Common lead ratio determined in the calculation. Returns same value as input if Pbc is a float.
         intercept_std : float
             Standard deviation of the common lead ratio.
+        slope_intercept_cov : float
+            Covariance between the slope and intercept.
         mswd : float
             Mean square weighted deviation of the fit.
         confint : list
@@ -1005,7 +1007,7 @@ def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None):
         r238_206_fit, r238_206_std_fit, r207_206_fit, r207_206_std_fit, rho_fit = r238_206, r238_206_std, r207_206, r207_206_std, rho
 
     # compute slope and intercept of line in Tera-Wasserburg space
-    m, b, m_sig, b_sig, _, _ = yorkfit(r238_206_fit, 
+    m, b, m_sig, b_sig, _, mb_cov = yorkfit(r238_206_fit, 
                                     r207_206_fit,
                                     1/r238_206_std_fit**2,
                                     1/r207_206_std_fit**2, 
@@ -1034,6 +1036,7 @@ def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None):
               'slope_sig': m_sig,
               'intercept': b, 
               'intercept_sig': b_sig, 
+              'slope_intercept_cov': mb_cov,
               'x_bar': np.mean(r238_206),
               'mswd': mswd,
               'confint': confint}

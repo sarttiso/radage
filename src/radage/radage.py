@@ -824,27 +824,6 @@ def Pb_mix_t(r207_206, r238_206, Pbc='SK'):
     return t
 
 
-def Pb_mix_plot(t, ax=None, **kwargs):
-    """
-    for given t, plot a linear common-radiogenic lead mixing model in TW space
-
-    To Do: update the input validation for ax
-    """
-    r238_206_rad = 1 / (np.exp(l238 * t) - 1)
-    r207_206_rad = 1 / u238u235 * (np.exp(l235 * t) - 1) / (np.exp(l238 * t) -
-                                                            1)
-
-    r206_204, r207_204 = sk_pb(t)
-    r207_206_0 = r207_204 / r206_204
-    r238_206_0 = 0
-
-    if ax == None:
-        ax = plt.axes()
-
-    ax.plot(np.array([r238_206_0, r238_206_rad]),
-            np.array([r207_206_0, r207_206_rad]))
-
-
 def discordance_filter(ages,
                        method='relative',
                        threshold=0.03,
@@ -1342,11 +1321,11 @@ def get_ages(df):
 ###
 
 # Vervoort et al. 2018 values
-# Lu_DM = 0.03976 
-# Hf_DM = 0.283238
+Lu_DM = 0.03976 
+Hf_DM = 0.283238
 
-Hf_DM = 0.283225
-Lu_DM = 0.0383
+# Hf_DM = 0.283225
+# Lu_DM = 0.0383
 
 # Vervoort & Blichert-Toft 1999
 Hf_CHUR = 0.282772

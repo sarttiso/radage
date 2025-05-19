@@ -10,6 +10,9 @@ To install **radage**, run:
 
    pip install radage
 
+
+For now, the best way to learn to use **radage** is to look through the module reference. Detailed guides and examples are shortly forthcoming.
+
 Contents
 ========
 
@@ -17,8 +20,6 @@ Contents
    :name: Usage
    :caption: Usage
    :maxdepth: 3
-
-   U-Pb <UPb>
 
 .. toctree::
    :name: Package Info

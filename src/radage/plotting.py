@@ -148,24 +148,25 @@ def plot_ages_concordia(ages=[],
 
     # annotation of labeled times
     labels_text_style_def = {'color': 'k', 'fontsize': 10}
+    anns = []
     if labels_text_style is None:
         labels_text_style = labels_text_style_def
     else:
         labels_text_style = labels_text_style_def | labels_text_style
     for ii in range(n_t_labels):
         if tw:
-            offset = (0, -15)
+            offset = (0, -10)
             ha = 'right'
         else:
             offset = (0, 5)
             ha = 'right'
 
-        ax.annotate(int(t_lab[ii]),
+        anns.append(ax.annotate(int(t_lab[ii]),
                     xy=(x_lab[ii], y_lab[ii]),
                     xytext=offset,
                     textcoords='offset points',
                     ha=ha,
-                    **labels_text_style)
+                    **labels_text_style))
     
     # enforce limits
     xlim, ylim = axlim_conc([t1, t2], ax=ax, tw=tw)
@@ -200,6 +201,17 @@ def plot_ages_concordia(ages=[],
     else:
         ax.set_xlabel('$^{207}\\mathrm{Pb}/^{235}\\mathrm{U}$')
         ax.set_ylabel('$^{206}\\mathrm{Pb}/^{238}\\mathrm{U}$')
+
+    # update axes limits to make sure that age labels on concordia are visible
+    fig = ax.figure
+    fig.canvas.draw()
+    # get the bounding boxes of the annotations in data coordinates
+    bboxes = np.array([ax.transData.inverted().transform(a.get_tightbbox()) for a in anns])
+    min_x, min_y = np.min(bboxes, axis=0)[0]
+    max_x, max_y = np.max(bboxes, axis=0)[1]
+    # set the new limits
+    ax.set_xlim([np.min([xlim[0], min_x]), np.max([xlim[1], max_x])])
+    ax.set_ylim([np.min([ylim[0], min_y]), np.max([ylim[1], max_y])])
 
     return ax
 
@@ -615,17 +627,18 @@ def discordia_array(fit, ax=None, conf=0.95, n_mc=1000):
     ----------
     fit : dict
         Dictionary with following keys (as output by :func:`radage.discordia_date_76_86`):
-        slope : float
+
+        - slope : float
             Slope of discordia line
-        slope_sig : float
+        - slope_sig : float
             Uncertainty on slope of discordia line
-        intercept : float
+        - intercept : float
             Intercept of discordia line
-        intercept_sig : float
+        - intercept_sig : float
             Uncertainty on intercept of discordia line
-        slope_intercept_cov : float
+        - slope_intercept_cov : float
             Covariance of slope and intercept
-        x_bar : float
+        - x_bar : float
             centroid in x-direction
     ax : matplotlib.pyplot.axes, optional
         Axes object to plot into. If None, one is generated. By default None.

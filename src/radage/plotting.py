@@ -706,12 +706,11 @@ def sk_discordia(t, ax=None, **kwargs):
         ax = plt.gca()
 
     xy1 = (0, sk_pb(t)[1]/sk_pb(t)[0])
-    r238_206_ctw, r207_206_ctw = concordia_tw(t)
-    m = (r207_206_ctw - xy1[1]) / r238_206_ctw
+    xy2 = concordia_tw(t)
 
     line_style_def = {'color': 'k', 'linestyle': '-', 'linewidth': 1}
     line_style = line_style_def | kwargs
 
-    h = ax.axline(xy1, slope=m, **line_style)
+    h = ax.axline(xy1, xy2, **line_style)
 
     return h, ax

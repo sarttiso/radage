@@ -968,19 +968,18 @@ def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None, Pbc_std=1e-2):
             """Cost function for finding optimal t that fits data and common lead model"""
             r206_204, r207_204 = sk_pb(t)
             Pbc = r207_204 / r206_204
-            x, x_sig, y, y_sig, r = Pbc_append(Pbc)
-            wx = 1/x_sig**2
-            wy = 1/y_sig**2
-            m, b, _, _, _, _ = yorkfit(x, 
-                                       y,
-                                       wx,
-                                       wy,
-                                       r)
+            r238_206_ctw, r207_206_ctw = concordia_tw(t)
+            m = (r207_206_ctw - Pbc) / r238_206_ctw
+
             # don't include fixed point in the fit
-            mswd = line_mswd(m, b, x[0:-1], y[0:-1], wx[0:-1], wy[0:-1], r[0:-1])
+            mswd = line_mswd(m, Pbc, r238_206, r207_206,
+                             1/r238_206_std**2, 1/r207_206_std**2, rho)
+
+            # but t needs to match lower intercept date
             return mswd
         # find optimal t that fits data and common lead model
         t_opt = minimize_scalar(cost, bounds=(0, 5000), method='bounded').x
+        print('test')
         Pbc = sk_pb(t_opt)[1] / sk_pb(t_opt)[0]
         # append Pbc at t_opt to the data
         r238_206_fit, r238_206_std_fit, r207_206_fit, r207_206_std_fit, rho_fit = Pbc_append(Pbc)

@@ -681,3 +681,37 @@ def discordia_array(fit, ax=None, conf=0.95, n_mc=1000):
         ax.fill_between(x, lower, upper, color='gray', alpha=0.5)
 
     return ax
+
+
+def sk_discordia(t, ax=None, **kwargs):
+    """ Plot discordia array for perfect Stacey-Kramers lead model age.
+    
+    Parameters
+    ----------
+    t : float
+        Age in Ma to plot discordia for
+    ax : matplotlib.pyplot.axes, optional
+        Axes object to plot into. If None, one is generated. By default None.
+    kwargs : dict
+        Additional keyword arguments passed to ax.axline() for line styling.
+
+    Returns
+    -------
+    h : matplotlib.lines.AxLine
+        Line object with plot
+    ax : matplotlib.pyplot.axes
+        Axes object with plot if ax is None, otherwise the provided ax.
+    """
+    if ax is None:
+        ax = plt.gca()
+
+    xy1 = (0, sk_pb(t)[1]/sk_pb(t)[0])
+    r238_206_ctw, r207_206_ctw = concordia_tw(t)
+    m = (r207_206_ctw - xy1[1]) / r238_206_ctw
+
+    line_style_def = {'color': 'k', 'linestyle': '-', 'linewidth': 1}
+    line_style = line_style_def | kwargs
+
+    h = ax.axline(xy1, slope=m, **line_style)
+
+    return h, ax

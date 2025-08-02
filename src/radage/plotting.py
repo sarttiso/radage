@@ -78,6 +78,8 @@ def plot_ages_concordia(ages=[],
         if tw:
             min76_age = np.min(np.array([age.date76(conf=None) - 3*age.date76()[1] for age in ages]))
             t1 = np.min([min68_age, min76_age])
+            if min76_age < 0:
+                t1 = min68_age
         else:
             min75_age = np.min(np.array([age.date75()[0] - 3*age.date75()[1] for age in ages]))
             t1 = np.min([min68_age, min75_age])
@@ -109,7 +111,8 @@ def plot_ages_concordia(ages=[],
 
     # make concordia line
     dt = t2 - t1
-    t_conc = np.linspace(t1 - dt/2, t2 + dt/2, 500) # add buffer to make sure concordia is plotted fully
+    t1 = np.max([t1, 0.1]) # make sure t1 is not zero
+    t_conc = np.linspace(np.max([t1 - dt/2, 0.1]), t2 + dt/2, 500) # add buffer to make sure concordia is plotted fully
     if tw:
         x_conc, y_conc = concordia_tw(t_conc)
     else:
@@ -207,8 +210,8 @@ def plot_ages_concordia(ages=[],
     fig.canvas.draw()
     # get the bounding boxes of the annotations in data coordinates
     bboxes = np.array([ax.transData.inverted().transform(a.get_tightbbox()) for a in anns])
-    min_x, min_y = np.min(bboxes, axis=0)[0]
-    max_x, max_y = np.max(bboxes, axis=0)[1]
+    min_x, min_y = np.nanmin(bboxes, axis=0)[0]
+    max_x, max_y = np.nanmax(bboxes, axis=0)[1]
     # set the new limits
     ax.set_xlim([np.min([xlim[0], min_x]), np.max([xlim[1], max_x])])
     ax.set_ylim([np.min([ylim[0], min_y]), np.max([ylim[1], max_y])])

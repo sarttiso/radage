@@ -8,15 +8,15 @@ def patch_dict_validator(patch_dict, n):
     """
     Validate patch_dict and returns list for styling of plotted patches.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     patch_dict : dict or list
         If a dictionary, same style will be used for all patches. If a list of dictionaries, must have length equal to n, and each dictionary will be used for each patch.
     n : int
         Number of patches to style
 
-    Returns:
-    --------
+    Returns
+    -------
     patch_dict : list 
         validated list
     """

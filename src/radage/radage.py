@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 
 import warnings
+warnings.filterwarnings('ignore', message='invalid value encountered in multiply')
 from .helper import *
 
 # in My
@@ -898,7 +899,7 @@ def root_fun_76_86(r238_206, m, b):
     r207_206_disc = m*r238_206 + b
     return r207_206_conc - r207_206_disc
 
-def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None):
+def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None, Pbc_std=1e-2):
     """Lower intercept date in Tera-Wasserburg space
 
     Parameters
@@ -912,26 +913,29 @@ def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None):
         Number of Monte Carlo iterations to use for estimating uncertainty, by default 1000. This is only used if conf is not None.
     Pbc : float, optional
         Common lead ratio to use, by default None. If None, the common lead ratio is estimated from the data. If a float, the common lead ratio is fixed to this value. If 'SK', the common lead ratio is determined such that it is equal to the Stacey and Kramers (1975) common lead ratio at the lower intercept date.
+    Pbc_std : float, optional
+        Standard deviation of the common lead ratio, by default 1e-1. This is only used if conf is not None.
 
     Returns
     -------
     result : dict
         Dictionary containing the following:
-        date : float
+
+        - date : float
             Date in Ma corresponding to the lower intercept of the line in Tera-Wasserburg space.
-        slope : float
+        - slope : float
             Slope of the line in Tera-Wasserburg space.
-        slope_std : float
+        - slope_std : float
             Standard deviation of the slope.
-        intercept : float
+        - intercept : float
             Common lead ratio determined in the calculation. Returns same value as input if Pbc is a float.
-        intercept_std : float
+        - intercept_std : float
             Standard deviation of the common lead ratio.
-        slope_intercept_cov : float
+        - slope_intercept_cov : float
             Covariance between the slope and intercept.
-        mswd : float
+        - mswd : float
             Mean square weighted deviation of the fit.
-        confint : list
+        - confint : list
             List of lower and upper bounds of the confidence interval for the lower intercept date. This is only computed if conf is not None.
     """
     
@@ -946,16 +950,14 @@ def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None):
     def Pbc_append(Pbc):
         """Append common lead ratio to the data"""
         r238_206_app = np.append(r238_206, 0)
-        r238_206_std_app = np.append(r238_206_std, 0.00001)
+        r238_206_std_app = np.append(r238_206_std, 1e-10)
         r207_206_app = np.append(r207_206, Pbc)
-        r207_206_std_app = np.append(r207_206_std, 0.00001)
+        r207_206_std_app = np.append(r207_206_std, Pbc_std)
         rho_app = np.append(rho, 0.0)
         return r238_206_app, r238_206_std_app, r207_206_app, r207_206_std_app, rho_app
 
     # if anchoring to a common lead ratio, append it to the data
     if (Pbc is not None) and (Pbc != 'SK'):
-        # check value is a float
-        assert isinstance(Pbc, float), 'Pbc must be a float or "SK"'
         # make sure value is greater than zero and less than 2
         assert Pbc > 0 and Pbc < 2, 'Pbc must be between 0 and 2'
         # append common lead ratio to the data
@@ -994,19 +996,22 @@ def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None):
     # compute MSWD using just input data
     mswd = line_mswd(m, b, r238_206, r207_206, 1/r238_206_std**2, 1/r207_206_std**2, rho)
 
-    
-    # find root, initial 238/206 = 500
+
+    # find root
+    x0 = 1000  # initial 238/206 for root finding
     if conf is not None:
-        m_mc = np.random.normal(m, m_sig, n_mc)
-        b_mc = np.random.normal(b, b_sig, n_mc)
+        mod_mc = np.matmul(np.linalg.cholesky(np.array([[m_sig**2, mb_cov], [mb_cov, b_sig**2]])),
+                           np.random.randn(2, n_mc)) + np.array([[m], [b]])
+        m_mc = mod_mc[0]
+        b_mc = mod_mc[1]
         dates = np.zeros(n_mc)
         for ii in range(n_mc):
-            sol = root_scalar(root_fun_76_86, args=(m_mc[ii], b_mc[ii]), x0=500, method='newton')
+            sol = root_scalar(root_fun_76_86, args=(m_mc[ii], b_mc[ii]), x0=x0, method='newton')
             dates[ii] = t238(1/sol.root)
         confint = np.quantile(dates, [(1-conf)/2, 1-(1-conf)/2])
         date = np.mean(dates)
     else:
-        sol = root_scalar(root_fun_76_86, args=(m, b), x0=500, method='newton')
+        sol = root_scalar(root_fun_76_86, args=(m, b), x0=x0, method='newton')
         date = t238(1/sol.root)
         confint = None
 

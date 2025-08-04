@@ -306,6 +306,11 @@ class UPb:
             Confidence level for interval, by default 0.95
         patch_dict : dict, optional
             Dictionary of keyword arguments for the ellipse, by default None. If None, a default style is used.
+
+        Returns
+        -------
+        ell : matplotlib.patches.Ellipse
+            Ellipse object representing the uncertainty ellipse for the 206Pb/238U-207Pb/235U date.
         """
         # set up a default stle
         patch_dict = patch_dict_validator(patch_dict, 1)
@@ -979,7 +984,6 @@ def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None, Pbc_std=1e-2):
             return mswd
         # find optimal t that fits data and common lead model
         t_opt = minimize_scalar(cost, bounds=(0, 5000), method='bounded').x
-        print('test')
         Pbc = sk_pb(t_opt)[1] / sk_pb(t_opt)[0]
         # append Pbc at t_opt to the data
         r238_206_fit, r238_206_std_fit, r207_206_fit, r207_206_std_fit, rho_fit = Pbc_append(Pbc)

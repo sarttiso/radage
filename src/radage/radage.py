@@ -123,13 +123,62 @@ def concordia_confint(t, conf=0.95):
 
     return lower_bound, upper_bound
 
+def r206_238(t):
+    """206/238 ratio for given time.
 
-def t238(r06_38):
+    Parameters
+    ----------
+    t : float or numpy.ndarray
+        Time in Myr
+
+    Returns
+    -------
+    r206_238 : float or numpy.ndarray
+        206/238 ratio for the given time(s)
+    """
+    r206_238 = np.exp(l238 * t) - 1
+    return r206_238
+
+def r207_235(t):
+    """207/235 ratio for given time.
+
+    Parameters
+    ----------
+    t : float or numpy.ndarray
+        Time in Myr
+
+    Returns
+    -------
+    r207_235 : float or numpy.ndarray
+        207/235 ratio for the given time(s)
+    """
+    r207_235 = np.exp(l235 * t) - 1
+    return r207_235
+
+def r207_206(t, u238u235=u238u235):
+    """207/206 ratio for given time.
+
+    Parameters
+    ----------
+    t : float or numpy.ndarray
+        Time in Myr
+    u238u235 : float, optional
+        Ratio of U238 to U235, by default 138.818
+
+    Returns
+    -------
+    r207_206 : float or numpy.ndarray
+        207/206 ratio for the given time(s)
+    """
+    r207_206 = (np.exp(l235 * t) - 1) / (np.exp(l238 * t) - 1) * 1 / u238u235
+    return r207_206
+
+def t238(r206_238):
     """206/238 date
 
     Parameters
     ----------
-    r06_38 : float or numpy.ndarray
+    r206_238 : float or numpy.ndarray
         206/238 ratio
 
     Returns
@@ -137,16 +186,16 @@ def t238(r06_38):
     t: float
         Date in Myr
     """
-    t = np.log(r06_38 + 1) / l238
+    t = np.log(r206_238 + 1) / l238
     return t
 
 
-def t235(r07_35):
+def t235(r207_235):
     """207/235 date
 
     Parameters
     ----------
-    r07_35 : float or numpy.ndarray
+    r207_235 : float or numpy.ndarray
         207/235 ratio
 
     Returns
@@ -154,7 +203,7 @@ def t235(r07_35):
     t: float
         Date in Myr
     """
-    t = np.log(r07_35 + 1) / l235
+    t = np.log(r207_235 + 1) / l235
     return t
 
 

@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 import scipy.stats as stats
 from scipy.optimize import minimize_scalar, root_scalar
@@ -406,7 +407,7 @@ class UPb:
 
         return ell
 
-    def discordance(self, method='relative'):
+    def discordance(self, method='concordia-distance'):
         """Date discordance.
 
         Compute discordance according to a given method.
@@ -880,7 +881,7 @@ def Pb_mix_t(r207_206, r238_206, Pbc='SK'):
 
 
 def discordance_filter(ages,
-                       method='relative',
+                       method='concordia-distance',
                        threshold=0.03,
                        system_threshold=False):
     """
@@ -891,18 +892,12 @@ def discordance_filter(ages,
     ages : list
         List of UPb.radage objects
     method : string
-        'relative', 'absolute', 'aitchison'
-        discordance metric to use. Discordance is evaluated between
-        207/206-238/206 ages for samples with 207/206 ages > 1 Ga, and 
-        206/238-207/235 ages for sample with 207/206 ages < 1 Ga
+        'relative', 'absolute', 'aitchison', 'concordia-distance', by default 'concordia-distance'
+        discordance metric to use. Discordance is evaluated between 207/206-238/206 ages for samples with 207/206 ages > 1 Ga, and 206/238-207/235 ages for sample with 207/206 ages < 1 Ga
     threshold : float, optional
-        discordance value for chosen filtering method above which to flag
-        ages as discordant
+        discordance value for chosen filtering method above which to flag ages as discordant
     system_threshold : boolean, optional
-        whether or not to switch discordance metrics between the 207/206-238/206 
-        and 206/238-207/235 systems at 1 Ga. If false, then discordance is always
-        computed between the 207/206-238/206 systems. If true, only works for 
-        aithison, relative, and absolute discordance metrics.
+        whether or not to switch discordance metrics between the 207/206-238/206 and 206/238-207/235 systems at 1 Ga. If false, then discordance is always computed between the 207/206-238/206 systems. If true, only works for aitchison, relative, and absolute discordance metrics.
 
     Returns
     -------
@@ -914,23 +909,37 @@ def discordance_filter(ages,
     ages_conc = []
     idx = np.zeros(len(ages), dtype=bool)
 
-    if system_threshold:
+    if method not in ['relative', 'absolute', 'aitchison', 'concordia-distance']:
+        raise ValueError(
+            'method must be one of "relative", "absolute", "aitchison", or "concordia-distance"'
+        )
+
+    if method == 'concordia-distance':
         for ii, age in enumerate(ages):
-            if age.date76(conf=None) > 1000:
-                cur_method = method + '_76_68'
-            else:
-                cur_method = method + '_68_75'
-            d = np.abs(age.discordance(method=cur_method))
+            d = np.abs(age.discordance(method=method))
             if d < threshold:
                 ages_conc.append(age)
                 idx[ii] = True
 
     else:
-        for ii, age in enumerate(ages):
-            d = np.abs(age.discordance(method=method + '_76_68'))
-            if d < threshold:
-                ages_conc.append(age)
-                idx[ii] = True
+        if system_threshold:
+            for ii, age in enumerate(ages):
+                if age.date76(conf=None) > 1000:
+                    cur_method = method + '_76_68'
+                else:
+                    cur_method = method + '_68_75'
+                d = np.abs(age.discordance(method=cur_method))
+                if d < threshold:
+                    ages_conc.append(age)
+                    idx[ii] = True
+
+        else:
+            for ii, age in enumerate(ages):
+                d = np.abs(age.discordance(method=method + '_76_68'))
+                if d < threshold:
+                    ages_conc.append(age)
+                    idx[ii] = True
+                    
     return ages_conc, idx
 
 
@@ -1430,3 +1439,83 @@ def eHf_DM(t):
         epsilon hafnium value(s) for depleted mantle
     """
     return eHf(Hf_DM, Lu_DM, t)
+
+#
+# DETRITAL AGE SPECTRA
+#
+class DetritalSpectra:
+    """Class for gathering and analyzing detrital age spectra from geologic sources.
+
+    Parameters
+    ----------
+    ages : dict or pandas.DataFrame
+        Dictionary or DataFrame of ages. If dict, keys are sample names and values are lists of UPb.radage objects. If DataFrame, must have a column called 'UPb' and a column called 'Sample', and the rows correspond to individual ages.
+    """
+    def __init__(self, ages):
+        """Instantiate DetritalSpectra object.
+
+        Parameters
+        ----------
+        ages : dict or pandas.DataFrame
+
+        Raises
+        ------
+        ValueError
+            If ages is not a dict or pandas DataFrame
+        AssertionError
+            If ages is a DataFrame and does not have the required columns
+        AssertionError
+            If any of the ages are not UPb objects
+        """
+        # process ages
+        if isinstance(ages, dict):
+            self.ages = ages
+        elif isinstance(ages, pd.DataFrame):
+            assert 'UPb' in ages.columns, 'DataFrame must have a column called "UPb"'
+            assert 'Sample' in ages.columns, 'DataFrame must have a column called "Sample"'
+            self.ages = {}
+            for sample in ages['Sample'].unique():
+                self.ages[sample] = list(ages[ages['Sample'] == sample]['UPb'])
+        else:
+            raise ValueError('ages must be a dict or pandas DataFrame')
+        # validate UPb objects
+        for sample in self.ages:
+            for age in self.ages[sample]:
+                assert isinstance(age, UPb), 'All ages must be UPb objects'
+        
+    def dissimilarity(self, method='wasserstein'):
+        """Compute dissimilarity matrix between detrital age spectra.
+
+        Parameters
+        ----------
+        method : str, optional
+            Method to compute pairwise spectra dissimilarities, by default 'wasserstein'. Valid methods are 'wasserstein', 'ks', 'energy'.
+
+        Returns
+        -------
+        D : pd.DataFrame
+            DataFrame of pairwise dissimilarities between detrital age spectra.
+        """
+
+        # validate method
+        assert method in ['wasserstein', 'ks', 'energy'], 'method must be one of "wasserstein", "ks", "energy"'
+
+        # prepare output dataframe
+        samples = list(self.ages.keys())
+        n_sam = len(samples)
+        D = pd.DataFrame(index=samples, columns=samples, data=np.zeros((n_sam, n_sam)))
+
+        # Wasserstein distance
+        if method == 'wasserstein':
+            for ii in range(n_sam):
+                for jj in range(ii+1, n_sam):
+                    # get current pair of samples
+                    idx_1 = self.ages[samples[ii]] == samples[ii]
+                    cur_sam_1 = df.loc[idx_1]['Age']
+                    idx_2 = df['Sample'] == samples[jj]
+                    cur_sam_2 = df.loc[idx_2]['Age']
+            
+                    # compute distance for pair
+                    wasser[ii, jj] = stats.wasserstein_distance(cur_sam_1.values, cur_sam_2.values)
+                    wasser[jj, ii] = wasser[ii, jj]
+        return D

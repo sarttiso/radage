@@ -297,7 +297,8 @@ def axlim_conc(tlims, ax=None, tw=False):
 
 
 def age_rank_plot_samples(samples_dict, sample_spacing=1, ax=None, 
-                          sample_fontsize=10, sample_label_loc='top', **kwargs):
+                          sample_fontsize=10, sample_label_loc='top',
+                          youngup=True, **kwargs):
     """Plot age rank diagrams for multiple samples
 
     Parameters
@@ -318,6 +319,8 @@ def age_rank_plot_samples(samples_dict, sample_spacing=1, ax=None,
         Fontsize for labeling samples. Defaults to 10.
     sample_label_loc : str, optional
         Location to label sample, 'top' or 'bottom'. Defaults to 'top'.
+    youngup : bool, optional
+        Whether to have y-axis increase with decreasing age (True) or increasing age (False). Defaults to True.
     kwargs : dict
         Additional keyword arguments sent to age_rank_plot().
 
@@ -362,11 +365,19 @@ def age_rank_plot_samples(samples_dict, sample_spacing=1, ax=None,
         age_min = np.nanmin([age_min, cur_min])
         # annotate
         if sample_label_loc == 'top':
-            ax.annotate(sample, (rank_start + n_ages/2 - 0.5, cur_min),
+            if youngup:
+                y_ann = cur_min
+            else:
+                y_ann = cur_max
+            ax.annotate(sample, (rank_start + n_ages/2 - 0.5, y_ann),
                         xytext=(0, 5), textcoords='offset points',
                         ha='center', va='bottom', fontsize=sample_fontsize)
         elif sample_label_loc == 'bottom':
-            ax.annotate(sample, (rank_start + n_ages/2 - 0.5, cur_max),
+            if youngup:
+                y_ann = cur_max
+            else:
+                y_ann = cur_min
+            ax.annotate(sample, (rank_start + n_ages/2 - 0.5, y_ann),
                         xytext=(0, -1), textcoords='offset points',
                         ha='center', va='top', fontsize=sample_fontsize)
         else:
@@ -377,7 +388,8 @@ def age_rank_plot_samples(samples_dict, sample_spacing=1, ax=None,
     # set limits
     ax.set_xlim([-sample_spacing, rank_start+1])
     ax.set_ylim([age_min, age_max])
-    ax.invert_yaxis()
+    if youngup:
+        ax.invert_yaxis()
 
     return ax
 

@@ -377,6 +377,7 @@ class UPb:
                       width=a1 * 2,
                       height=a2 * 2,
                       angle=rotdeg,
+                      label=self.name,
                       **patch_dict[0])
 
         return ell
@@ -403,6 +404,7 @@ class UPb:
                       width=a1 * 2,
                       height=a2 * 2,
                       angle=-rotdeg,
+                      label=self.name,
                       **patch_dict[0])
 
         return ell

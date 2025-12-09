@@ -1,0 +1,1195 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="prev" title="radage.plotting module" href="radage.plotting.html">
+
+    <!-- Generated with Sphinx 8.2.3 and Furo 2025.09.25 -->
+        <title>radage.radage module - radage unknown documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=580074bf" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">radage unknown documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  <span class="sidebar-brand-text">radage unknown documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Package Info</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="modules.html">Module Reference</a><input aria-label="Toggle navigation of Module Reference" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2 current has-children"><a class="reference internal" href="radage.html">radage package</a><input aria-label="Toggle navigation of radage package" checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="radage.helper.html">radage.helper module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radage.plotting.html">radage.plotting module</a></li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">radage.radage module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/api/radage.radage.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="module-radage.radage">
+<span id="radage-radage-module"></span><h1>radage.radage module<a class="headerlink" href="#module-radage.radage" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="radage.radage.DetritalSpectra">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">radage.radage.</span></span><span class="sig-name descname"><span class="pre">DetritalSpectra</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ages</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#DetritalSpectra"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.DetritalSpectra" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.12/library/functions.html#object" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class for gathering and analyzing detrital age spectra from geologic sources.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ages</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em> or </em><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.3.3)"><em>pandas.DataFrame</em></a>) – Dictionary or DataFrame of ages. If dict, keys are sample names and values are lists of UPb.radage objects. If DataFrame, must have a column called ‘UPb’ and a column called ‘Sample’, and the rows correspond to individual ages.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="radage.radage.DetritalSpectra.dissimilarity">
+<span class="sig-name descname"><span class="pre">dissimilarity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'wasserstein'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#DetritalSpectra.dissimilarity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.DetritalSpectra.dissimilarity" title="Link to this definition">¶</a></dt>
+<dd><p>Compute dissimilarity matrix between detrital age spectra.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>method</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – Method to compute pairwise spectra dissimilarities, by default ‘wasserstein’. Valid methods are ‘wasserstein’, ‘ks’, ‘energy’.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>D</strong> – DataFrame of pairwise dissimilarities between detrital age spectra.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="radage.radage.Pb_mix_t">
+<span class="sig-prename descclassname"><span class="pre">radage.radage.</span></span><span class="sig-name descname"><span class="pre">Pb_mix_t</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r207_206</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r238_206</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Pbc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'SK'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#Pb_mix_t"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.Pb_mix_t" title="Link to this definition">¶</a></dt>
+<dd><p>Solve for age given a pair of 207/206 &amp; 238/206 isotopic ratios and a common lead model.</p>
+<p>Given a pair of 207/206 &amp; 238/206 isotopic ratios, this function solves for the age such that one has a lead mixing model that results in identical Stacey &amp; Kramers’ (1975) common lead model and lower intercept concordia ages while also passing through the observed pair of ratios.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>r207_206</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – 207/206 ratio</p></li>
+<li><p><strong>r238_206</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – 238/206 ratio</p></li>
+<li><p><strong>Pbc</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – Initial common lead model to use, by default ‘SK’. If float, then the common lead model is defined by the input value.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>t</strong> – Age in Myr</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)">float</a></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">radage</span>
+</pre></div>
+</div>
+<p>(<a class="reference download internal" download="" href="../_downloads/83e3fabacb9ebd30180c66968b1e1f9a/radage-radage-1.py"><code class="xref download docutils literal notranslate"><span class="pre">Source</span> <span class="pre">code</span></code></a>)</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="radage.radage.UPb">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">radage.radage.</span></span><span class="sig-name descname"><span class="pre">UPb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r206_238</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r206_238_std</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r207_235</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r207_235_std</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r207_206</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r207_206_std</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho75_68</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho86_76</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#UPb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.UPb" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.12/library/functions.html#object" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>class for handling U-Pb ages, where data are given as isotopic ratios and their uncertainties</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>r206_238</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Pb206/U238 ratio</p></li>
+<li><p><strong>r206_238_std</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Standard deviation of Pb206/U238 ratio</p></li>
+<li><p><strong>r207_235</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Pb207/U235 ratio</p></li>
+<li><p><strong>r207_235_std</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Standard deviation of Pb207/U235 ratio</p></li>
+<li><p><strong>r207_206</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Pb207/Pb206 ratio</p></li>
+<li><p><strong>r207_206_std</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Standard deviation of Pb207/Pb206 ratio</p></li>
+<li><p><strong>rho75_68</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Error correlation between 207/235 and 206/238 ratios. Must be between -1 and 1</p></li>
+<li><p><strong>rho86_76</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Error correlation between 238/206 and 207/206 ratios. Must be between -1 and 1</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – Name for age, by default None. Useful for plotting</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="radage.radage.UPb.cov_235_238">
+<span class="sig-name descname"><span class="pre">cov_235_238</span></span><a class="headerlink" href="#radage.radage.UPb.cov_235_238" title="Link to this definition">¶</a></dt>
+<dd><p>Covariance matrix for 206/238 and 207/235 ratios</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="radage.radage.UPb.eigval_235_238">
+<span class="sig-name descname"><span class="pre">eigval_235_238</span></span><a class="headerlink" href="#radage.radage.UPb.eigval_235_238" title="Link to this definition">¶</a></dt>
+<dd><p>Eigenvalues of covariance matrix for 206/238 and 207/235 ratios</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="radage.radage.UPb.eigvec_235_238">
+<span class="sig-name descname"><span class="pre">eigvec_235_238</span></span><a class="headerlink" href="#radage.radage.UPb.eigvec_235_238" title="Link to this definition">¶</a></dt>
+<dd><p>Eigenvectors of covariance matrix for 206/238 and 207/235 ratios</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="radage.radage.UPb.cov_238_207">
+<span class="sig-name descname"><span class="pre">cov_238_207</span></span><a class="headerlink" href="#radage.radage.UPb.cov_238_207" title="Link to this definition">¶</a></dt>
+<dd><p>Covariance matrix for 238/206 and 207/206 ratios</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="radage.radage.UPb.eigval_238_207">
+<span class="sig-name descname"><span class="pre">eigval_238_207</span></span><a class="headerlink" href="#radage.radage.UPb.eigval_238_207" title="Link to this definition">¶</a></dt>
+<dd><p>Eigenvalues of covariance matrix for 238/206 and 207/206 ratios</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="radage.radage.UPb.eigvec_238_207">
+<span class="sig-name descname"><span class="pre">eigvec_238_207</span></span><a class="headerlink" href="#radage.radage.UPb.eigvec_238_207" title="Link to this definition">¶</a></dt>
+<dd><p>Eigenvectors of covariance matrix for 238/206 and 207/206 ratios</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="radage.radage.UPb.date68">
+<span class="sig-name descname"><span class="pre">date68</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.95</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#UPb.date68"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.UPb.date68" title="Link to this definition">¶</a></dt>
+<dd><p>206/238 date with uncertainty.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>conf</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> or </em><em>None</em><em>, </em><em>optional</em>) – Confidence level for interval, by default 0.95. If None, only the age is returned.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>date</strong> (<em>float</em>) – Date in Myr</p></li>
+<li><p><strong>sig</strong> (<em>float</em>) – Standard deviation of date</p></li>
+<li><p><strong>confint</strong> (<em>float</em>) – Confidence interval at desired confidence level</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="radage.radage.UPb.date75">
+<span class="sig-name descname"><span class="pre">date75</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.95</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#UPb.date75"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.UPb.date75" title="Link to this definition">¶</a></dt>
+<dd><p>207/235 date with uncertainty.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>conf</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> or </em><em>None</em><em>, </em><em>optional</em>) – Confidence level for interval, by default 0.95. If None, only the age is returned.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>date</strong> (<em>float</em>) – Date in Myr</p></li>
+<li><p><strong>sig</strong> (<em>float</em>) – Standard deviation of date</p></li>
+<li><p><strong>confint</strong> (<em>float</em>) – Confidence interval at desired confidence level.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="radage.radage.UPb.date76">
+<span class="sig-name descname"><span class="pre">date76</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.95</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u238u235</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">138.818</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#UPb.date76"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.UPb.date76" title="Link to this definition">¶</a></dt>
+<dd><p>207/206 date with uncertainty.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>conf</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> or </em><em>None</em><em>, </em><em>optional</em>) – Confidence level for interval, by default 0.95. If None, only the age is returned.</p></li>
+<li><p><strong>u238u235</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – Ratio of U238 to U235, by default u238u235</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>date</strong> (<em>float</em>) – Date in Myr</p></li>
+<li><p><strong>sig</strong> (<em>float</em>) – Standard deviation of date</p></li>
+<li><p><strong>confint</strong> (<em>float</em>) – Confidence interval at desired confidence level.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="radage.radage.UPb.date_207_238_concordia">
+<span class="sig-name descname"><span class="pre">date_207_238_concordia</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#UPb.date_207_238_concordia"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.UPb.date_207_238_concordia" title="Link to this definition">¶</a></dt>
+<dd><p>207Pb/206Pb - 206Pb/238U concordia date</p>
+<p>The date is calculate as per <a class="reference external" href="http://doi.org/10.1016/S0016-7037(98)00059-3">Ludwig (1998)</a>, with uncertainty and MSWD.</p>
+<p>Utilizes the error transformation for 207Pb/235U computed from 206Pb/238U and 207Pb/206Pb as per Appendix A of Ludwig (1998).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><strong>t</strong> (<em>float</em>) – Concordia date (Myr) for 207Pb/206Pb - 206Pb/238U</p></li>
+<li><p><strong>t_std</strong> (<em>float</em>) – Standard deviation of age</p></li>
+<li><p><strong>poc</strong> (<em>float</em>) – Probability of concordance.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="radage.radage.UPb.date_235_238_concordia">
+<span class="sig-name descname"><span class="pre">date_235_238_concordia</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#UPb.date_235_238_concordia"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.UPb.date_235_238_concordia" title="Link to this definition">¶</a></dt>
+<dd><p>207Pb/235U - 206Pb/238U concordia date</p>
+<p>The date is calculate as per <a class="reference external" href="http://doi.org/10.1016/S0016-7037(98)00059-3">Ludwig (1998)</a>, with uncertainty and MSWD.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><strong>t</strong> (<em>float</em>) – Concordia date (Myr) for 207Pb/235U - 206Pb/238U</p></li>
+<li><p><strong>t_std</strong> (<em>float</em>) – Standard deviation of age</p></li>
+<li><p><strong>poc</strong> (<em>float</em>) – Probability of concordance.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="radage.radage.UPb.discordance">
+<span class="sig-name descname"><span class="pre">discordance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'concordia-distance'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#UPb.discordance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.UPb.discordance" title="Link to this definition">¶</a></dt>
+<dd><p>Date discordance.</p>
+<p>Compute discordance according to a given method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>method</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – <p>Method for computing discordance, by default ‘relative’. Valid strings are:</p>
+<ul class="simple">
+<li><p>’SK’: mixture model with Stacey and Kramers’ (1975) common lead model</p></li>
+<li><p>’p_238_235’: use the probability of fit from the concordia age</p></li>
+<li><dl class="simple">
+<dt>’relative’: relative age different, where the 206/238 vs 207/235 ages are</dt><dd><p>used for 206/238 ages younger than 1 Ga, and the 207/206 vs 206/238
+ages are used for ages older than 1 Ga</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>’relative_68_76’: relative age difference using only the 206/238 and 206/207</dt><dd><p>ages, computed as 1-(t68/t76)</p>
+</dd>
+</dl>
+</li>
+<li><p>’concordia-distance’: as defined in Equation 8 of <a class="reference external" href="http://doi.org/10.5194/gchron-3-247-2021">Vermeesch (2021)</a> (see corrigendum).</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>d</strong> – discordance</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="radage.radage.UPb.ellipse_68_75">
+<span class="sig-name descname"><span class="pre">ellipse_68_75</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.95</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patch_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#UPb.ellipse_68_75"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.UPb.ellipse_68_75" title="Link to this definition">¶</a></dt>
+<dd><p>Uncertainty ellipse for 206Pb/238U-207Pb/235U date</p>
+<p>See <a class="reference external" href="https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Interval">here</a> for more information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>conf</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – Confidence level for interval, by default 0.95</p></li>
+<li><p><strong>patch_dict</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>, </em><em>optional</em>) – Dictionary of keyword arguments for the ellipse, by default None. If None, a default style is used.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ell</strong> – Ellipse object representing the uncertainty ellipse for the 206Pb/238U-207Pb/235U date.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.patches.Ellipse.html#matplotlib.patches.Ellipse" title="(in Matplotlib v3.10.7)">matplotlib.patches.Ellipse</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="radage.radage.UPb.ellipse_76_86">
+<span class="sig-name descname"><span class="pre">ellipse_76_86</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.95</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patch_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#UPb.ellipse_76_86"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.UPb.ellipse_76_86" title="Link to this definition">¶</a></dt>
+<dd><p>Uncertainty ellipse for 207Pb/206Pb-238U/206Pb date</p>
+<p>See <a class="reference external" href="https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Interval">here</a> for more information.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="radage.radage.concordia">
+<span class="sig-prename descclassname"><span class="pre">radage.radage.</span></span><span class="sig-name descname"><span class="pre">concordia</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#concordia"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.concordia" title="Link to this definition">¶</a></dt>
+<dd><p>Wetherill concordia curve.</p>
+<p>207/235 and 206/238 ratios for given times.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>t</strong> (<em>array-like</em>) – time points in Myr</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>r207_235</strong> (<em>array-like</em>) – 207/235 ratios for the given times</p></li>
+<li><p><strong>r206_238</strong> (<em>array-like</em>) – 206/238 ratios for the given times</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="radage.radage.concordia_confint">
+<span class="sig-prename descclassname"><span class="pre">radage.radage.</span></span><span class="sig-name descname"><span class="pre">concordia_confint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.95</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#concordia_confint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.concordia_confint" title="Link to this definition">¶</a></dt>
+<dd><p>Confidence intervals on concordia.</p>
+<p>Function giving 206/238, 207/235 ratios for bounds on confidence region around concordia at a given t
+Returns upper bound, then lower bound</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>array-like</em>) – time points in Myr</p></li>
+<li><p><strong>conf</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – confidence level for interval, defaults to 0.95</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>lower_bound</strong> (<em>numpy.ndarray</em>) – Lower bound of confidence interval, first column is 207/235, second column is 206/238</p></li>
+<li><p><strong>upper_bound</strong> (<em>numpy.ndarray</em>) – Upper bound of confidence interval, first column is 207/235, second column is 206/238</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="radage.radage.concordia_tw">
+<span class="sig-prename descclassname"><span class="pre">radage.radage.</span></span><span class="sig-name descname"><span class="pre">concordia_tw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#concordia_tw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.concordia_tw" title="Link to this definition">¶</a></dt>
+<dd><p>Tara-Wasserberg concordia curve.</p>
+<p>238/206 and 207/206 ratios for given times.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>t</strong> (<em>array-like</em>) – time points in Myr</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>r238_206</strong> (<em>array-like</em>) – 238/206 ratios for the given times</p></li>
+<li><p><strong>r207_206</strong> (<em>array-like</em>) – 207/206 ratios for the given times</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="radage.radage.discordance_filter">
+<span class="sig-prename descclassname"><span class="pre">radage.radage.</span></span><span class="sig-name descname"><span class="pre">discordance_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'concordia-distance'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.03</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#discordance_filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.discordance_filter" title="Link to this definition">¶</a></dt>
+<dd><p>function to filter on discordance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ages</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a>) – List of UPb.radage objects</p></li>
+<li><p><strong>method</strong> (<em>string</em>) – ‘relative’, ‘absolute’, ‘aitchison’, ‘concordia-distance’, by default ‘concordia-distance’
+discordance metric to use. Discordance is evaluated between 207/206-238/206 ages for samples with 207/206 ages &gt; 1 Ga, and 206/238-207/235 ages for sample with 207/206 ages &lt; 1 Ga</p></li>
+<li><p><strong>threshold</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – discordance value for chosen filtering method above which to flag ages as discordant</p></li>
+<li><p><strong>system_threshold</strong> (<em>boolean</em><em>, </em><em>optional</em>) – whether or not to switch discordance metrics between the 207/206-238/206 and 206/238-207/235 systems at 1 Ga. If false, then discordance is always computed between the 207/206-238/206 systems. If true, only works for aitchison, relative, and absolute discordance metrics.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>ages_conc</strong> (<em>list</em>) – List of UPb.radage objects that pass the discordance filter</p></li>
+<li><p><strong>idx</strong> (<em>np.ndarray</em>) – Indices of the ages that pass the discordance filter</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="radage.radage.discordia_date_76_86">
+<span class="sig-prename descclassname"><span class="pre">radage.radage.</span></span><span class="sig-name descname"><span class="pre">discordia_date_76_86</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UPbs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_mc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Pbc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Pbc_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#discordia_date_76_86"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.discordia_date_76_86" title="Link to this definition">¶</a></dt>
+<dd><p>Lower intercept date in Tera-Wasserburg space</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>UPbs</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a>) – List of UPb.radage objects</p></li>
+<li><p><strong>conf</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – Confidence level for interval, by default None. If None, only the lower intercept date is returned. Otherwise, a range corresponding to the confidence level is returned.
+Valid values are between 0 and 1.</p></li>
+<li><p><strong>n_mc</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><em>optional</em>) – Number of Monte Carlo iterations to use for estimating uncertainty, by default 1000. This is only used if conf is not None.</p></li>
+<li><p><strong>Pbc</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – Common lead ratio to use, by default None. If None, the common lead ratio is estimated from the data. If a float, the common lead ratio is fixed to this value. If ‘SK’, the common lead ratio is determined such that it is equal to the Stacey and Kramers (1975) common lead ratio at the lower intercept date.</p></li>
+<li><p><strong>Pbc_std</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – Standard deviation of the common lead ratio, by default 1e-1. This is only used if conf is not None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p><strong>result</strong> – Dictionary containing the following:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>date<span class="classifier">float</span></dt><dd><p>Date in Ma corresponding to the lower intercept of the line in Tera-Wasserburg space.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>slope<span class="classifier">float</span></dt><dd><p>Slope of the line in Tera-Wasserburg space.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>slope_std<span class="classifier">float</span></dt><dd><p>Standard deviation of the slope.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>intercept<span class="classifier">float</span></dt><dd><p>Common lead ratio determined in the calculation. Returns same value as input if Pbc is a float.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>intercept_std<span class="classifier">float</span></dt><dd><p>Standard deviation of the common lead ratio.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>slope_intercept_cov<span class="classifier">float</span></dt><dd><p>Covariance between the slope and intercept.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>mswd<span class="classifier">float</span></dt><dd><p>Mean square weighted deviation of the fit.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>confint<span class="classifier">list</span></dt><dd><p>List of lower and upper bounds of the confidence interval for the lower intercept date. This is only computed if conf is not None.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="radage.radage.eHf">
+<span class="sig-prename descclassname"><span class="pre">radage.radage.</span></span><span class="sig-name descname"><span class="pre">eHf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Hf176Hf177</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Lu176Hf177</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Hf_CHUR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.282772</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Lu_CHUR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0332</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#eHf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.eHf" title="Link to this definition">¶</a></dt>
+<dd><p>epsilon hafnium</p>
+<p>for a given set of ratios</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Hf176Hf177</strong> (<em>array-like</em>) – 176Hf/177Hf ratio(s)</p></li>
+<li><p><strong>Lu176Hf177</strong> (<em>array-like</em>) – 176Lu/177Hf ratio(s)</p></li>
+<li><p><strong>t</strong> (<em>array-like</em>) – age(s) in Myr. If float, then the same age is used for all ratios.</p></li>
+<li><p><strong>Hf_CHUR</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – 176Hf/177Hf ratio for CHUR, by default Hf_CHUR</p></li>
+<li><p><strong>Lu_CHUR</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – 176Lu/177Hf ratio for CHUR, by default Lu_CHUR</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>eHf</strong> – epsilon hafnium value(s)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array-like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="radage.radage.eHf_DM">
+<span class="sig-prename descclassname"><span class="pre">radage.radage.</span></span><span class="sig-name descname"><span class="pre">eHf_DM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#eHf_DM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.eHf_DM" title="Link to this definition">¶</a></dt>
+<dd><p>epsilon Hafnium for depleted mantle</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>t</strong> (<em>array-like</em>) – Age(s) in Myr</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>eHf</strong> – epsilon hafnium value(s) for depleted mantle</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array-like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="radage.radage.get_ages">
+<span class="sig-prename descclassname"><span class="pre">radage.radage.</span></span><span class="sig-name descname"><span class="pre">get_ages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#get_ages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.get_ages" title="Link to this definition">¶</a></dt>
+<dd><p>Produce UPb age objects</p>
+<p>Create UPb age objects from data in GeochemDB. This function assumes that the following quantities are present in the GeochemDB database and form columns in the input DataFrame:
+- Pb206/U238
+- Pb207/U235
+- Pb207/Pb206
+- rho 206Pb/238U v 207Pb/235U
+- rho 207Pb/206Pb v 238U/206Pb
+These quantitues should have both mean and uncertainty values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>df</strong> (<em>pd.DataFrame</em>) – DataFrame of U-Pb measurements, ideally from GeochemDB.GeochemDB.measurements_by_sample(). Must have a hierarchical column index with the following levels: ‘Pb206/U238’, ‘Pb207/U235’, ‘Pb207/Pb206’, ‘rho 206Pb/238U v 207Pb/235U’, ‘rho 207Pb/206Pb v 238U/206Pb’. Each level should have ‘mean’ and ‘uncertainty’ sublevels.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ages</strong> – List of UPb objects.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#list" title="(in Python v3.12)">list</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="radage.radage.kde">
+<span class="sig-prename descclassname"><span class="pre">radage.radage.</span></span><span class="sig-name descname"><span class="pre">kde</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">radages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gauss'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'adaptive'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'uncertainty'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#kde"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.kde" title="Link to this definition">¶</a></dt>
+<dd><p>Evaluate kde for radages at times t.</p>
+<p>The 238/206 - 207/206 concordia ages are used for plotting, and the associated uncertainties are used as weights.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>radages</strong> (<em>arraylike</em>) – list of radages.</p></li>
+<li><p><strong>t</strong> (<em>arraylike</em>) – times at which to evaluate the kde.</p></li>
+<li><p><strong>bw</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – Bandwidth, by default ‘adaptive’. Valid strings are ‘adaptive’, ‘scott’, ‘botev’. If float, specifies a fixed bandwidth directly.</p></li>
+<li><p><strong>kernel</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – Kernel function to use, by default ‘epa’. Valid strings are ‘epa’, ‘gauss’.</p></li>
+<li><p><strong>weights</strong> (<em>arraylike</em><em> or </em><em>None</em><em> or </em><a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – Weights for each age, by default ‘uncertainty’. Valid values are ‘uncertainty’, None, or an array of floats of the same length as radages.</p></li>
+<li><p><strong>**kwargs</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>, </em><em>optional</em>) – Additional arguments to pass to helper.kde_base</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>kde_est</strong> – KDE estimate at times t</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>arraylike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="radage.radage.line_mswd">
+<span class="sig-prename descclassname"><span class="pre">radage.radage.</span></span><span class="sig-name descname"><span class="pre">line_mswd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#line_mswd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.line_mswd" title="Link to this definition">¶</a></dt>
+<dd><p>Reduced chi-squared statistic for a linear fit to data with errors in both x and y.
+This</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>m</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Slope of line</p></li>
+<li><p><strong>b</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Intercept of line</p></li>
+<li><p><strong>x</strong> (<em>array-like</em>) – x-values</p></li>
+<li><p><strong>y</strong> (<em>array-like</em>) – y-values</p></li>
+<li><p><strong>wx</strong> (<em>array-like</em>) – Weights for x-values (typically 1/sigma^2)</p></li>
+<li><p><strong>wy</strong> (<em>array-like</em>) – Weights for y-values (typically 1/sigma^2)</p></li>
+<li><p><strong>r</strong> (<em>array-like</em>) – Correlation coefficients of errors in x and y, must be between -1 and 1</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>mswd</strong> – Reduced chi-squared statistic for residuals with respect to the line</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="radage.radage.r206_238">
+<span class="sig-prename descclassname"><span class="pre">radage.radage.</span></span><span class="sig-name descname"><span class="pre">r206_238</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#r206_238"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.r206_238" title="Link to this definition">¶</a></dt>
+<dd><p>206/238 ratio for given time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>t</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><em>numpy.ndarray</em></a>) – Time in Myr</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>r206_238</strong> – 206/238 ratio for the given time(s)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)">float</a> or <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="radage.radage.r207_206">
+<span class="sig-prename descclassname"><span class="pre">radage.radage.</span></span><span class="sig-name descname"><span class="pre">r207_206</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u238u235</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">138.818</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#r207_206"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.r207_206" title="Link to this definition">¶</a></dt>
+<dd><p>207/206 ratio for given time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><em>numpy.ndarray</em></a>) – Time in Myr</p></li>
+<li><p><strong>u238u235</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – Ratio of U238 to U235, by default 138.818</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>r207_206</strong> – 207/206 ratio for the given time(s)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)">float</a> or <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="radage.radage.r207_235">
+<span class="sig-prename descclassname"><span class="pre">radage.radage.</span></span><span class="sig-name descname"><span class="pre">r207_235</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#r207_235"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.r207_235" title="Link to this definition">¶</a></dt>
+<dd><p>207/235 ratio for given time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>t</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><em>numpy.ndarray</em></a>) – Time in Myr</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>r207_235</strong> – 207/235 ratio for the given time(s)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)">float</a> or <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="radage.radage.root_fun_76_86">
+<span class="sig-prename descclassname"><span class="pre">radage.radage.</span></span><span class="sig-name descname"><span class="pre">root_fun_76_86</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r238_206</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#root_fun_76_86"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.root_fun_76_86" title="Link to this definition">¶</a></dt>
+<dd><p>Root function for finding the lower intercept date in Tera-Wasserburg space
+:param r238_206: 238/206 ratio
+:type r238_206: float
+:param m: Slope of the line in Tera-Wasserburg space
+:type m: float
+:param b: Intercept of the line in Tera-Wasserburg space
+:type b: float</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>r207_206_conc - r207_206_disc</strong> – Difference between the concordia and discordia ratios</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="radage.radage.sk_pb">
+<span class="sig-prename descclassname"><span class="pre">radage.radage.</span></span><span class="sig-name descname"><span class="pre">sk_pb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4570.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3700.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7.19</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">9.74</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">9.307</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10.294</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#sk_pb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.sk_pb" title="Link to this definition">¶</a></dt>
+<dd><p>Common lead model from <a class="reference external" href="https://doi.org/10.1016/0012-821X(75)90088-6">Stacey and Kramers (1975)</a>.</p>
+<p>This model implements a two stage process for the evolution of common lead.</p>
+<p>For times before <span class="math notranslate nohighlight">\(t_1 = 3.7\)</span> Ga, the following equations describe the temporal evolution of common lead:</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+    \frac{^{206}\text{Pb}}{^{204}\text{Pb}}(t) &amp;= \left(\frac{^{206}\text{Pb}}{^{204}\text{Pb}}\right)_0 + \mu_1\,\left(e^{\lambda_{238}t_0}-e^{\lambda_{238}t}\right) \\
+    \frac{^{207}\text{Pb}}{^{204}\text{Pb}}(t) &amp;= \left(\frac{^{207}\text{Pb}}{^{204}\text{Pb}}\right)_0 + \frac{^{235}\text{U}}{^{238}\text{U}} \, \mu_1\, \left(e^{\lambda_{235}t_0}-e^{\lambda_{235}t}\right)
+\end{align}\end{split}\]</div>
+</div>
+<p>For times after <span class="math notranslate nohighlight">\(t_1 = 3.7\)</span> Ga, the following equations describe the temporal evolution of common lead:</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+\frac{^{206}\text{Pb}}{^{204}\text{Pb}}(t) &amp;= \left(\frac{^{206}\text{Pb}}{^{204}\text{Pb}}\right)_1 + \mu_2\,\left(e^{\lambda_{238}t_1}-e^{\lambda_{238}t}\right) \\
+\frac{^{207}\text{Pb}}{^{204}\text{Pb}}(t) &amp;= \left(\frac{^{207}\text{Pb}}{^{204}\text{Pb}}\right)_1 + \frac{^{235}\text{U}}{^{238}\text{U}} \, \mu_2\, \left(e^{\lambda_{235}t_1}-e^{\lambda_{235}t}\right)
+\end{align}\end{split}\]</div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(\left(\frac{^{206}\text{Pb}}{^{204}\text{Pb}}\right)_1\)</span> and <span class="math notranslate nohighlight">\(\left(\frac{^{207}\text{Pb}}{^{204}\text{Pb}}\right)_1\)</span> are the above equations evaluated at <span class="math notranslate nohighlight">\(t=t_1\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>1d array like</em>) – Time(s) (in Ma) for which to return isotopic ratios for the linear mixing model from concordia to mantle</p></li>
+<li><p><strong>t0</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – Age of earth in Myr, by default 4570.</p></li>
+<li><p><strong>t1</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – Age of transition between model stages, by default 3700.</p></li>
+<li><p><strong>mu1</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>)</p></li>
+<li><p><strong>mu2</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>)</p></li>
+<li><p><strong>x0</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – 206Pb/204Pb ratio for troilite lead, by default 9.307.</p></li>
+<li><p><strong>y0</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – 207Pb/204Pb ratio for troilite lead, by default 10.294.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>r206_204</strong> (<em>1d array</em>) – 206/204 ratio(s) for the given time(s)</p></li>
+<li><p><strong>r207_204</strong> (<em>1d array</em>) – 207/204 ratio(s) for the given time(s)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">radage</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4500</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+<span class="n">r206_204</span><span class="p">,</span> <span class="n">r207_204</span> <span class="o">=</span> <span class="n">radage</span><span class="o">.</span><span class="n">sk_pb</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">r206_204</span><span class="p">,</span> <span class="n">r207_204</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$</span><span class="si">{}</span><span class="s1">^</span><span class="si">{206}</span><span class="s1">\mathrm</span><span class="si">{Pb}</span><span class="s1">/</span><span class="si">{}</span><span class="s1">^</span><span class="si">{204}</span><span class="s1">\mathrm</span><span class="si">{Pb}</span><span class="s1">$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$</span><span class="si">{}</span><span class="s1">^</span><span class="si">{207}</span><span class="s1">\mathrm</span><span class="si">{Pb}</span><span class="s1">/</span><span class="si">{}</span><span class="s1">^</span><span class="si">{204}</span><span class="s1">\mathrm</span><span class="si">{Pb}</span><span class="s1">$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Stacey and Kramers (1975) Common Lead Model&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>(<a class="reference download internal" download="" href="../_downloads/d34f0414771dc3361c9b4511f1c5c0e2/radage-radage-2.py"><code class="xref download docutils literal notranslate"><span class="pre">Source</span> <span class="pre">code</span></code></a>, <a class="reference download internal" download="" href="../_downloads/5aa6124c9064164d2c8f9d2490832d0e/radage-radage-2.png"><code class="xref download docutils literal notranslate"><span class="pre">png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/ca83200152c45cc4bb74fd4ad50636e9/radage-radage-2.hires.png"><code class="xref download docutils literal notranslate"><span class="pre">hires.png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/3099dabdf0d5267492c05534852ab468/radage-radage-2.pdf"><code class="xref download docutils literal notranslate"><span class="pre">pdf</span></code></a>)</p>
+<figure class="align-default">
+<img alt="../_images/radage-radage-2.png" class="plot-directive" src="../_images/radage-radage-2.png" />
+</figure>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="radage.radage.t207">
+<span class="sig-prename descclassname"><span class="pre">radage.radage.</span></span><span class="sig-name descname"><span class="pre">t207</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r207_206</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u238u235</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">138.818</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#t207"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.t207" title="Link to this definition">¶</a></dt>
+<dd><p>207/206 date</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>r207_206</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><em>numpy.ndarray</em></a>) – 207/206 ratio(s)</p></li>
+<li><p><strong>u238u235</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – Ratio of U238 to U235, by default u238u235</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>date</strong> – Date in Myr</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="radage.radage.t235">
+<span class="sig-prename descclassname"><span class="pre">radage.radage.</span></span><span class="sig-name descname"><span class="pre">t235</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r207_235</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#t235"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.t235" title="Link to this definition">¶</a></dt>
+<dd><p>207/235 date</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>r207_235</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><em>numpy.ndarray</em></a>) – 207/235 ratio</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>t</strong> – Date in Myr</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="radage.radage.t238">
+<span class="sig-prename descclassname"><span class="pre">radage.radage.</span></span><span class="sig-name descname"><span class="pre">t238</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r206_238</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#t238"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.t238" title="Link to this definition">¶</a></dt>
+<dd><p>206/238 date</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>r206_238</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><em>numpy.ndarray</em></a>) – 206/238 ratio</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>t</strong> – Date in Myr</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="radage.radage.wc1_corr">
+<span class="sig-prename descclassname"><span class="pre">radage.radage.</span></span><span class="sig-name descname"><span class="pre">wc1_corr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wc1_UPbs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#wc1_corr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.wc1_corr" title="Link to this definition">¶</a></dt>
+<dd><p>Correct 238/206 ratios of WC1 analyses to achieve lower intercept age of 254 Ma with fixed common Pb 207/206 ratio of 0.85.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>wc1_UPbs</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a>) – List of UPb.radage objects for WC1 analyses</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>factor</strong> – Factor by which to multiply 238/206 ratios to achieve lower intercept age of 254 Ma with fixed common Pb 207/206 ratio of 0.85.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="radage.radage.weighted_mean">
+<span class="sig-prename descclassname"><span class="pre">radage.radage.</span></span><span class="sig-name descname"><span class="pre">weighted_mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ages_s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'naive'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standard_error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#weighted_mean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.weighted_mean" title="Link to this definition">¶</a></dt>
+<dd><p>Weighted-mean age computation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ages</strong> (<em>array-like</em>) – Age means</p></li>
+<li><p><strong>ages_s</strong> (<em>array-like</em>) – Age standard deviations (same length as ages)</p></li>
+<li><p><strong>sig_method</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – <p>Method for computing the standard error of the weighted mean, by default ‘naive’. Valid strings are ‘naive’, ‘unbiased’
+For unbiased, see</p>
+<blockquote>
+<div><p><a class="reference external" href="https://en.wikipedia.org/wiki/Weighted_arithmetic_mean#Reliability_weights">https://en.wikipedia.org/wiki/Weighted_arithmetic_mean#Reliability_weights</a>,
+<a class="reference external" href="https://seismo.berkeley.edu/~kirchner/Toolkits/Toolkit_12.pdf">https://seismo.berkeley.edu/~kirchner/Toolkits/Toolkit_12.pdf</a></p>
+</div></blockquote>
+</p></li>
+<li><p><strong>standard_error</strong> (<a class="reference external" href="https://docs.python.org/3.12/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to return the standard error of the weighted mean, by default True. If sig_method is ‘naive’, then this parameter is True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>mu</strong> (<em>float</em>) – Weighted mean age</p></li>
+<li><p><strong>sig</strong> (<em>float</em>) – Standard deviation or error of weighted mean age, depending on standard_error value</p></li>
+<li><p><strong>mswd</strong> (<em>float</em>) – Reduced chi-squared statistic for residuals with respect to the weighted mean</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="radage.radage.yorkfit">
+<span class="sig-prename descclassname"><span class="pre">radage.radage.</span></span><span class="sig-name descname"><span class="pre">yorkfit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thres</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/radage/radage.html#yorkfit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#radage.radage.yorkfit" title="Link to this definition">¶</a></dt>
+<dd><p>Implementation of York 1969 10.1016/S0012-821X(68)80059-7</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>array-like</em>) – Mean x-values</p></li>
+<li><p><strong>y</strong> (<em>array-like</em>) – Mean y-values</p></li>
+<li><p><strong>wx</strong> (<em>array-like</em>) – Weights for x-values (typically 1/sigma^2)</p></li>
+<li><p><strong>wy</strong> (<em>array-like</em>) – Weights for y-values (typically 1/sigma^2)</p></li>
+<li><p><strong>r</strong> (<em>array-like</em>) – Correlation coefficients of errors in x and y, must be between -1 and 1</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>b</strong> (<em>float</em>) – Maximum likelihood estimate for slope of line</p></li>
+<li><p><strong>a</strong> (<em>float</em>) – Maximum likelihood estimate for intercept of line</p></li>
+<li><p><strong>b_sig</strong> (<em>float</em>) – Standard deviation of slope for line</p></li>
+<li><p><strong>a_sig</strong> (<em>float</em>) – Standard deviation of intercept for line</p></li>
+<li><p><strong>mswd</strong> (<em>float</em>) – Reduced chi-squared statistic for residuals with respect to the maximum likelihood linear model</p></li>
+<li><p><strong>ab_cov</strong> (<em>float</em>) – Covariance of slope and intercept for line</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          <a class="prev-page" href="radage.plotting.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">radage.plotting module</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025, Adrian Tasistro-Hart
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">radage.radage module</a><ul>
+<li><a class="reference internal" href="#radage.radage.DetritalSpectra"><code class="docutils literal notranslate"><span class="pre">DetritalSpectra</span></code></a><ul>
+<li><a class="reference internal" href="#radage.radage.DetritalSpectra.dissimilarity"><code class="docutils literal notranslate"><span class="pre">DetritalSpectra.dissimilarity()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#radage.radage.Pb_mix_t"><code class="docutils literal notranslate"><span class="pre">Pb_mix_t()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.UPb"><code class="docutils literal notranslate"><span class="pre">UPb</span></code></a><ul>
+<li><a class="reference internal" href="#radage.radage.UPb.cov_235_238"><code class="docutils literal notranslate"><span class="pre">UPb.cov_235_238</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.UPb.eigval_235_238"><code class="docutils literal notranslate"><span class="pre">UPb.eigval_235_238</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.UPb.eigvec_235_238"><code class="docutils literal notranslate"><span class="pre">UPb.eigvec_235_238</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.UPb.cov_238_207"><code class="docutils literal notranslate"><span class="pre">UPb.cov_238_207</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.UPb.eigval_238_207"><code class="docutils literal notranslate"><span class="pre">UPb.eigval_238_207</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.UPb.eigvec_238_207"><code class="docutils literal notranslate"><span class="pre">UPb.eigvec_238_207</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.UPb.date68"><code class="docutils literal notranslate"><span class="pre">UPb.date68()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.UPb.date75"><code class="docutils literal notranslate"><span class="pre">UPb.date75()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.UPb.date76"><code class="docutils literal notranslate"><span class="pre">UPb.date76()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.UPb.date_207_238_concordia"><code class="docutils literal notranslate"><span class="pre">UPb.date_207_238_concordia()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.UPb.date_235_238_concordia"><code class="docutils literal notranslate"><span class="pre">UPb.date_235_238_concordia()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.UPb.discordance"><code class="docutils literal notranslate"><span class="pre">UPb.discordance()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.UPb.ellipse_68_75"><code class="docutils literal notranslate"><span class="pre">UPb.ellipse_68_75()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.UPb.ellipse_76_86"><code class="docutils literal notranslate"><span class="pre">UPb.ellipse_76_86()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#radage.radage.concordia"><code class="docutils literal notranslate"><span class="pre">concordia()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.concordia_confint"><code class="docutils literal notranslate"><span class="pre">concordia_confint()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.concordia_tw"><code class="docutils literal notranslate"><span class="pre">concordia_tw()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.discordance_filter"><code class="docutils literal notranslate"><span class="pre">discordance_filter()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.discordia_date_76_86"><code class="docutils literal notranslate"><span class="pre">discordia_date_76_86()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.eHf"><code class="docutils literal notranslate"><span class="pre">eHf()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.eHf_DM"><code class="docutils literal notranslate"><span class="pre">eHf_DM()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.get_ages"><code class="docutils literal notranslate"><span class="pre">get_ages()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.kde"><code class="docutils literal notranslate"><span class="pre">kde()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.line_mswd"><code class="docutils literal notranslate"><span class="pre">line_mswd()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.r206_238"><code class="docutils literal notranslate"><span class="pre">r206_238()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.r207_206"><code class="docutils literal notranslate"><span class="pre">r207_206()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.r207_235"><code class="docutils literal notranslate"><span class="pre">r207_235()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.root_fun_76_86"><code class="docutils literal notranslate"><span class="pre">root_fun_76_86()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.sk_pb"><code class="docutils literal notranslate"><span class="pre">sk_pb()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.t207"><code class="docutils literal notranslate"><span class="pre">t207()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.t235"><code class="docutils literal notranslate"><span class="pre">t235()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.t238"><code class="docutils literal notranslate"><span class="pre">t238()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.wc1_corr"><code class="docutils literal notranslate"><span class="pre">wc1_corr()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.weighted_mean"><code class="docutils literal notranslate"><span class="pre">weighted_mean()</span></code></a></li>
+<li><a class="reference internal" href="#radage.radage.yorkfit"><code class="docutils literal notranslate"><span class="pre">yorkfit()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=3f1b9271"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    </body>
+</html>

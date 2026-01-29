@@ -124,8 +124,8 @@ def botev(x, n=None):
 
         # from https://github.com/tommyod/KDEpy/blob/ae1c23c2dc50b91b93dfb982030f0127ce83e447/KDEpy/bw_selection.py#L21
         # https://github.com/tommyod/KDEpy/issues/95
-        I = np.asfarray(I, dtype=np.float64)
-        a2 = np.asfarray(a2, dtype=np.float64)
+        I = np.asarray(I, dtype=np.float64)
+        a2 = np.asarray(a2, dtype=np.float64)
 
         l = 7
         # Initial f calculation

@@ -564,6 +564,8 @@ def kde_plot(radages, t=None, bw='adaptive', kernel='gauss', weights='uncertaint
         ax.set_ylim([-yfact*yrange, ylim[1]])
         ax.axhspan(-yfact*yrange, 0, facecolor='white', edgecolor='k',
                    zorder=2, alpha=1)
+    else:
+        ax.set_ylim([0, ax.get_ylim()[1]])
 
     
     # format axes

@@ -728,3 +728,35 @@ def sk_discordia(t, ax=None, **kwargs):
     h = ax.axline(xy1, xy2, **line_style)
 
     return h, ax
+
+
+def eHf_model(t=None, ax=None):
+    """CHUR and DM eHf evolution
+    
+    Plot model lines for depleted mantle and CHUR evolution.
+
+    Parameters
+    ----------
+    t : array-like, optional
+        Time axis to plot model evolution. The default is None. If None, goes from 0 to 4500 Ma.
+    ax : matplotlib.axes, optional
+        Axes object in which to plot. The default is None.
+
+    Returns
+    -------
+    ax : matplotlib.axes
+        Axes plotted into.
+    """
+    if ax is None:
+        ax = plt.gca()
+    
+    if t is None:
+        t = np.linspace(0, 4500, 500)
+    
+    dm = eHf_DM(t)
+    chur = np.zeros(len(t))
+    
+    ax.plot(t, chur, color='grey')
+    ax.plot(t, dm, color='k')
+    
+    return ax

@@ -236,9 +236,12 @@ def t207(r207_206, u238u235=u238u235):
         return S
 
     # compute date
-    date = minimize_scalar(cost, args=(r207_206), bounds=(0, 5000)).x
+    r207_206s = np.atleast_1d(r207_206)
+    dates = np.zeros(r207_206s.shape)
+    for ii, r207_206 in enumerate(r207_206s):
+        dates[ii] = minimize_scalar(cost, args=(r207_206), bounds=(0, 5000)).x
 
-    return date
+    return np.squeeze(dates)
 
 
 class UPb:

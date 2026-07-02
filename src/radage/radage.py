@@ -1,14 +1,13 @@
-import numpy as np
-import pandas as pd
-
-import scipy.stats as stats
-from scipy.optimize import minimize_scalar, root_scalar
+import warnings
 
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import scipy.stats as stats
 from matplotlib.patches import Ellipse
+from scipy.optimize import minimize_scalar, root_scalar
 
-import warnings
-warnings.filterwarnings('ignore', message='invalid value encountered in multiply')
+warnings.filterwarnings("ignore", message="invalid value encountered in multiply")
 from .helper import *
 
 # in My
@@ -103,13 +102,17 @@ def concordia_confint(t, conf=0.95):
     sigx = t * np.exp(l235 * t) * l235_std
 
     # tangent points to uncertainty ellipse
-    with np.errstate(divide='ignore', invalid='ignore'):
-        ytan_1 = np.sqrt(r / (1 / (sigx**2) *
-                              (-m * sigx**2 / sigy**2)**2 + 1 / sigy**2)) + y
+    with np.errstate(divide="ignore", invalid="ignore"):
+        ytan_1 = (
+            np.sqrt(r / (1 / (sigx**2) * (-m * sigx**2 / sigy**2) ** 2 + 1 / sigy**2))
+            + y
+        )
         xtan_1 = -m * sigx**2 / sigy**2 * (ytan_1 - y) + x
 
-        ytan_2 = -np.sqrt(r / (1 / (sigx**2) *
-                               (-m * sigx**2 / sigy**2)**2 + 1 / sigy**2)) + y
+        ytan_2 = (
+            -np.sqrt(r / (1 / (sigx**2) * (-m * sigx**2 / sigy**2) ** 2 + 1 / sigy**2))
+            + y
+        )
         xtan_2 = -m * sigx**2 / sigy**2 * (ytan_2 - y) + x
 
     if np.any(t == 0):
@@ -123,6 +126,7 @@ def concordia_confint(t, conf=0.95):
     upper_bound = np.vstack([xtan_2, ytan_2]).T
 
     return lower_bound, upper_bound
+
 
 def r206_238(t):
     """206/238 ratio for given time.
@@ -140,6 +144,7 @@ def r206_238(t):
     r206_238 = np.exp(l238 * t) - 1
     return r206_238
 
+
 def r207_235(t):
     """207/235 ratio for given time.
 
@@ -155,6 +160,7 @@ def r207_235(t):
     """
     r207_235 = np.exp(l235 * t) - 1
     return r207_235
+
 
 def r207_206(t, u238u235=u238u235):
     """207/206 ratio for given time.
@@ -173,6 +179,7 @@ def r207_206(t, u238u235=u238u235):
     """
     r207_206 = (np.exp(l235 * t) - 1) / (np.exp(l238 * t) - 1) * 1 / u238u235
     return r207_206
+
 
 def t238(r206_238):
     """206/238 date
@@ -225,14 +232,16 @@ def t207(r207_206, u238u235=u238u235):
     """
     # ignore warning that occurs sometimes during optimization
     warnings.filterwarnings(
-        'ignore', message='invalid value encountered in double_scalars')
+        "ignore", message="invalid value encountered in double_scalars"
+    )
 
     def cost(t, cur207_206):
         """
         cost function for solving for t
         """
-        S = (1 / u238u235 * (np.exp(l235 * t) - 1) / (np.exp(l238 * t) - 1) -
-             cur207_206)**2
+        S = (
+            1 / u238u235 * (np.exp(l235 * t) - 1) / (np.exp(l238 * t) - 1) - cur207_206
+        ) ** 2
         return S
 
     # compute date
@@ -285,14 +294,19 @@ class UPb:
         Eigenvectors of covariance matrix for 238/206 and 207/206 ratios
     """
 
-    def __init__(self,
-                 r206_238, r206_238_std,
-                 r207_235, r207_235_std,
-                 r207_206, r207_206_std,
-                 rho75_68, rho86_76,
-                 name=None):
-        """Create UPb object
-        """
+    def __init__(
+        self,
+        r206_238,
+        r206_238_std,
+        r207_235,
+        r207_235_std,
+        r207_206,
+        r207_206_std,
+        rho75_68,
+        rho86_76,
+        name=None,
+    ):
+        """Create UPb object"""
         self.r206_238 = r206_238
         self.r206_238_std = r206_238_std
         self.r207_235 = r207_235
@@ -303,10 +317,10 @@ class UPb:
 
         # check that correlation coefficients are between 0 and 1
         if rho75_68 < -1 or rho75_68 > 1:
-            raise ValueError('rho75_68 must be between -1 and 1')
+            raise ValueError("rho75_68 must be between -1 and 1")
         if rho86_76 < -1 or rho86_76 > 1:
             print(rho86_76)
-            raise ValueError('rho86_76 must be between -1 and 1')
+            raise ValueError("rho86_76 must be between -1 and 1")
         self.rho75_68 = rho75_68  # rho1
         self.rho86_76 = rho86_76  # rho2
 
@@ -314,41 +328,42 @@ class UPb:
 
         # compute eigen decomposition of covariance matrix for 206/238, 207/235
         self.cov_235_238 = np.array(
-            [[
-                self.r207_235_std**2,
-                self.rho75_68 * self.r206_238_std * self.r207_235_std
-            ],
+            [
                 [
-                self.rho75_68 * self.r206_238_std * self.r207_235_std,
-                self.r206_238_std**2
-            ]])
-        self.eigval_235_238, self.eigvec_235_238 = np.linalg.eig(
-            self.cov_235_238)
+                    self.r207_235_std**2,
+                    self.rho75_68 * self.r206_238_std * self.r207_235_std,
+                ],
+                [
+                    self.rho75_68 * self.r206_238_std * self.r207_235_std,
+                    self.r206_238_std**2,
+                ],
+            ]
+        )
+        self.eigval_235_238, self.eigvec_235_238 = np.linalg.eig(self.cov_235_238)
         idx = np.argsort(self.eigval_235_238)[::-1]  # sort descending
         self.eigval_235_238 = self.eigval_235_238[idx]
         self.eigvec_235_238 = self.eigvec_235_238.T[idx].T
 
         # compute eigen decomposition of covariance matrix for 238/206, 207/206
-        self.r238_206_std = (self.r206_238_std /
-                             self.r206_238) * (self.r238_206)
+        self.r238_206_std = (self.r206_238_std / self.r206_238) * (self.r238_206)
         self.cov_238_207 = np.array(
-            [[
-                self.r238_206_std**2,
-                self.rho86_76 * self.r238_206_std * self.r207_206_std
-            ],
+            [
                 [
-                self.rho86_76 * self.r238_206_std * self.r207_206_std,
-                self.r207_206_std**2
-            ]])
-        self.eigval_238_207, self.eigvec_238_207 = np.linalg.eig(
-            self.cov_238_207)
+                    self.r238_206_std**2,
+                    self.rho86_76 * self.r238_206_std * self.r207_206_std,
+                ],
+                [
+                    self.rho86_76 * self.r238_206_std * self.r207_206_std,
+                    self.r207_206_std**2,
+                ],
+            ]
+        )
+        self.eigval_238_207, self.eigvec_238_207 = np.linalg.eig(self.cov_238_207)
         idx = np.argsort(self.eigval_238_207)[::-1]  # sort descending
         self.eigval_238_207 = self.eigval_238_207[idx]
         self.eigvec_238_207 = self.eigvec_238_207.T[idx].T
 
-    def ellipse_68_75(self,
-                      conf=0.95,
-                      patch_dict=None):
+    def ellipse_68_75(self, conf=0.95, patch_dict=None):
         """Uncertainty ellipse for 206Pb/238U-207Pb/235U date
 
         See `here <https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Interval>`__ for more information.
@@ -376,18 +391,22 @@ class UPb:
         rotdeg = np.rad2deg(np.arccos(self.eigvec_235_238[0, 0]))
 
         # create
-        ell = Ellipse((self.r207_235, self.r206_238),
-                      width=a1 * 2,
-                      height=a2 * 2,
-                      angle=rotdeg,
-                      label=self.name,
-                      **patch_dict[0])
+        ell = Ellipse(
+            (self.r207_235, self.r206_238),
+            width=a1 * 2,
+            height=a2 * 2,
+            angle=rotdeg,
+            label=self.name,
+            **patch_dict[0],
+        )
 
         return ell
 
-    def ellipse_76_86(self,
-                      conf=0.95,
-                      patch_dict=None,):
+    def ellipse_76_86(
+        self,
+        conf=0.95,
+        patch_dict=None,
+    ):
         """Uncertainty ellipse for 207Pb/206Pb-238U/206Pb date
 
         See `here <https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Interval>`__ for more information.
@@ -403,16 +422,18 @@ class UPb:
         rotdeg = np.rad2deg(np.arccos(self.eigvec_238_207[0, 0]))
 
         # create
-        ell = Ellipse((self.r238_206, self.r207_206),
-                      width=a1 * 2,
-                      height=a2 * 2,
-                      angle=-rotdeg,
-                      label=self.name,
-                      **patch_dict[0])
+        ell = Ellipse(
+            (self.r238_206, self.r207_206),
+            width=a1 * 2,
+            height=a2 * 2,
+            angle=-rotdeg,
+            label=self.name,
+            **patch_dict[0],
+        )
 
         return ell
 
-    def discordance(self, method='concordia-distance'):
+    def discordance(self, method="concordia-distance"):
         """Date discordance.
 
         Compute discordance according to a given method.
@@ -436,7 +457,7 @@ class UPb:
         d : float
             discordance
         """
-        if method == 'SK':
+        if method == "SK":
             t = Pb_mix_t(self.r207_206, 1 / self.r206_238)
             r238_206_rad = 1 / (np.exp(l238 * t) - 1)
             # r207_206_rad = 1/u238u235 * (np.exp(l235*t)-1)/(np.exp(l238*t)-1)
@@ -445,61 +466,71 @@ class UPb:
             # l = np.sqrt((1/self.r206_238-r238_206_rad)**2 + (self.r207_206-r207_206_rad)**2)
             d = 1 - (1 / self.r206_238) / r238_206_rad
             # d = l/L
-        elif method == 'relative':
+        elif method == "relative":
             cur68_age = self.date68(conf=None)
             # use 75 vs 68 for younger than 1 Ga
             if cur68_age < 1000:
-                d = 1 - cur68_age/self.date75(conf=None)
+                d = 1 - cur68_age / self.date75(conf=None)
             else:
                 d = 1 - cur68_age / self.date76(conf=None)
-        elif method == 'concordia-distance':
+        elif method == "concordia-distance":
             tc = self.date_207_238_concordia()[0]
             R68tc = np.exp(l238 * tc) - 1
             R75tc = np.exp(l235 * tc) - 1
-            dx = 1/np.sqrt(2) * (np.log(self.r238_206) + np.log(R68tc))
-            dy = np.sqrt(2/3) * (np.log(self.r207_206) - np.log((1/u238u235)*R75tc/R68tc))
-            d = 100*np.sqrt(dx**2 + dy**2)
-        elif method == 'relative_76_68':
+            dx = 1 / np.sqrt(2) * (np.log(self.r238_206) + np.log(R68tc))
+            dy = np.sqrt(2 / 3) * (
+                np.log(self.r207_206) - np.log((1 / u238u235) * R75tc / R68tc)
+            )
+            d = 100 * np.sqrt(dx**2 + dy**2)
+        elif method == "relative_76_68":
             d = 1 - self.date68(conf=None) / self.date76(conf=None)
-        elif method == 'absolute_76_68':
+        elif method == "absolute_76_68":
             d = np.abs(self.date76(conf=None) - self.date68(conf=None))
-        elif method == 'relative_68_75':
+        elif method == "relative_68_75":
             d = 1 - self.date68(conf=None) / self.date75(conf=None)
-        elif method == 'absolute_68_75':
+        elif method == "absolute_68_75":
             d = np.abs(self.date75(conf=None) - self.date68(conf=None))
-        elif method == 'p_68_75':
+        elif method == "p_68_75":
             tc = self.date_235_238_concordia()[0]
-            v = np.array([[
-                self.r207_235 - np.exp(l235 * tc) + 1,
-                self.r206_238 - np.exp(l238 * tc) + 1
-            ]]).T
-            C = np.array([[
-                self.r207_235_std**2,
-                self.rho75_68 * self.r207_235_std * self.r206_238_std
-            ],
+            v = np.array(
                 [
-                self.rho75_68 * self.r207_235_std *
-                self.r206_238_std, self.r206_238_std**2
-            ]])
+                    [
+                        self.r207_235 - np.exp(l235 * tc) + 1,
+                        self.r206_238 - np.exp(l238 * tc) + 1,
+                    ]
+                ]
+            ).T
+            C = np.array(
+                [
+                    [
+                        self.r207_235_std**2,
+                        self.rho75_68 * self.r207_235_std * self.r206_238_std,
+                    ],
+                    [
+                        self.rho75_68 * self.r207_235_std * self.r206_238_std,
+                        self.r206_238_std**2,
+                    ],
+                ]
+            )
             # chi-squared statistic is this quadratic
             S = np.matmul(v.T, np.matmul(np.linalg.inv(C), v))
             # probability of exceeding the statistic is just 1-cdf for a chi-squared distribution with 2 dof
             d = 1 - stats.chi2.cdf(S, 2)
             d = np.squeeze(d)[()]
-        elif method == 'aitchison_76_68':
+        elif method == "aitchison_76_68":
 
             def dx(t):
                 return np.log(self.r206_238) - np.log(np.exp(l238 * t) - 1)
 
             def dy(t):
-                return np.log(self.r207_206) - np.log(1 / u238u235 *
-                                                      (np.exp(l235 * t) - 1) /
-                                                      (np.exp(l238 * t) - 1))
+                return np.log(self.r207_206) - np.log(
+                    1 / u238u235 * (np.exp(l235 * t) - 1) / (np.exp(l238 * t) - 1)
+                )
 
             d = dx(self.date76(conf=None)) * np.sin(
-                np.arctan(
-                    dy(self.date68(conf=None)) / dx(self.date76(conf=None))))
-        elif method == 'aitchison_68_75':
+                np.arctan(dy(self.date68(conf=None)) / dx(self.date76(conf=None)))
+            )
+        elif method == "aitchison_68_75":
 
             def dx(t):
                 return np.log(self.r207_235) - np.log(np.exp(l235 * t) - 1)
@@ -508,14 +539,14 @@ class UPb:
                 return np.log(self.r206_238) - np.log(np.exp(l238 * t) - 1)
 
             d = dx(self.date68(conf=None)) * np.sin(
-                np.arctan(
-                    dy(self.date75(conf=None)) / dx(self.date68(conf=None))))
+                np.arctan(dy(self.date75(conf=None)) / dx(self.date68(conf=None)))
+            )
 
         return d
 
     def date_207_238_concordia(self):
-        """207Pb/206Pb - 206Pb/238U concordia date 
-        
+        """207Pb/206Pb - 206Pb/238U concordia date
+
         The date is calculate as per `Ludwig (1998) <http://doi.org/10.1016/S0016-7037(98)00059-3>`__, with uncertainty and MSWD.
 
         Utilizes the error transformation for 207Pb/235U computed from 206Pb/238U and 207Pb/206Pb as per Appendix A of Ludwig (1998).
@@ -527,7 +558,7 @@ class UPb:
         t_std: float
             Standard deviation of age
         poc: float
-            Probability of concordance. 
+            Probability of concordance.
         """
         # relative errors
         SX = self.r206_238_std / self.r206_238
@@ -553,8 +584,11 @@ class UPb:
             Py = t * np.exp(l238 * t)
 
             cov_mod = np.array(
-                [[sigx**2 + Px**2 * l235_std**2, rhoxy * sigx * sigy],
-                 [rhoxy * sigx * sigy, sigy**2 + Py**2 * l238_std**2]])
+                [
+                    [sigx**2 + Px**2 * l235_std**2, rhoxy * sigx * sigy],
+                    [rhoxy * sigx * sigy, sigy**2 + Py**2 * l238_std**2],
+                ]
+            )
             omega = np.linalg.inv(cov_mod)
             return omega
 
@@ -564,11 +598,11 @@ class UPb:
             R = x - np.exp(l235 * t) + 1
             r = y - np.exp(l238 * t) + 1
 
-            S = omega[0,0] * R**2 + omega[1,1] * r**2 + 2 * R * r * omega[0,1]
+            S = omega[0, 0] * R**2 + omega[1, 1] * r**2 + 2 * R * r * omega[0, 1]
 
             return S
 
-        opt = minimize_scalar(S_cost, bounds=[0, 5000], method='bounded')
+        opt = minimize_scalar(S_cost, bounds=[0, 5000], method="bounded")
         t = opt.x
 
         omega = get_omega(t)
@@ -576,8 +610,14 @@ class UPb:
         Q235 = l235 * np.exp(l235 * t)
         Q238 = l238 * np.exp(l238 * t)
 
-        t_std = np.sqrt((Q235**2 * omega[0, 0] + Q238**2 * omega[1, 1] +
-                         2 * Q235 * Q238 * omega[0, 1])**(-1))
+        t_std = np.sqrt(
+            (
+                Q235**2 * omega[0, 0]
+                + Q238**2 * omega[1, 1]
+                + 2 * Q235 * Q238 * omega[0, 1]
+            )
+            ** (-1)
+        )
 
         # probability of concordance
         poc = 1 - stats.chi2.cdf(opt.fun, 1)
@@ -585,8 +625,8 @@ class UPb:
         return t, t_std, poc
 
     def date_235_238_concordia(self):
-        """207Pb/235U - 206Pb/238U concordia date 
-        
+        """207Pb/235U - 206Pb/238U concordia date
+
         The date is calculate as per `Ludwig (1998) <http://doi.org/10.1016/S0016-7037(98)00059-3>`__, with uncertainty and MSWD.
 
         Returns
@@ -605,14 +645,17 @@ class UPb:
             P238 = t * np.exp(l238 * t)
 
             cov_mod = np.array(
-                [[
-                    self.r207_235_std**2 + P235**2 * l235_std**2,
-                    self.rho75_68 * self.r206_238_std * self.r207_235_std
-                ],
+                [
                     [
-                    self.rho75_68 * self.r206_238_std * self.r207_235_std,
-                    self.r206_238_std**2 + P238**2 * l238_std**2
-                ]])
+                        self.r207_235_std**2 + P235**2 * l235_std**2,
+                        self.rho75_68 * self.r206_238_std * self.r207_235_std,
+                    ],
+                    [
+                        self.rho75_68 * self.r206_238_std * self.r207_235_std,
+                        self.r206_238_std**2 + P238**2 * l238_std**2,
+                    ],
+                ]
+            )
             omega = np.linalg.inv(cov_mod)
             return omega
 
@@ -623,11 +666,11 @@ class UPb:
             R = self.r207_235 - np.exp(l235 * t) + 1
             r = self.r206_238 - np.exp(l238 * t) + 1
 
-            S = omega[0,0] * R**2 + omega[1,1] * r**2 + 2 * R * r * omega[0,1]
+            S = omega[0, 0] * R**2 + omega[1, 1] * r**2 + 2 * R * r * omega[0, 1]
 
             return S
 
-        opt = minimize_scalar(S_cost, bounds=[0, 5000], method='bounded')
+        opt = minimize_scalar(S_cost, bounds=[0, 5000], method="bounded")
         t = opt.x
 
         omega = get_omega(t)
@@ -635,8 +678,14 @@ class UPb:
         Q235 = l235 * np.exp(l235 * t)
         Q238 = l238 * np.exp(l238 * t)
 
-        t_std = np.sqrt((Q235**2 * omega[0, 0] + Q238**2 * omega[1, 1] +
-                         2 * Q235 * Q238 * omega[0, 1])**(-1))
+        t_std = np.sqrt(
+            (
+                Q235**2 * omega[0, 0]
+                + Q238**2 * omega[1, 1]
+                + 2 * Q235 * Q238 * omega[0, 1]
+            )
+            ** (-1)
+        )
 
         # probability of concordance
         poc = 1 - stats.chi2.cdf(opt.fun, 1)
@@ -664,7 +713,7 @@ class UPb:
         if conf == None:
             return date
         else:
-            sig = (1/l238) * self.r206_238_std/(self.r206_238 + 1)
+            sig = (1 / l238) * self.r206_238_std / (self.r206_238 + 1)
             conf = 1 - (1 - conf) / 2
             confint = stats.norm.ppf(conf, date, sig) - date
             return date, sig, confint
@@ -690,7 +739,7 @@ class UPb:
         if conf == None:
             return date
         else:
-            sig = (1/l235) * self.r207_235_std/(self.r207_235 + 1)
+            sig = (1 / l235) * self.r207_235_std / (self.r207_235 + 1)
             conf = 1 - (1 - conf) / 2
             confint = stats.norm.ppf(conf, date, sig) - date
             return date, sig, confint
@@ -742,7 +791,7 @@ def sk_pb(t, t0=4.57e3, t1=3.7e3, mu1=7.19, mu2=9.74, x0=9.307, y0=10.294):
     For times after :math:`t_1 = 3.7` Ga, the following equations describe the temporal evolution of common lead:
 
     .. math::
-            
+
         \\begin{align}
         \\frac{^{206}\\text{Pb}}{^{204}\\text{Pb}}(t) &= \\left(\\frac{^{206}\\text{Pb}}{^{204}\\text{Pb}}\\right)_1 + \\mu_2\\,\\left(e^{\\lambda_{238}t_1}-e^{\\lambda_{238}t}\\right) \\\\
         \\frac{^{207}\\text{Pb}}{^{204}\\text{Pb}}(t) &= \\left(\\frac{^{207}\\text{Pb}}{^{204}\\text{Pb}}\\right)_1 + \\frac{^{235}\\text{U}}{^{238}\\text{U}} \\, \\mu_2\\, \\left(e^{\\lambda_{235}t_1}-e^{\\lambda_{235}t}\\right)
@@ -804,21 +853,19 @@ def sk_pb(t, t0=4.57e3, t1=3.7e3, mu1=7.19, mu2=9.74, x0=9.307, y0=10.294):
     # for times in first stage
     idx = t > t1
     r206_204[idx] = x0 + mu1 * (np.exp(l238 * t0) - np.exp(l238 * t[idx]))
-    r207_204[idx] = y0 + mu1 / u238u235 * (np.exp(l235 * t0) -
-                                           np.exp(l235 * t[idx]))
+    r207_204[idx] = y0 + mu1 / u238u235 * (np.exp(l235 * t0) - np.exp(l235 * t[idx]))
 
     # for times in second stage
     idx = t <= t1
     x1 = x0 + mu1 * (np.exp(l238 * t0) - np.exp(l238 * t1))
     y1 = y0 + mu1 / u238u235 * (np.exp(l235 * t0) - np.exp(l235 * t1))
     r206_204[idx] = x1 + mu2 * (np.exp(l238 * t1) - np.exp(l238 * t[idx]))
-    r207_204[idx] = y1 + mu2 / u238u235 * (np.exp(l235 * t1) -
-                                           np.exp(l235 * t[idx]))
+    r207_204[idx] = y1 + mu2 / u238u235 * (np.exp(l235 * t1) - np.exp(l235 * t[idx]))
 
     return r206_204.squeeze(), r207_204.squeeze()
 
 
-def Pb_mix_t(r207_206, r238_206, Pbc='SK'):
+def Pb_mix_t(r207_206, r238_206, Pbc="SK"):
     """Solve for age given a pair of 207/206 & 238/206 isotopic ratios and a common lead model.
 
     Given a pair of 207/206 & 238/206 isotopic ratios, this function solves for the age such that one has a lead mixing model that results in identical Stacey & Kramers' (1975) common lead model and lower intercept concordia ages while also passing through the observed pair of ratios.
@@ -831,7 +878,7 @@ def Pb_mix_t(r207_206, r238_206, Pbc='SK'):
         238/206 ratio
     Pbc : str or float, optional
         Initial common lead model to use, by default 'SK'. If float, then the common lead model is defined by the input value.
-    
+
     Returns
     -------
     t : float
@@ -845,8 +892,9 @@ def Pb_mix_t(r207_206, r238_206, Pbc='SK'):
         import radage
     """
 
-    if Pbc == 'SK':
-        def Pbc0(t): 
+    if Pbc == "SK":
+
+        def Pbc0(t):
             r206_204, r207_204 = sk_pb(t)
             r207_206_0 = r207_204 / r206_204
             return r207_206_0
@@ -854,7 +902,8 @@ def Pb_mix_t(r207_206, r238_206, Pbc='SK'):
         # check value is a float
         assert isinstance(Pbc, float), 'Pbc must be a float or "SK"'
         # make sure value is greater than zero and less than 2
-        assert Pbc > 0 and Pbc < 2, 'Pbc must be between 0 and 2'
+        assert Pbc > 0 and Pbc < 2, "Pbc must be between 0 and 2"
+
         def Pbc0(t):
             r207_206_0 = Pbc
             return r207_206_0
@@ -868,14 +917,13 @@ def Pb_mix_t(r207_206, r238_206, Pbc='SK'):
 
         # concordia (radiogenic component)
         r238_206_rad = 1 / (np.exp(l238 * t) - 1)
-        r207_206_rad = 1 / u238u235 * (np.exp(l235 * t) -
-                                       1) / (np.exp(l238 * t) - 1)
+        r207_206_rad = 1 / u238u235 * (np.exp(l235 * t) - 1) / (np.exp(l238 * t) - 1)
 
         # compute distance from line connecting these two points
-        d = np.abs((r238_206_rad-r238_206_0)*(r207_206_0-r207_206) -
-                   (r238_206_0-r238_206)*(r207_206_rad-r207_206_0)) / \
-            np.sqrt((r238_206_rad-r238_206_0)**2 +
-                    (r207_206_rad-r207_206_0)**2)
+        d = np.abs(
+            (r238_206_rad - r238_206_0) * (r207_206_0 - r207_206)
+            - (r238_206_0 - r238_206) * (r207_206_rad - r207_206_0)
+        ) / np.sqrt((r238_206_rad - r238_206_0) ** 2 + (r207_206_rad - r207_206_0) ** 2)
 
         return d
 
@@ -885,10 +933,9 @@ def Pb_mix_t(r207_206, r238_206, Pbc='SK'):
     return t
 
 
-def discordance_filter(ages,
-                       method='concordia-distance',
-                       threshold=0.03,
-                       system_threshold=False):
+def discordance_filter(
+    ages, method="concordia-distance", threshold=0.03, system_threshold=False
+):
     """
     function to filter on discordance
 
@@ -914,12 +961,12 @@ def discordance_filter(ages,
     ages_conc = []
     idx = np.zeros(len(ages), dtype=bool)
 
-    if method not in ['relative', 'absolute', 'aitchison', 'concordia-distance']:
+    if method not in ["relative", "absolute", "aitchison", "concordia-distance"]:
         raise ValueError(
             'method must be one of "relative", "absolute", "aitchison", or "concordia-distance"'
         )
 
-    if method == 'concordia-distance':
+    if method == "concordia-distance":
         for ii, age in enumerate(ages):
             d = np.abs(age.discordance(method=method))
             if d < threshold:
@@ -930,9 +977,9 @@ def discordance_filter(ages,
         if system_threshold:
             for ii, age in enumerate(ages):
                 if age.date76(conf=None) > 1000:
-                    cur_method = method + '_76_68'
+                    cur_method = method + "_76_68"
                 else:
-                    cur_method = method + '_68_75'
+                    cur_method = method + "_68_75"
                 d = np.abs(age.discordance(method=cur_method))
                 if d < threshold:
                     ages_conc.append(age)
@@ -940,11 +987,11 @@ def discordance_filter(ages,
 
         else:
             for ii, age in enumerate(ages):
-                d = np.abs(age.discordance(method=method + '_76_68'))
+                d = np.abs(age.discordance(method=method + "_76_68"))
                 if d < threshold:
                     ages_conc.append(age)
                     idx[ii] = True
-                    
+
     return ages_conc, idx
 
 
@@ -963,9 +1010,10 @@ def root_fun_76_86(r238_206, m, b):
     r207_206_conc - r207_206_disc : float
         Difference between the concordia and discordia ratios
     """
-    r207_206_conc = concordia_tw(t238(1/r238_206))[1]
-    r207_206_disc = m*r238_206 + b
+    r207_206_conc = concordia_tw(t238(1 / r238_206))[1]
+    r207_206_disc = m * r238_206 + b
     return r207_206_conc - r207_206_disc
+
 
 def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None, Pbc_std=1e-2):
     """Lower intercept date in Tera-Wasserburg space
@@ -1006,7 +1054,7 @@ def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None, Pbc_std=1e-2):
         - confint : list
             List of lower and upper bounds of the confidence interval for the lower intercept date. This is only computed if conf is not None.
     """
-    
+
     # gather relevant ratios
     r238_206 = np.array([x.r238_206 for x in UPbs])
     r238_206_std = np.array([x.r238_206_std for x in UPbs])
@@ -1025,13 +1073,16 @@ def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None, Pbc_std=1e-2):
         return r238_206_app, r238_206_std_app, r207_206_app, r207_206_std_app, rho_app
 
     # if anchoring to a common lead ratio, append it to the data
-    if (Pbc is not None) and (Pbc != 'SK'):
+    if (Pbc is not None) and (Pbc != "SK"):
         # make sure value is greater than zero and less than 2
-        assert Pbc > 0 and Pbc < 2, 'Pbc must be between 0 and 2'
+        assert Pbc > 0 and Pbc < 2, "Pbc must be between 0 and 2"
         # append common lead ratio to the data
-        r238_206_fit, r238_206_std_fit, r207_206_fit, r207_206_std_fit, rho_fit = Pbc_append(Pbc)
+        r238_206_fit, r238_206_std_fit, r207_206_fit, r207_206_std_fit, rho_fit = (
+            Pbc_append(Pbc)
+        )
     # if using SK, solve for slope and intercept such that the common lead ratio is equal to the Stacey and Kramers (1975) common lead ratio at the lower intercept date
-    elif Pbc == 'SK':
+    elif Pbc == "SK":
+
         def cost(t):
             """Cost function for finding optimal t that fits data and common lead model"""
             r206_204, r207_204 = sk_pb(t)
@@ -1040,56 +1091,81 @@ def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None, Pbc_std=1e-2):
             m = (r207_206_ctw - Pbc) / r238_206_ctw
 
             # don't include fixed point in the fit
-            mswd = line_mswd(m, Pbc, r238_206, r207_206,
-                             1/r238_206_std**2, 1/r207_206_std**2, rho)
+            mswd = line_mswd(
+                m,
+                Pbc,
+                r238_206,
+                r207_206,
+                1 / r238_206_std**2,
+                1 / r207_206_std**2,
+                rho,
+            )
 
             # but t needs to match lower intercept date
             return mswd
+
         # find optimal t that fits data and common lead model
-        t_opt = minimize_scalar(cost, bounds=(0, 5000), method='bounded').x
+        t_opt = minimize_scalar(cost, bounds=(0, 5000), method="bounded").x
         Pbc = sk_pb(t_opt)[1] / sk_pb(t_opt)[0]
         # append Pbc at t_opt to the data
-        r238_206_fit, r238_206_std_fit, r207_206_fit, r207_206_std_fit, rho_fit = Pbc_append(Pbc)
+        r238_206_fit, r238_206_std_fit, r207_206_fit, r207_206_std_fit, rho_fit = (
+            Pbc_append(Pbc)
+        )
     else:
-        r238_206_fit, r238_206_std_fit, r207_206_fit, r207_206_std_fit, rho_fit = r238_206, r238_206_std, r207_206, r207_206_std, rho
+        r238_206_fit, r238_206_std_fit, r207_206_fit, r207_206_std_fit, rho_fit = (
+            r238_206,
+            r238_206_std,
+            r207_206,
+            r207_206_std,
+            rho,
+        )
 
     # compute slope and intercept of line in Tera-Wasserburg space
-    m, b, m_sig, b_sig, _, mb_cov = yorkfit(r238_206_fit, 
-                                    r207_206_fit,
-                                    1/r238_206_std_fit**2,
-                                    1/r207_206_std_fit**2, 
-                                    rho_fit)
+    m, b, m_sig, b_sig, _, mb_cov = yorkfit(
+        r238_206_fit,
+        r207_206_fit,
+        1 / r238_206_std_fit**2,
+        1 / r207_206_std_fit**2,
+        rho_fit,
+    )
     # compute MSWD using just input data
-    mswd = line_mswd(m, b, r238_206, r207_206, 1/r238_206_std**2, 1/r207_206_std**2, rho)
-
+    mswd = line_mswd(
+        m, b, r238_206, r207_206, 1 / r238_206_std**2, 1 / r207_206_std**2, rho
+    )
 
     # find root
     x0 = 1000  # initial 238/206 for root finding
     if conf is not None:
-        mod_mc = np.matmul(np.linalg.cholesky(np.array([[m_sig**2, mb_cov], [mb_cov, b_sig**2]])),
-                           np.random.randn(2, n_mc)) + np.array([[m], [b]])
+        mod_mc = np.matmul(
+            np.linalg.cholesky(np.array([[m_sig**2, mb_cov], [mb_cov, b_sig**2]])),
+            np.random.randn(2, n_mc),
+        ) + np.array([[m], [b]])
         m_mc = mod_mc[0]
         b_mc = mod_mc[1]
         dates = np.zeros(n_mc)
         for ii in range(n_mc):
-            sol = root_scalar(root_fun_76_86, args=(m_mc[ii], b_mc[ii]), x0=x0, method='newton')
-            dates[ii] = t238(1/sol.root)
-        confint = np.quantile(dates, [(1-conf)/2, 1-(1-conf)/2])
+            sol = root_scalar(
+                root_fun_76_86, args=(m_mc[ii], b_mc[ii]), x0=x0, method="newton"
+            )
+            dates[ii] = t238(1 / sol.root)
+        confint = np.quantile(dates, [(1 - conf) / 2, 1 - (1 - conf) / 2])
         date = np.mean(dates)
     else:
-        sol = root_scalar(root_fun_76_86, args=(m, b), x0=x0, method='newton')
-        date = t238(1/sol.root)
+        sol = root_scalar(root_fun_76_86, args=(m, b), x0=x0, method="newton")
+        date = t238(1 / sol.root)
         confint = None
 
-    result = {'date': date, 
-              'slope': m,
-              'slope_sig': m_sig,
-              'intercept': b, 
-              'intercept_sig': b_sig, 
-              'slope_intercept_cov': mb_cov,
-              'x_bar': np.mean(r238_206),
-              'mswd': mswd,
-              'confint': confint}
+    result = {
+        "date": date,
+        "slope": m,
+        "slope_sig": m_sig,
+        "intercept": b,
+        "intercept_sig": b_sig,
+        "slope_intercept_cov": mb_cov,
+        "x_bar": np.mean(r238_206),
+        "mswd": mswd,
+        "confint": confint,
+    }
 
     return result
 
@@ -1110,29 +1186,25 @@ def wc1_corr(wc1_UPbs):
     # compute slope with fixed common lead ratio of 0.85
     b = 0.85
     result = discordia_date_76_86(wc1_UPbs, Pbc=b)
-    m = result['slope']
+    m = result["slope"]
 
     def cost(factor):
         """Cost function for finding factor to multiply 238/206 ratios by"""
         # compute lower intercept date
-        sol = root_scalar(root_fun_76_86, args=(m/factor, b), x0=500, method='newton')
-        date = t238(1/sol.root)
+        sol = root_scalar(root_fun_76_86, args=(m / factor, b), x0=500, method="newton")
+        date = t238(1 / sol.root)
 
-        return (date - 254)**2
-    
+        return (date - 254) ** 2
+
     # find factor that minimizes cost function
-    factor = minimize_scalar(cost, bounds=(0, 2), method='bounded').x
+    factor = minimize_scalar(cost, bounds=(0, 2), method="bounded").x
 
     return factor
 
 
-def kde(radages, t,
-        kernel='gauss',
-        bw='adaptive',
-        weights='uncertainty',
-        **kwargs):
-    """Evaluate kde for radages at times t. 
-    
+def kde(radages, t, kernel="gauss", bw="adaptive", weights="uncertainty", **kwargs):
+    """Evaluate kde for radages at times t.
+
     The 238/206 - 207/206 concordia ages are used for plotting, and the associated uncertainties are used as weights.
 
     Parameters
@@ -1161,10 +1233,12 @@ def kde(radages, t,
 
     if weights is None:
         w = np.ones(len(ages_in))
-    elif weights == 'uncertainty':
-        w = 1 / dates_conc[:, 1]**2
+    elif weights == "uncertainty":
+        w = 1 / dates_conc[:, 1] ** 2
     else:
-        assert len(weights) == len(ages_in), 'Weights must be the same length as radages'
+        assert len(weights) == len(ages_in), (
+            "Weights must be the same length as radages"
+        )
 
     # evaluate kde
     kde_est = kde_base(ages_in, t, kernel=kernel, bw=bw, w=w, **kwargs)
@@ -1200,11 +1274,12 @@ def line_mswd(m, b, x, y, wx, wy, r):
     """
     # for variable meanings, see yorkfit()
     n = len(x)
-    assert len(x) == len(y), 'x and y must be the same length'
+    assert len(x) == len(y), "x and y must be the same length"
     alpha = np.sqrt(wx * wy)
     W = (wx * wy) / (wx + m**2 * wy - 2 * m * r * alpha)
-    mswd = np.sum(W * (y - m * x - b)**2) / (n - 2)
+    mswd = np.sum(W * (y - m * x - b) ** 2) / (n - 2)
     return mswd
+
 
 def yorkfit(x, y, wx, wy, r, thres=1e-3):
     """
@@ -1212,22 +1287,22 @@ def yorkfit(x, y, wx, wy, r, thres=1e-3):
 
     Parameters
     ----------
-    x : array-like 
+    x : array-like
         Mean x-values
     y : array-like
         Mean y-values
     wx : array-like
         Weights for x-values (typically 1/sigma^2)
-    wy : array-like 
+    wy : array-like
         Weights for y-values (typically 1/sigma^2)
     r : array-like
         Correlation coefficients of errors in x and y, must be between -1 and 1
-    
+
     Returns
     -------
     b : float
         Maximum likelihood estimate for slope of line
-    a : float 
+    a : float
         Maximum likelihood estimate for intercept of line
     b_sig : float
         Standard deviation of slope for line
@@ -1238,11 +1313,11 @@ def yorkfit(x, y, wx, wy, r, thres=1e-3):
     ab_cov : float
         Covariance of slope and intercept for line
     """
-    assert len(x) == len(y), 'x and y must be the same length'
-    assert len(wx) == len(x), 'wx must be the same length as x'
-    assert len(wy) == len(y), 'wy must be the same length as y'
-    assert np.all(np.abs(r) <= 1), 'r must be between -1 and 1'
-    
+    assert len(x) == len(y), "x and y must be the same length"
+    assert len(wx) == len(x), "wx must be the same length as x"
+    assert len(wy) == len(y), "wy must be the same length as y"
+    assert np.all(np.abs(r) <= 1), "r must be between -1 and 1"
+
     n = len(x)
     # get first guess for b
     b = stats.linregress(x, y)[0]
@@ -1284,7 +1359,7 @@ def yorkfit(x, y, wx, wy, r, thres=1e-3):
     return b, a, b_sig, a_sig, mswd, ab_cov
 
 
-def weighted_mean(ages, ages_s, sig_method='naive', standard_error=True):
+def weighted_mean(ages, ages_s, sig_method="naive", standard_error=True):
     """Weighted-mean age computation
 
     Parameters
@@ -1295,9 +1370,9 @@ def weighted_mean(ages, ages_s, sig_method='naive', standard_error=True):
         Age standard deviations (same length as ages)
     sig_method : str, optional
         Method for computing the standard error of the weighted mean, by default 'naive'. Valid strings are 'naive', 'unbiased'
-        For unbiased, see 
+        For unbiased, see
             https://en.wikipedia.org/wiki/Weighted_arithmetic_mean#Reliability_weights,
-            https://seismo.berkeley.edu/~kirchner/Toolkits/Toolkit_12.pdf 
+            https://seismo.berkeley.edu/~kirchner/Toolkits/Toolkit_12.pdf
     standard_error : bool, optional
         Whether to return the standard error of the weighted mean, by default True. If sig_method is 'naive', then this parameter is True.
 
@@ -1311,39 +1386,46 @@ def weighted_mean(ages, ages_s, sig_method='naive', standard_error=True):
         Reduced chi-squared statistic for residuals with respect to the weighted mean
     """
     # weights
-    w = 1/(ages_s**2)
+    w = 1 / (ages_s**2)
     # weighted mean
-    mu = np.sum(ages*w)/np.sum(w)
+    mu = np.sum(ages * w) / np.sum(w)
     # verify sig_method is valid
-    assert sig_method in ['naive', 'unbiased', 'biased'], 'sig_method must be one of naive, unbiased, biased'
+    assert sig_method in ["naive", "unbiased", "biased"], (
+        "sig_method must be one of naive, unbiased, biased"
+    )
     # ignore standard error if sig_method is naive
-    if sig_method == 'naive':
+    if sig_method == "naive":
         standard_error = True
     # naive
-    if sig_method == 'naive':
-        sig2 = 1/np.sum(w)
+    if sig_method == "naive":
+        sig2 = 1 / np.sum(w)
         n = 1  # hacky
     # unbiased
-    elif sig_method == 'unbiased':
-        sig2 = np.sum(w)/(np.sum(w)**2-np.sum(w**2))*np.sum(w*(ages-mu)**2)
-        n = np.sum(w)**2/np.sum(w**2)   # effective sample size
+    elif sig_method == "unbiased":
+        sig2 = (
+            np.sum(w) / (np.sum(w) ** 2 - np.sum(w**2)) * np.sum(w * (ages - mu) ** 2)
+        )
+        n = np.sum(w) ** 2 / np.sum(w**2)  # effective sample size
     # biased
-    elif sig_method == 'biased':
-        n = len(ages)   # sample size
-        sig2 = (np.sum(w*(ages-mu)**2)/np.sum(w)) * n / (n-1)
-    
+    elif sig_method == "biased":
+        n = len(ages)  # sample size
+        sig2 = (np.sum(w * (ages - mu) ** 2) / np.sum(w)) * n / (n - 1)
+
     if standard_error:
-       sig = np.sqrt(sig2/n)
+        sig = np.sqrt(sig2 / n)
     else:
         sig = np.sqrt(sig2)
 
-    mswd = np.sum(w)/(np.sum(w)**2-np.sum(w**2)) * \
-        np.sum((w*(ages-mu)**2)/ages_s**2)
-    
+    mswd = (
+        np.sum(w)
+        / (np.sum(w) ** 2 - np.sum(w**2))
+        * np.sum((w * (ages - mu) ** 2) / ages_s**2)
+    )
+
     return mu, sig, mswd
 
 
-def get_ages(df):
+def get_ages(df, columns=None):
     """Produce UPb age objects
 
     Create UPb age objects from data in GeochemDB. This function assumes that the following quantities are present in the GeochemDB database and form columns in the input DataFrame:
@@ -1357,33 +1439,45 @@ def get_ages(df):
     Parameters
     ----------
     df : pd.DataFrame
-        DataFrame of U-Pb measurements, ideally from GeochemDB.GeochemDB.measurements_by_sample(). Must have a hierarchical column index with the following levels: 'Pb206/U238', 'Pb207/U235', 'Pb207/Pb206', 'rho 206Pb/238U v 207Pb/235U', 'rho 207Pb/206Pb v 238U/206Pb'. Each level should have 'mean' and 'uncertainty' sublevels. 
-    
+        DataFrame of U-Pb measurements, ideally from GeochemDB.GeochemDB.measurements_by_sample(). Assumes a hierarchical column index with the following levels: 'Pb206/U238', 'Pb207/U235', 'Pb207/Pb206', 'rho 206Pb/238U v 207Pb/235U', 'rho 207Pb/206Pb v 238U/206Pb'. Each level should have 'mean' and 'uncertainty' sublevels.
+    columns : list, optional
+        List of columns to use for creating UPb objects, by default None. If None, the function will use the default columns as described above. Must be a list of tuples with the first element being the column name and the second element being either 'mean' or 'uncertainty'. Order of entries is: 206Pb/U238 mean, 206Pb/U238 uncertainty, 207Pb/U235 mean, 207Pb/U235 uncertainty, 207Pb/Pb206 mean, 207Pb/Pb206 uncertainty, rho 206Pb/238U v 207Pb/235U mean, rho 207Pb/206Pb v 238U/206Pb mean.
+
     Returns
     -------
     ages : list
         List of UPb objects.
     """
     # cols
-    cols = [('Pb206/U238', 'mean'), 
-            ('Pb206/U238', 'uncertainty'), 
-            ('Pb207/U235', 'mean'),
-            ('Pb207/U235', 'uncertainty'),
-            ('Pb207/Pb206', 'mean'),
-            ('Pb207/Pb206', 'uncertainty'),
-            ('rho 206Pb/238U v 207Pb/235U', 'mean'),
-            ('rho 207Pb/206Pb v 238U/206Pb', 'mean')]
-    
+    if columns is not None:
+        cols = columns
+    else:
+        cols = [
+            ("Pb206/U238", "mean"),
+            ("Pb206/U238", "uncertainty"),
+            ("Pb207/U235", "mean"),
+            ("Pb207/U235", "uncertainty"),
+            ("Pb207/Pb206", "mean"),
+            ("Pb207/Pb206", "uncertainty"),
+            ("rho 206Pb/238U v 207Pb/235U", "mean"),
+            ("rho 207Pb/206Pb v 238U/206Pb", "mean"),
+        ]
+
     ages = []
     for ii in range(df.shape[0]):
-        ages.append(UPb(df.iloc[ii][cols[0]], 
-                              df.iloc[ii][cols[1]]/2,
-                              df.iloc[ii][cols[2]], 
-                              df.iloc[ii][cols[3]]/2, 
-                              df.iloc[ii][cols[4]], 
-                              df.iloc[ii][cols[5]]/2, 
-                              df.iloc[ii][cols[6]],
-                              df.iloc[ii][cols[7]], name=df.index[ii]))
+        ages.append(
+            UPb(
+                df.iloc[ii][cols[0]],
+                df.iloc[ii][cols[1]] / 2,
+                df.iloc[ii][cols[2]],
+                df.iloc[ii][cols[3]] / 2,
+                df.iloc[ii][cols[4]],
+                df.iloc[ii][cols[5]] / 2,
+                df.iloc[ii][cols[6]],
+                df.iloc[ii][cols[7]],
+                name=df.index[ii],
+            )
+        )
     return ages
 
 
@@ -1392,7 +1486,7 @@ def get_ages(df):
 ###
 
 # Vervoort et al. 2018 values
-Lu_DM = 0.03976 
+Lu_DM = 0.03976
 Hf_DM = 0.283238
 
 # Hf_DM = 0.283225
@@ -1402,11 +1496,12 @@ Hf_DM = 0.283238
 Hf_CHUR = 0.282772
 Lu_CHUR = 0.0332
 
-lam_Lu = 1.867e-5 # My-1
+lam_Lu = 1.867e-5  # My-1
+
 
 def eHf(Hf176Hf177, Lu176Hf177, t, Hf_CHUR=Hf_CHUR, Lu_CHUR=Lu_CHUR):
-    """epsilon hafnium 
-    
+    """epsilon hafnium
+
     for a given set of ratios
 
     Parameters
@@ -1415,7 +1510,7 @@ def eHf(Hf176Hf177, Lu176Hf177, t, Hf_CHUR=Hf_CHUR, Lu_CHUR=Lu_CHUR):
         176Hf/177Hf ratio(s)
     Lu176Hf177 : array-like
         176Lu/177Hf ratio(s)
-    t : array-like 
+    t : array-like
         age(s) in Myr. If float, then the same age is used for all ratios.
     Hf_CHUR : float, optional
         176Hf/177Hf ratio for CHUR, by default Hf_CHUR
@@ -1427,9 +1522,13 @@ def eHf(Hf176Hf177, Lu176Hf177, t, Hf_CHUR=Hf_CHUR, Lu_CHUR=Lu_CHUR):
     eHf : array-like
         epsilon hafnium value(s)
     """
-    return 10000*((Hf176Hf177 - Lu176Hf177*(np.exp(lam_Lu*t)-1)) / \
-                  (Hf_CHUR - Lu_CHUR*(np.exp(lam_Lu*t)-1)) - 1)
-                  
+    return 10000 * (
+        (Hf176Hf177 - Lu176Hf177 * (np.exp(lam_Lu * t) - 1))
+        / (Hf_CHUR - Lu_CHUR * (np.exp(lam_Lu * t) - 1))
+        - 1
+    )
+
+
 def eHf_DM(t):
     """epsilon Hafnium for depleted mantle
 
@@ -1445,6 +1544,7 @@ def eHf_DM(t):
     """
     return eHf(Hf_DM, Lu_DM, t)
 
+
 #
 # DETRITAL AGE SPECTRA
 #
@@ -1456,6 +1556,7 @@ class DetritalSpectra:
     ages : dict or pandas.DataFrame
         Dictionary or DataFrame of ages. If dict, keys are sample names and values are lists of UPb.radage objects. If DataFrame, must have a column called 'UPb' and a column called 'Sample', and the rows correspond to individual ages.
     """
+
     def __init__(self, ages):
         """Instantiate DetritalSpectra object.
 
@@ -1476,19 +1577,21 @@ class DetritalSpectra:
         if isinstance(ages, dict):
             self.ages = ages
         elif isinstance(ages, pd.DataFrame):
-            assert 'UPb' in ages.columns, 'DataFrame must have a column called "UPb"'
-            assert 'Sample' in ages.columns, 'DataFrame must have a column called "Sample"'
+            assert "UPb" in ages.columns, 'DataFrame must have a column called "UPb"'
+            assert "Sample" in ages.columns, (
+                'DataFrame must have a column called "Sample"'
+            )
             self.ages = {}
-            for sample in ages['Sample'].unique():
-                self.ages[sample] = list(ages[ages['Sample'] == sample]['UPb'])
+            for sample in ages["Sample"].unique():
+                self.ages[sample] = list(ages[ages["Sample"] == sample]["UPb"])
         else:
-            raise ValueError('ages must be a dict or pandas DataFrame')
+            raise ValueError("ages must be a dict or pandas DataFrame")
         # validate UPb objects
         for sample in self.ages:
             for age in self.ages[sample]:
-                assert isinstance(age, UPb), 'All ages must be UPb objects'
-        
-    def dissimilarity(self, method='wasserstein'):
+                assert isinstance(age, UPb), "All ages must be UPb objects"
+
+    def dissimilarity(self, method="wasserstein"):
         """Compute dissimilarity matrix between detrital age spectra.
 
         Parameters
@@ -1503,7 +1606,9 @@ class DetritalSpectra:
         """
 
         # validate method
-        assert method in ['wasserstein', 'ks', 'energy'], 'method must be one of "wasserstein", "ks", "energy"'
+        assert method in ["wasserstein", "ks", "energy"], (
+            'method must be one of "wasserstein", "ks", "energy"'
+        )
 
         # prepare output dataframe
         samples = list(self.ages.keys())
@@ -1511,16 +1616,18 @@ class DetritalSpectra:
         D = pd.DataFrame(index=samples, columns=samples, data=np.zeros((n_sam, n_sam)))
 
         # Wasserstein distance
-        if method == 'wasserstein':
+        if method == "wasserstein":
             for ii in range(n_sam):
-                for jj in range(ii+1, n_sam):
+                for jj in range(ii + 1, n_sam):
                     # get current pair of samples
                     idx_1 = self.ages[samples[ii]] == samples[ii]
-                    cur_sam_1 = df.loc[idx_1]['Age']
-                    idx_2 = df['Sample'] == samples[jj]
-                    cur_sam_2 = df.loc[idx_2]['Age']
-            
+                    cur_sam_1 = df.loc[idx_1]["Age"]
+                    idx_2 = df["Sample"] == samples[jj]
+                    cur_sam_2 = df.loc[idx_2]["Age"]
+
                     # compute distance for pair
-                    wasser[ii, jj] = stats.wasserstein_distance(cur_sam_1.values, cur_sam_2.values)
+                    wasser[ii, jj] = stats.wasserstein_distance(
+                        cur_sam_1.values, cur_sam_2.values
+                    )
                     wasser[jj, ii] = wasser[ii, jj]
         return D

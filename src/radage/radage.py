@@ -16,7 +16,7 @@ l238_std = 0.5 * l238 * 0.107 / 100  # see Schoene 2014 pg. 359
 l235 = 9.8485e-10 * 1e6
 l235_std = 0.5 * l235 * 0.137 / 100
 l232 = 0.049475e-9 * 1e6  # probably needs to be updated, from Stacey and Kramers 1975
-u238u235 = 138.818  # Heiss 2012
+u238u235 = 137.818  # Heiss 2012
 
 
 def concordia(t):
@@ -252,29 +252,124 @@ def t207(r207_206, u238u235=u238u235):
 
     return np.squeeze(dates)
 
+def rho207235_206238_to_rho238206_207206(
+    r207235,
+    r207235_std,
+    r206238,
+    r206238_std,
+    rho_207235_206238
+):
+    """convert error correlation from 206-238 vs 207-235 to 207-206 vs 238-206
 
-class UPb:
-    """
-    class for handling U-Pb ages, where data are given as isotopic ratios and their uncertainties
+    see pg. 170-1 of notes (Red Leuchtturm)
 
     Parameters
     ----------
-    r206_238 : float
-        Pb206/U238 ratio
-    r206_238_std : float
-        Standard deviation of Pb206/U238 ratio
-    r207_235 : float
-        Pb207/U235 ratio
-    r207_235_std : float
-        Standard deviation of Pb207/U235 ratio
-    r207_206 : float
-        Pb207/Pb206 ratio
-    r207_206_std : float
-        Standard deviation of Pb207/Pb206 ratio
-    rho75_68 : float
-        Error correlation between 207/235 and 206/238 ratios. Must be between -1 and 1
-    rho86_76 : float
-        Error correlation between 238/206 and 207/206 ratios. Must be between -1 and 1
+    r207235 : float or array
+        207-235 ratios
+    r207235_std : float or array
+        r207235 uncertainties
+    r206238 : float or array
+        206-238 ratio(s)
+    r206238_std : float or array
+        206-238 uncertainties
+    rho_207235_206238 : float or array
+        error correlation coefficients
+
+    Returns
+    -------
+    rho207206_238206 : float or array
+        error correlation coefficients for 207-206 vs 238-206
+        The negative of this correlation coefficient is the correlation coefficient for 206-238 vs 207-206 (see page 173 Leuchtturm notebook)
+    r238206_std : float or array
+        238-206 uncertainties
+    r207206_std : float or array
+        207-206 uncertainties
+    """
+    X1 = r207235
+    Y1 = r206238
+    X2 = 1/Y1
+    Y2 = X1/Y1 / u238u235
+    u = r207235_std/X1
+    v = r206238_std/Y1
+    rho1 = rho_207235_206238
+    X2_sig = X2*v
+    Y2_sig = Y2*np.sqrt(u**2 + v**2 - 2*rho1*u*v)
+    rho2 = (v-rho1*u)/np.sqrt(u**2 + v**2 - 2*rho1*u*v)
+
+    return rho2, X2_sig, Y2_sig
+
+def rho206238_207206_to_rho207235_206238(
+    r206238,
+    r206238_std,
+    r207206,
+    r207206_std,
+    rho_206238_207206
+):
+    """convert error correlation from 206-238 vs 207-206 to 207-2235 vs 206-238
+
+    see pg. 174 of notes (Red Leuchtturm)
+
+    Parameters
+    ----------
+    r206238 : float or array
+        206-238 ratio(s)
+    r206238_std : float or array
+        206-238 uncertainties
+    r207206 : float or array
+        207-206 ratios
+    r207206_std : float or array
+        207-206 uncertainties
+    rho_206238_207206 : float or array
+        error correlation coefficients
+
+    Returns
+    -------
+    rho207235_206238 : float or array
+        error correlation coefficients for 207-235 vs 206-238
+        The negative of this correlation coefficient is the correlation coefficient for 206-238 vs 207-206 (see page 173 Leuchtturm notebook)
+    r206238_std : float or array
+        206-238 uncertainties
+    r207235_std : float or array
+        207-235 uncertainties
+    """
+    X1 = r206238
+    Y1 = r207206
+    X2 = X1
+    Y2 = X1*Y1*u238u235
+    u = r206238_std/X1
+    v = r207206_std/Y1
+    rho1 = rho_206238_207206
+    X2_sig = r206238_std
+    Y2_sig = Y2*np.sqrt(u**2 + v**2 + 2*rho1*u*v)
+    rho2 = (u+rho1*v)/np.sqrt(u**2 + v**2 + 2*rho1*u*v)
+
+    return rho2, X2_sig, Y2_sig
+
+class UPb:
+    """U-Pb ages based on isotopic ratios and their uncertainties.
+
+    Inputs can be any of the following combinations of measurements:
+        - 206Pb/238U and 207Pb/235U with rho_207235_206238
+        - 206Pb/238U, 207Pb/235U, and 207Pb/206Pb with rho_207235_206238 and/or rho_206238_207206
+        - 238U/206Pb and 207Pb/206Pb with rho_238206_207206
+
+    Parameters
+    ----------
+    r206_238 : tuple or list
+        Pb206/U238 ratio and 1-sigma uncertainty, by default None. If None, the ratio is computed from r238_206.
+    r207_235 : tuple or list
+        Pb207/U235 ratio and 1-sigma uncertainty, by default None. If None, the ratio is computed from r207_206 and r206_238.
+    r207_206 : tuple or list
+        Pb207/Pb206 ratio and 1-sigma uncertainty, by default None. If None, the ratio is computed from r207_235 and r206_238.
+    r238_206 : tuple or list
+        U238/Pb206 ratio and 1-sigma uncertainty, by default None. If None, the ratio is computed from r206_238.
+    rho_207235_206238 : float
+        Error correlation between 207/235 and 206/238 ratios. Must be between -1 and 1. By default None. If None, the correlation is computed from rho_238206_207206 or rho_206238_207206. If no correlation coefficients are provided, the default is 0.
+    rho_238206_207206 : float
+        Error correlation between 238/206 and 207/206 ratios. Must be between -1 and 1. By default None. If None, the correlation is computed from rho_207235_206238 or rho_206238_207206. If no correlation coefficients are provided, the default is 0.
+    rho_206238_207206 : float
+        Error correlation between 206/238 and 207/206 ratios. Must be between -1 and 1. By default None. If None, the correlation is computed from rho_207235_206238 or rho_238206_207206. If no correlation coefficients are provided, the default is 0.
     name : str, optional
         Name for age, by default None. Useful for plotting
 
@@ -296,33 +391,102 @@ class UPb:
 
     def __init__(
         self,
-        r206_238,
-        r206_238_std,
-        r207_235,
-        r207_235_std,
-        r207_206,
-        r207_206_std,
-        rho75_68,
-        rho86_76,
+        r206_238=None,
+        r207_235=None,
+        r207_206=None,
+        r238_206=None,
+        rho_207235_206238=None,
+        rho_238206_207206=None,
+        rho_206238_207206=None,
         name=None,
     ):
         """Create UPb object"""
-        self.r206_238 = r206_238
+
+        # parse input combinations; each conditional statement ultimately yields the following ratios and correlation coefficients:
+        # 206-238, 207-235, 207-206, 238-206, rho_207235_206238, rho_206238_207206, rho_238206_207206
+        #
+        # case 1: 206-238, 207-235, and 207-206, with rho_206238_207206 and/or rho_207235_206238
+        if r206_238 is not None and r207_235 is not None and r207_206 is not None:
+            r206_238_mean, r206_238_std = r206_238
+            r207_235_mean, r207_235_std = r207_235
+            r207_206_mean, r207_206_std = r207_206
+            r238_206_mean = 1 / r206_238_mean
+            # sort out correlation coefficients
+            if rho_207235_206238 is None and rho_206238_207206 is None:
+                rho_207235_206238 = 0
+                rho_206238_207206 = 0
+            elif rho_207235_206238 is not None and rho_206238_207206 is None:
+                rho_206238_207206 = \
+                    -rho207235_206238_to_rho238206_207206(
+                        r207_235_mean, r207_235_std,
+                        r206_238_mean, r206_238_std,
+                        rho_207235_206238
+                    )[0]
+            elif rho_207235_206238 is None and rho_206238_207206 is not None:
+                rho_207235_206238 = \
+                    rho206238_207206_to_rho207235_206238(
+                        r206_238_mean, r206_238_std,
+                        r207_206_mean, r207_206_std,
+                        rho_206238_207206
+                    )[0]
+            rho_238206_207206, r238_206_std, _ = rho207235_206238_to_rho238206_207206(
+                r207_235_mean, r207_235_std,
+                r206_238_mean, r206_238_std,
+                rho_207235_206238
+            )
+        
+        # case 2: 206Pb/238U and 207Pb/235U with rho_207235_206238
+        elif r206_238 is not None and r207_235 is not None:
+            r206_238_mean, r206_238_std = r206_238
+            r207_235_mean, r207_235_std = r207_235
+            r207_206_mean = r207_235_mean / r206_238_mean / u238u235
+            if rho_207235_206238 is None:
+                rho_207235_206238 = 0
+            rho_238206_207206, r238_206_std, r207206_std = \
+                rho207235_206238_to_rho238206_207206(
+                    r207_235_mean, r207_235_std,
+                    r206_238_mean, r206_238_std,
+                    rho_207235_206238
+                )
+            rho_206238_207206 = -rho_238206_207206
+        
+        # case 3: 238Pb/206U and 207Pb/206Pb with rho_238206_207206
+        elif r238_206 is not None and r207_206 is not None:
+            r238_206_mean, r238_206_std = r238_206
+            r207_206_mean, r207_206_std = r207_206
+            r206_238_mean = 1 / r238_206_mean
+            r206_238_std = (r238_206_std/r238_206_mean) * r206_238_mean
+            r207_235_mean = r207_206_mean * r206_238_mean * u238u235
+            if rho_238206_207206 is None:
+                rho_238206_207206 = 0
+            rho_206238_207206 = -rho_238206_207206
+            rho_207235_206238, r207235_std, _ = \
+                rho206238_207206_to_rho207235_206238(
+                    r206_238_mean, r206_238_std,
+                    r207_206_mean, r207_206_std,
+                    rho_206238_207206
+                )
+        
+        # assign to self
+        self.r206_238 = r206_238_mean
         self.r206_238_std = r206_238_std
-        self.r207_235 = r207_235
+        self.r207_235 = r207_235_mean
         self.r207_235_std = r207_235_std
-        self.r207_206 = r207_206
+        self.r207_206 = r207_206_mean
         self.r207_206_std = r207_206_std
-        self.r238_206 = 1 / r206_238
+        self.r238_206 = r238_206_mean
+        self.r238_206_std = r238_206_std
 
         # check that correlation coefficients are between 0 and 1
-        if rho75_68 < -1 or rho75_68 > 1:
-            raise ValueError("rho75_68 must be between -1 and 1")
-        if rho86_76 < -1 or rho86_76 > 1:
-            print(rho86_76)
-            raise ValueError("rho86_76 must be between -1 and 1")
-        self.rho75_68 = rho75_68  # rho1
-        self.rho86_76 = rho86_76  # rho2
+        if rho_207235_206238 < -1 or rho_207235_206238 > 1:
+            raise ValueError("rho_207235_206238 must be between -1 and 1")
+        if rho_238206_207206 < -1 or rho_238206_207206 > 1:
+            raise ValueError("rho_238206_207206 must be between -1 and 1")
+        if rho_206238_207206 < -1 or rho_206238_207206 > 1:
+            raise ValueError("rho_206238_207206 must be between -1 and 1")
+        self.rho_207235_206238 = rho_207235_206238 
+        self.rho_238206_207206 = rho_238206_207206
+        self.rho_206238_207206 = rho_206238_207206
 
         self.name = name
 
@@ -331,10 +495,10 @@ class UPb:
             [
                 [
                     self.r207_235_std**2,
-                    self.rho75_68 * self.r206_238_std * self.r207_235_std,
+                    self.rho_207235_206238 * self.r206_238_std * self.r207_235_std,
                 ],
                 [
-                    self.rho75_68 * self.r206_238_std * self.r207_235_std,
+                    self.rho_207235_206238 * self.r206_238_std * self.r207_235_std,
                     self.r206_238_std**2,
                 ],
             ]
@@ -350,10 +514,10 @@ class UPb:
             [
                 [
                     self.r238_206_std**2,
-                    self.rho86_76 * self.r238_206_std * self.r207_206_std,
+                    self.rho_238206_207206 * self.r238_206_std * self.r207_206_std,
                 ],
                 [
-                    self.rho86_76 * self.r238_206_std * self.r207_206_std,
+                    self.rho_238206_207206 * self.r238_206_std * self.r207_206_std,
                     self.r207_206_std**2,
                 ],
             ]
@@ -504,10 +668,10 @@ class UPb:
                 [
                     [
                         self.r207_235_std**2,
-                        self.rho75_68 * self.r207_235_std * self.r206_238_std,
+                        self.rho_207235_206238 * self.r207_235_std * self.r206_238_std,
                     ],
                     [
-                        self.rho75_68 * self.r207_235_std * self.r206_238_std,
+                        self.rho_207235_206238 * self.r207_235_std * self.r206_238_std,
                         self.r206_238_std**2,
                     ],
                 ]
@@ -565,7 +729,7 @@ class UPb:
         SY = self.r207_206_std / self.r207_206
         # Sx = self.r207_235_std / self.r207_235
         Sy = self.r206_238_std / self.r206_238
-        rhoXY = self.rho86_76
+        rhoXY = self.rho_238206_207206
         # error transformation for 207/235 computed from 206/238 and 207/206
         Sx = np.sqrt(SX**2 + SY**2 - 2 * SX * SY * rhoXY)
         rhoxy = (SX**2 - SX * SY * rhoXY) / (Sx * Sy)
@@ -648,10 +812,10 @@ class UPb:
                 [
                     [
                         self.r207_235_std**2 + P235**2 * l235_std**2,
-                        self.rho75_68 * self.r206_238_std * self.r207_235_std,
+                        self.rho_207235_206238 * self.r206_238_std * self.r207_235_std,
                     ],
                     [
-                        self.rho75_68 * self.r206_238_std * self.r207_235_std,
+                        self.rho_207235_206238 * self.r206_238_std * self.r207_235_std,
                         self.r206_238_std**2 + P238**2 * l238_std**2,
                     ],
                 ]
@@ -1467,14 +1631,11 @@ def get_ages(df, columns=None):
     for ii in range(df.shape[0]):
         ages.append(
             UPb(
-                df.iloc[ii][cols[0]],
-                df.iloc[ii][cols[1]] / 2,
-                df.iloc[ii][cols[2]],
-                df.iloc[ii][cols[3]] / 2,
-                df.iloc[ii][cols[4]],
-                df.iloc[ii][cols[5]] / 2,
-                df.iloc[ii][cols[6]],
-                df.iloc[ii][cols[7]],
+                r206_238=(df.iloc[ii][cols[0]], df.iloc[ii][cols[1]] / 2),
+                r207_235=(df.iloc[ii][cols[2]], df.iloc[ii][cols[3]] / 2),
+                r207_206=(df.iloc[ii][cols[4]], df.iloc[ii][cols[5]] / 2),
+                rho_207235_206238=df.iloc[ii][cols[6]],
+                rho_238206_207206=df.iloc[ii][cols[7]],
                 name=df.index[ii],
             )
         )

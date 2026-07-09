@@ -6,6 +6,7 @@ import pandas as pd
 import scipy.stats as stats
 from matplotlib.patches import Ellipse
 from scipy.optimize import minimize_scalar, root_scalar
+from sklearn.manifold import MDS
 
 warnings.filterwarnings("ignore", message="invalid value encountered in multiply")
 from .helper import *
@@ -1836,3 +1837,36 @@ class DetritalSpectra:
                     D[ii, jj] = stats.wasserstein_distance(cur_sam_1, cur_sam_2)
                     D[jj, ii] = D[ii, jj]
         return D
+    
+    def mds(self, D, n_components=2, random_state=0, **kwargs):
+        """Perform multidimensional scaling on a dissimilarity matrix.
+
+        Parameters
+        ----------
+        D : pd.DataFrame
+            DataFrame of pairwise dissimilarities between detrital age spectra.
+        n_components : int, optional
+            Number of dimensions to use for MDS embedding, by default 2.
+        random_state : int, optional
+            Random state for MDS embedding, by default 0.
+        kwargs : dict, optional
+            Additional arguments to pass to sklearn.manifold.MDS. See https://scikit-learn.org/stable/modules/generated/sklearn.manifold.MDS.html for more details.
+
+        Returns
+        -------
+        mds_coords : pd.DataFrame
+            DataFrame of MDS coordinates for each group.
+        """
+        mds = MDS(
+            init="random",
+            n_components=n_components,
+            metric="precomputed",
+            random_state=random_state,
+            **kwargs
+        )
+        
+        mds_coords = mds.fit_transform(D)
+        mds_coords_df = pd.DataFrame(
+            mds_coords, index=self.ages.keys(), columns=[f"MDS_{i+1}" for i in range(n_components)]
+        )
+        return mds_coords_df

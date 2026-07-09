@@ -459,7 +459,7 @@ def age_rank_plot(ages, ages_2s, ranks=None, ax=None, wid=0.6, patch_dict=None):
     return ax
 
 
-def kde_plot(radages, t=None, bw='adaptive', kernel='gauss', weights='uncertainty',
+def kde_plot(UPbs, t=None, bw='adaptive', kernel='gauss', weights='uncertainty',
              ax=None, fill=True, rug=True, 
              kde_style=None, kde_base_args=None, patch_style=None, 
              rug_style=None):
@@ -467,7 +467,7 @@ def kde_plot(radages, t=None, bw='adaptive', kernel='gauss', weights='uncertaint
 
     Parameters
     ----------
-    radages : list
+    UPbs : list
         List of radage.UPb objects to include in the kde
     t : array-like, optional
         Time points to evaluate the kde at. If None, a default range is used. Defaults to None.
@@ -476,7 +476,7 @@ def kde_plot(radages, t=None, bw='adaptive', kernel='gauss', weights='uncertaint
     kernel : str, optional
         Kernel to use. Defaults to 'gauss'. Valid options are 'gauss', 'epa'
     weights : str, optional
-        Weights to use for the kde. Defaults to 'uncertainty'. Valid options are 'uncertainty', 'uniform', or a 1d array of weights with same length as radages.
+        Weights to use for the kde. Defaults to 'uncertainty'. Valid options are 'uncertainty', 'uniform', or a 1d array of weights with same length as UPbs.
     ax : matplotlib.pyplot.axes, optional
         Axes object to plot into. If None, one is created. Defaults to None.
     fill : bool, optional
@@ -500,7 +500,7 @@ def kde_plot(radages, t=None, bw='adaptive', kernel='gauss', weights='uncertaint
     
     # useful to precompute dates
     if t is None or rug:
-        dates_conc = np.array([age.date_207_238_concordia()[0:2] for age in radages])
+        dates_conc = np.array([age.date_207_238_concordia()[0:2] for age in UPbs])
 
     # set up default time range if not provided
     if t is None:
@@ -520,7 +520,7 @@ def kde_plot(radages, t=None, bw='adaptive', kernel='gauss', weights='uncertaint
         kde_base_args = {}
 
     # plot fill_between if requested
-    cur_kde = kde(radages, t, bw=bw, kernel=kernel, weights=weights,
+    cur_kde = kde(UPbs, t, bw=bw, kernel=kernel, weights=weights,
                   **kde_base_args) # call once
     
     # set up kde style

@@ -524,7 +524,7 @@ def kde_plot(radages, t=None, bw='adaptive', kernel='gauss', weights='uncertaint
                   **kde_base_args) # call once
     
     # set up kde style
-    kde_style_def = {'color': 'k', 'linestyle': '-'}
+    kde_style_def = {'color': 'k', 'linestyle': '-', 'linewidth': 1}
     if kde_style is None:
         kde_style = kde_style_def
     else:
@@ -537,10 +537,10 @@ def kde_plot(radages, t=None, bw='adaptive', kernel='gauss', weights='uncertaint
             patch_style = patch_style_def
         else:
             patch_style = patch_style_def | patch_style
-        ax.fill_between(t, cur_kde, **patch_style | kde_style, zorder=2)        
+        h_fill = ax.fill_between(t, cur_kde, **patch_style | kde_style, zorder=2)        
 
     # plot kde
-    ax.plot(t, cur_kde, **kde_style)
+    h_line = ax.plot(t, cur_kde, **kde_style)[0]
     if rug:
         rug_style_def = {'color': 'k', 'linewidth': 0.2}
         if rug_style is None:
@@ -573,7 +573,10 @@ def kde_plot(radages, t=None, bw='adaptive', kernel='gauss', weights='uncertaint
     ax.set_yticks([])
     ax.set_xlabel('Age (Ma)')
 
-    return ax
+    if fill:
+        return ax, h_fill
+    else:
+        return ax, h_line
 
 
 def plot_ellipses_68_75(ages, conf=0.95, patch_dict=None, ax=None):

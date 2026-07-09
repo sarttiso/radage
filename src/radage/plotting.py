@@ -461,7 +461,7 @@ def age_rank_plot(ages, ages_2s, ranks=None, ax=None, wid=0.6, patch_dict=None):
 
 def kde_plot(radages, t=None, bw='adaptive', kernel='gauss', weights='uncertainty',
              ax=None, fill=True, rug=True, 
-             kde_style=None, kde_base_args=None, patch_dict=None, 
+             kde_style=None, kde_base_args=None, patch_style=None, 
              rug_style=None):
     """Plot a kernel density estimate of ages
 
@@ -487,7 +487,7 @@ def kde_plot(radages, t=None, bw='adaptive', kernel='gauss', weights='uncertaint
         Dictionary of style parameters for the kde line. Defaults to None. If None, a default style is used.
     kde_base_args : dict, optional
         Dictionary of base arguments for the kde function. Defaults to None.
-    patch_dict : dict or list, optional
+    patch_style : dict or list, optional
         Dictionary of style parameters for the fill_between patch. Defaults to None. If None, a default style is used.
     rug_style : dict, optional
         Dictionary of style parameters for the rug plot lines. Defaults to None. If None, a default style is used.
@@ -522,25 +522,22 @@ def kde_plot(radages, t=None, bw='adaptive', kernel='gauss', weights='uncertaint
     # plot fill_between if requested
     cur_kde = kde(radages, t, bw=bw, kernel=kernel, weights=weights,
                   **kde_base_args) # call once
-    if fill:
-        # set up different default style
-        patch_dict_def = {'facecolor': 'darkgray', 'alpha': 1}
-        if patch_dict is None:
-            patch_dict = patch_dict_def
-        else:
-            patch_dict = patch_dict_def | patch_dict
-        patch_dict = patch_dict_validator(patch_dict, 1)
-        ax.fill_between(t, cur_kde, **patch_dict[0], zorder=2)
-        # if fill, make default style for kde invisible
-        kde_style_def = {'linestyle': ''}
-    else:
-        kde_style_def = {'color': 'k', 'linestyle': '-'}
-
+    
     # set up kde style
+    kde_style_def = {'color': 'k', 'linestyle': '-'}
     if kde_style is None:
         kde_style = kde_style_def
     else:
         kde_style = kde_style_def | kde_style
+
+    if fill:
+        # set up different default style
+        patch_style_def = {'facecolor': 'darkgray', 'alpha': 1}
+        if patch_style is None:
+            patch_style = patch_style_def
+        else:
+            patch_style = patch_style_def | patch_style
+        ax.fill_between(t, cur_kde, **patch_style | kde_style, zorder=2)        
 
     # plot kde
     ax.plot(t, cur_kde, **kde_style)

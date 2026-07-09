@@ -1712,45 +1712,93 @@ def eHf_DM(t):
 class DetritalSpectra:
     """Class for gathering and analyzing detrital age spectra from geologic sources.
 
+    User can provide either radage.UPb objects or numerical ages, grouped by sample, locality, formation, time interval, or any other grouping of interest. If UPb objects are provided, discordance filtering can optionally be applied to the provided objects. If numerical ages are provided, then the class will assume that they have already been filtered for discordance and other quality control metrics.
+
     Parameters
     ----------
-    ages : dict or pandas.DataFrame
-        Dictionary or DataFrame of ages. If dict, keys are grouping names (e.g., sample names, localities, formations, time intervals, etc.) and values are lists of UPb.radage objects. If DataFrame, must have a column called 'UPb' and a column called 'Group', and the rows correspond to individual ages.
+    UPbs : dict or pandas.DataFrame, optional
+        Dictionary or DataFrame of UPb objects. If dict, keys are grouping names (e.g., sample names, localities, formations, time intervals, etc.) and values are lists of radage.UPb objects. If DataFrame, must have a column called 'UPb' and a column called 'Group', and the rows correspond to individual ages. By default, None, in which cases ages must be specified.
+    ages : dict or pandas.DataFrame, optional
+        Dictionary or DataFrame of numerical detrital zircon ages. Structure as for UPbs, but values are lists of numerical ages instead of UPb objects, and a column label 'Age' rather than 'UPb' must be present. By default, None, in which cases UPbs must be specified.
+    discordance_filtering : bool, optional
+        Whether or not to apply discordance filtering to the provided UPb objects. If True, then the discordance method and threshold parameters will be used to filter the provided UPb objects. Ignored if numerical ages are provided. If False, then no filtering will be applied and all provided UPb objects will be used in subsequent analyses. By default, False.
+    discordance_method : str, optional
+        Method to use for discordance filtering if discordance_filtering is True. Valid values are 'relative', 'absolute', 'aitchison', 'concordia-distance'. By default, 'concordia-distance'.
+    discordance_threshold : float, optional
+        Threshold value for discordance filtering if discordance_filtering is True. See :func:`discordance_filter` for more details on how the threshold is applied for each method. By default, 3.    
     """
 
-    def __init__(self, ages):
+    def __init__(self, UPbs=None, ages=None, discordance_filtering=False, discordance_method="concordia-distance", discordance_threshold=3):
         """Instantiate DetritalSpectra object.
 
         Parameters
         ----------
-        ages : dict or pandas.DataFrame
+        UPbs : dict or pandas.DataFrame, optional
+        ages : dict or pandas.DataFrame, optional
 
         Raises
         ------
         ValueError
-            If ages is not a dict or pandas DataFrame
+            If UPbs is not a dict or pandas DataFrame
         AssertionError
-            If ages is a DataFrame and does not have the required columns
+            If UPbs is a DataFrame and does not have the required columns
         AssertionError
-            If any of the ages are not UPb objects
+            If any of the UPbs are not UPb objects
         """
-        # process ages
-        if isinstance(ages, dict):
-            self.ages = ages
-        elif isinstance(ages, pd.DataFrame):
-            assert "UPb" in ages.columns, 'DataFrame must have a column called "UPb"'
-            assert "Group" in ages.columns, (
-                'DataFrame must have a column called "Group"'
-            )
+        if (UPbs is None) and (ages is None):
+            raise ValueError("Must provide either UPbs or ages")
+        if (UPbs is not None) and (ages is not None):
+            raise ValueError("Must provide only one of UPbs or ages")
+        
+        if UPbs is not None:
+            # process UPbs
+            if isinstance(UPbs, dict):
+                self.UPbs = UPbs
+            elif isinstance(UPbs, pd.DataFrame):
+                assert "UPb" in UPbs.columns, 'DataFrame must have a column called "UPb"'
+                assert "Group" in UPbs.columns, (
+                    'DataFrame must have a column called "Group"'
+                )
+                self.UPbs = {}
+                for group in UPbs["Group"].unique():
+                    self.UPbs[group] = list(UPbs[UPbs["Group"] == group]["UPb"])
+            else:
+                raise ValueError("UPbs must be a dict or pandas DataFrame")
+            # validate UPb objects
+            for group in self.UPbs:
+                for age in self.UPbs[group]:
+                    assert isinstance(age, UPb), "All UPbs must be UPb objects"
+            # filter for discordance if desired
+            if discordance_filtering:
+                for group in self.UPbs:
+                    ages_conc, idx = discordance_filter(
+                        self.UPbs[group],
+                        method=discordance_method,
+                        threshold=discordance_threshold,
+                    )
+                    self.UPbs[group] = ages_conc
+            # compute numerical ages
             self.ages = {}
-            for group in ages["Group"].unique():
-                self.ages[group] = list(ages[ages["Group"] == group]["UPb"])
-        else:
-            raise ValueError("ages must be a dict or pandas DataFrame")
-        # validate UPb objects
-        for group in self.ages:
-            for age in self.ages[group]:
-                assert isinstance(age, UPb), "All ages must be UPb objects"
+            for group in self.UPbs:
+                self.ages[group] = np.array(
+                    [age.date_207_238_concordia()[0] for age in self.UPbs[group]]
+                )
+        elif ages is not None:
+            # process ages
+            if isinstance(ages, dict):
+                self.ages = ages
+            elif isinstance(ages, pd.DataFrame):
+                assert "Age" in ages.columns, 'DataFrame must have a column called "Age"'
+                assert "Group" in ages.columns, (
+                    'DataFrame must have a column called "Group"'
+                )
+                self.ages = {}
+                for group in ages["Group"].unique():
+                    self.ages[group] = np.array(
+                        ages[ages["Group"] == group]["Age"].values
+                    )
+            else:
+                raise ValueError("ages must be a dict or pandas DataFrame")
 
     def dissimilarity(self, method="wasserstein"):
         """Compute dissimilarity matrix between detrital age spectra.
@@ -1774,21 +1822,17 @@ class DetritalSpectra:
         # prepare output dataframe
         groups = list(self.ages.keys())
         n_groups = len(groups)
-        D = pd.DataFrame(index=groups, columns=groups, data=np.zeros((n_groups, n_groups)))
+        D = np.zeros((n_groups, n_groups))
 
         # Wasserstein distance
         if method == "wasserstein":
             for ii in range(n_groups):
                 for jj in range(ii + 1, n_groups):
                     # get current pair of groups
-                    idx_1 = self.ages[groups[ii]] == groups[ii]
-                    cur_sam_1 = df.loc[idx_1]["Age"]
-                    idx_2 = df["Group"] == groups[jj]
-                    cur_sam_2 = df.loc[idx_2]["Age"]
+                    cur_sam_1 = self.ages[groups[ii]]
+                    cur_sam_2 = self.ages[groups[jj]]
 
                     # compute distance for pair
-                    wasser[ii, jj] = stats.wasserstein_distance(
-                        cur_sam_1.values, cur_sam_2.values
-                    )
-                    wasser[jj, ii] = wasser[ii, jj]
+                    D[ii, jj] = stats.wasserstein_distance(cur_sam_1, cur_sam_2)
+                    D[jj, ii] = D[ii, jj]
         return D

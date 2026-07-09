@@ -10,4 +10,4 @@ statsmodels
 matplotlib
 myst-nb
 furo
-sklearn
+scikit-learn

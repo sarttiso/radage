@@ -1715,7 +1715,7 @@ class DetritalSpectra:
     Parameters
     ----------
     ages : dict or pandas.DataFrame
-        Dictionary or DataFrame of ages. If dict, keys are sample names and values are lists of UPb.radage objects. If DataFrame, must have a column called 'UPb' and a column called 'Sample', and the rows correspond to individual ages.
+        Dictionary or DataFrame of ages. If dict, keys are grouping names (e.g., sample names, localities, formations, time intervals, etc.) and values are lists of UPb.radage objects. If DataFrame, must have a column called 'UPb' and a column called 'Group', and the rows correspond to individual ages.
     """
 
     def __init__(self, ages):
@@ -1739,17 +1739,17 @@ class DetritalSpectra:
             self.ages = ages
         elif isinstance(ages, pd.DataFrame):
             assert "UPb" in ages.columns, 'DataFrame must have a column called "UPb"'
-            assert "Sample" in ages.columns, (
-                'DataFrame must have a column called "Sample"'
+            assert "Group" in ages.columns, (
+                'DataFrame must have a column called "Group"'
             )
             self.ages = {}
-            for sample in ages["Sample"].unique():
-                self.ages[sample] = list(ages[ages["Sample"] == sample]["UPb"])
+            for group in ages["Group"].unique():
+                self.ages[group] = list(ages[ages["Group"] == group]["UPb"])
         else:
             raise ValueError("ages must be a dict or pandas DataFrame")
         # validate UPb objects
-        for sample in self.ages:
-            for age in self.ages[sample]:
+        for group in self.ages:
+            for age in self.ages[group]:
                 assert isinstance(age, UPb), "All ages must be UPb objects"
 
     def dissimilarity(self, method="wasserstein"):
@@ -1772,18 +1772,18 @@ class DetritalSpectra:
         )
 
         # prepare output dataframe
-        samples = list(self.ages.keys())
-        n_sam = len(samples)
-        D = pd.DataFrame(index=samples, columns=samples, data=np.zeros((n_sam, n_sam)))
+        groups = list(self.ages.keys())
+        n_groups = len(groups)
+        D = pd.DataFrame(index=groups, columns=groups, data=np.zeros((n_groups, n_groups)))
 
         # Wasserstein distance
         if method == "wasserstein":
-            for ii in range(n_sam):
-                for jj in range(ii + 1, n_sam):
-                    # get current pair of samples
-                    idx_1 = self.ages[samples[ii]] == samples[ii]
+            for ii in range(n_groups):
+                for jj in range(ii + 1, n_groups):
+                    # get current pair of groups
+                    idx_1 = self.ages[groups[ii]] == groups[ii]
                     cur_sam_1 = df.loc[idx_1]["Age"]
-                    idx_2 = df["Sample"] == samples[jj]
+                    idx_2 = df["Group"] == groups[jj]
                     cur_sam_2 = df.loc[idx_2]["Age"]
 
                     # compute distance for pair

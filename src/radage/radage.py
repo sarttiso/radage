@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
+from scipy.spatial.distance import  jensenshannon
 from matplotlib.patches import Ellipse
 from scipy.optimize import minimize_scalar, root_scalar
 from sklearn.manifold import MDS
@@ -1801,23 +1802,30 @@ class DetritalSpectra:
             else:
                 raise ValueError("ages must be a dict or pandas DataFrame")
 
-    def dissimilarity(self, method="wasserstein"):
+    def dissimilarity(self, method="wasserstein", kde_args={}):
         """Compute dissimilarity matrix between detrital age spectra.
 
         Parameters
         ----------
         method : str, optional
-            Method to compute pairwise spectra dissimilarities, by default 'wasserstein'. Valid methods are 'wasserstein', 'ks', 'energy'.
+            Method to compute pairwise spectra dissimilarities, by default 'wasserstein'. Valid methods are 'wasserstein', 'ks', 'energy-distance', 'jensen-shannon'.
+            - 'wasserstein': Wasserstein distance between empirical age distributions. See https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.wasserstein_distance.html for more details. Recommended by: Lipp, A., and Vermeesch, P., 2023, Short communication: The Wasserstein distance as a dissimilarity metric for comparing detrital age spectra and other geological distributions: Geochronology, v. 5, p. 263–270, doi:10.5194/gchron-5-263-2023.
+            - 'ks': Kolmogorov-Smirnov distance between empirical age distributions. See https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.ks_2samp.html for more details.
+            - 'energy-distance': Energy distance between empirical age distributions. See https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.energy_distance.html for more details.
+            - 'jensen-shannon': Jensen-Shannon distance between kernel density estimated age distributions. See kde_args below for the default kernel density estimation parameters. See https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.jensenshannon.html for more details.
+        kde_args : dict, optional
+            Additional arguments to pass to the kernel density estimation function if method is 'jensen-shannon'. See :func:`helper.kde_base` for more details on the available arguments and their default values.
+ 
 
         Returns
         -------
-        D : pd.DataFrame
-            DataFrame of pairwise dissimilarities between detrital age spectra.
+        D : np.ndarray
+            Square array of pairwise dissimilarities between detrital age spectra.
         """
 
         # validate method
-        assert method in ["wasserstein", "ks", "energy"], (
-            'method must be one of "wasserstein", "ks", "energy"'
+        assert method in ["wasserstein", "ks", "energy-distance", "jensen-shannon"], (
+            'method must be one of "wasserstein", "ks", "energy-distance", "jensen-shannon"'
         )
 
         # prepare output dataframe
@@ -1835,6 +1843,49 @@ class DetritalSpectra:
 
                     # compute distance for pair
                     D[ii, jj] = stats.wasserstein_distance(cur_sam_1, cur_sam_2)
+                    D[jj, ii] = D[ii, jj]
+        # Kolmogorov-Smirnov distance
+        elif method == "ks":
+            for ii in range(n_groups):
+                for jj in range(ii + 1, n_groups):
+                    # get current pair of groups
+                    cur_sam_1 = self.ages[groups[ii]]
+                    cur_sam_2 = self.ages[groups[jj]]
+
+                    # compute distance for pair
+                    D[ii, jj] = stats.ks_2samp(cur_sam_1, cur_sam_2).statistic
+                    D[jj, ii] = D[ii, jj]
+        # Energy distance
+        elif method == "energy-distance":
+            for ii in range(n_groups):
+                for jj in range(ii + 1, n_groups):
+                    # get current pair of groups
+                    cur_sam_1 = self.ages[groups[ii]]
+                    cur_sam_2 = self.ages[groups[jj]]
+
+                    # compute distance for pair
+                    D[ii, jj] = stats.energy_distance(cur_sam_1, cur_sam_2)
+                    D[jj, ii] = D[ii, jj]
+        # Jensen-Shannon distance
+        elif method == "jensen-shannon":
+            # compute KDE for each group to get probability distributions, then compute pairwise distances between distributions
+            kde_args_def = {"kernel": "gauss", "bw": "adaptive", "weights": "uncertainty"}
+            kde_args_def.update(kde_args)
+            t_eval = np.linspace(np.min([np.min(self.ages[group]) for group in groups]), 
+                                 np.max([np.max(self.ages[group]) for group in groups]), 500)
+            kde_values = {}
+            for group in groups:
+                kde_values[group] = kde_base(self.ages[group], 
+                                             t_eval, 
+                                             **kde_args_def)
+            for ii in range(n_groups):
+                for jj in range(ii + 1, n_groups):
+                    # get current pair of groups
+                    cur_sam_1 = kde_values[groups[ii]]
+                    cur_sam_2 = kde_values[groups[jj]]
+
+                    # compute distance for pair
+                    D[ii, jj] = jensenshannon(cur_sam_1, cur_sam_2)
                     D[jj, ii] = D[ii, jj]
         return D
     
@@ -1864,7 +1915,7 @@ class DetritalSpectra:
             random_state=random_state,
             **kwargs
         )
-        
+
         mds_coords = mds.fit_transform(D)
         mds_coords_df = pd.DataFrame(
             mds_coords, index=self.ages.keys(), columns=[f"MDS_{i+1}" for i in range(n_components)]

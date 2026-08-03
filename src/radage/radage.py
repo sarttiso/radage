@@ -1226,7 +1226,7 @@ def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None, Pbc_std=1e-2):
     r238_206_std = np.array([x.r238_206_std for x in UPbs])
     r207_206 = np.array([x.r207_206 for x in UPbs])
     r207_206_std = np.array([x.r207_206_std for x in UPbs])
-    rho = np.array([x.rho86_76 for x in UPbs])
+    rho = np.array([x.rho_238206_207206 for x in UPbs])
 
     # helper function to append fixed common lead ratios to the data
     def Pbc_append(Pbc):

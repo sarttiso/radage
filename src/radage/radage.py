@@ -359,13 +359,13 @@ class UPb:
     Parameters
     ----------
     r206_238 : tuple or list
-        Pb206/U238 ratio and 1-sigma uncertainty, by default None. If None, the ratio is computed from r238_206.
+        Pb206/U238 ratio and 1-sigma absolute uncertainty, by default None. If None, the ratio is computed from r238_206.
     r207_235 : tuple or list
-        Pb207/U235 ratio and 1-sigma uncertainty, by default None. If None, the ratio is computed from r207_206 and r206_238.
+        Pb207/U235 ratio and 1-sigma absolute uncertainty, by default None. If None, the ratio is computed from r207_206 and r206_238.
     r207_206 : tuple or list
-        Pb207/Pb206 ratio and 1-sigma uncertainty, by default None. If None, the ratio is computed from r207_235 and r206_238.
+        Pb207/Pb206 ratio and 1-sigma absolute uncertainty, by default None. If None, the ratio is computed from r207_235 and r206_238.
     r238_206 : tuple or list
-        U238/Pb206 ratio and 1-sigma uncertainty, by default None. If None, the ratio is computed from r206_238.
+        U238/Pb206 ratio and 1-sigma absolute uncertainty, by default None. If None, the ratio is computed from r206_238.
     rho_207235_206238 : float
         Error correlation between 207/235 and 206/238 ratios. Must be between -1 and 1. By default None. If None, the correlation is computed from rho_238206_207206 or rho_206238_207206. If no correlation coefficients are provided, the default is 0.
     rho_238206_207206 : float
@@ -462,7 +462,7 @@ class UPb:
             if rho_238206_207206 is None:
                 rho_238206_207206 = 0
             rho_206238_207206 = -rho_238206_207206
-            rho_207235_206238, r207235_std, _ = \
+            rho_207235_206238, r207_235_std, _ = \
                 rho206238_207206_to_rho207235_206238(
                     r206_238_mean, r206_238_std,
                     r207_206_mean, r207_206_std,
@@ -1591,56 +1591,159 @@ def weighted_mean(ages, ages_s, sig_method="naive", standard_error=True):
     return mu, sig, mswd
 
 
-def get_ages(df, columns=None):
+def get_ages(df, 
+             combination='Wetherill', 
+             uncertainty_type='2 sigma absolute',
+             columns=None):
     """Produce UPb age objects
 
-    Create UPb age objects from data in GeochemDB. This function assumes that the following quantities are present in the GeochemDB database and form columns in the input DataFrame:
-    - Pb206/U238
-    - Pb207/U235
-    - Pb207/Pb206
-    - rho 206Pb/238U v 207Pb/235U
-    - rho 207Pb/206Pb v 238U/206Pb
-    These quantitues should have both mean and uncertainty values.
+    Create UPb age objects from dataframe. This function assumes that one of the following combinations of input quantites is available in the dataframe. These inputs should have with matching column names and columns in a hierarchical index, with the second level of the index being either 'mean' or 'uncertainty'. If correlation coefficients (rho) are not available, then they will be set to zero.
+    Wetherill:
+    - r206_238
+    - r207_235
+    - rho_207235_206238
+    All:
+    - r206_238
+    - r207_235
+    - r207_206
+    - rho_207235_206238
+    - rho_206238_207206
+    TW:
+    - r238_206
+    - r207_206
+    - rho_238206_207206
 
     Parameters
     ----------
     df : pd.DataFrame
-        DataFrame of U-Pb measurements, ideally from GeochemDB.GeochemDB.measurements_by_sample(). Assumes a hierarchical column index with the following levels: 'Pb206/U238', 'Pb207/U235', 'Pb207/Pb206', 'rho 206Pb/238U v 207Pb/235U', 'rho 207Pb/206Pb v 238U/206Pb'. Each level should have 'mean' and 'uncertainty' sublevels.
-    columns : list, optional
-        List of columns to use for creating UPb objects, by default None. If None, the function will use the default columns as described above. Must be a list of tuples with the first element being the column name and the second element being either 'mean' or 'uncertainty'. Order of entries is: 206Pb/U238 mean, 206Pb/U238 uncertainty, 207Pb/U235 mean, 207Pb/U235 uncertainty, 207Pb/Pb206 mean, 207Pb/Pb206 uncertainty, rho 206Pb/238U v 207Pb/235U mean, rho 207Pb/206Pb v 238U/206Pb mean.
+        DataFrame of U-Pb measurements, ideally from GeochemDB.GeochemDB.measurements_by_sample(). Assumes a hierarchical column index with levels matching the columns described above. Each level should have 'mean' and 'uncertainty' sublevels, except for the correlation coefficients, which should only have a 'mean' sublevel.
+
+    combination : str, optional
+        Combination of input quantities to use for creating UPb objects, by default 'Wetherill'. Valid options are 'Wetherill', 'All', and 'TW'. 
+
+    uncertainty_type : str, optional
+        Type of uncertainty to use for creating UPb objects, by default '2 sigma absolute'. Valid options are '2 sigma absolute', '1 sigma absolute', '2 sigma relative', and '1 sigma relative'. This parameter determines how the uncertainties in the dataframe are interpreted when creating the UPb objects.
+
+    columns : dictionary, optional
+        Dictionary with mapping of column names in the case the dataframe columns do not match the names above. The expected structure is {actual_name: default_name} (e.g., {'Pb206_U238': 'r206_238'}). Only applies to the top level in the multiindex (i.e., the second level should still be 'mean' and 'uncertainty'), and the input dataframe is expected to have a multiindex in the columns. If None, the function will use the default column names as described above.
 
     Returns
     -------
     ages : list
         List of UPb objects.
     """
-    # cols
+    if combination not in ["Wetherill", "All", "TW"]:
+        raise ValueError(
+            "combination must be one of 'Wetherill', 'All', or 'TW'."
+        )
+    if uncertainty_type not in ["2 sigma absolute", "1 sigma absolute", "2 sigma relative", "1 sigma relative"]:
+        raise ValueError(
+            "uncertainty_type must be one of '2 sigma absolute', '1 sigma absolute', '2 sigma relative', or '1 sigma relative'."
+        )
+
+    # copy dataframe to avoid modifying original
+    df = df.copy()
+
+    # apply column mapping if provided
     if columns is not None:
-        cols = columns
-    else:
+        # check that columns is a dictionary
+        if not isinstance(columns, dict):
+            raise ValueError("columns must be a dictionary with mapping of column names.")
+        # check that all keys in columns are valid default names
+        valid_values = ["r206_238", "r207_235", "r207_206", "r238_206", "rho_207235_206238", "rho_206238_207206", "rho_238206_207206"]
+        for values in columns.values():
+            if values not in valid_values:
+                raise ValueError(f"Invalid value '{values}' in columns. Valid values are: {valid_values}")
+        # rename columns in dataframe
+        df.rename(columns=columns, inplace=True)
+
+    # go over combinations
+    if combination == "Wetherill":
         cols = [
-            ("Pb206/U238", "mean"),
-            ("Pb206/U238", "uncertainty"),
-            ("Pb207/U235", "mean"),
-            ("Pb207/U235", "uncertainty"),
-            ("Pb207/Pb206", "mean"),
-            ("Pb207/Pb206", "uncertainty"),
-            ("rho 206Pb/238U v 207Pb/235U", "mean"),
-            ("rho 207Pb/206Pb v 238U/206Pb", "mean"),
+            ("r206_238", "mean"),
+            ("r206_238", "uncertainty"),
+            ("r207_235", "mean"),
+            ("r207_235", "uncertainty"),
+            ("rho_207235_206238", "mean"),
+        ]
+    elif combination == "All":
+        cols = [
+            ("r206_238", "mean"),
+            ("r206_238", "uncertainty"),
+            ("r207_235", "mean"),
+            ("r207_235", "uncertainty"),
+            ("r207_206", "mean"),
+            ("r207_206", "uncertainty"),
+            ("rho_207235_206238", "mean"),
+            ("rho_206238_207206", "mean"),
+        ]
+    elif combination == "TW":
+        cols = [
+            ("r238_206", "mean"),
+            ("r238_206", "uncertainty"),
+            ("r207_206", "mean"),
+            ("r207_206", "uncertainty"),
+            ("rho_238206_207206", "mean"),
         ]
 
+    # check that columns are present in the dataframe (if rho missing, set to zero)
+    for col in cols:
+        if col not in df.columns:
+            if "rho" in col[0]:
+                df[col] = 0.0
+            else:
+                raise ValueError(f"Column {col} not found in dataframe.")
+
+    # convert uncertainties to 1 sigma absolute if necessary
+    if uncertainty_type == "1 sigma absolute":
+        pass  # do nothing
+    elif uncertainty_type == "2 sigma absolute":
+        for col in cols:
+            if "uncertainty" in col[1]:
+                df[col] = df[col] / 2
+    elif uncertainty_type == "1 sigma relative":
+        for col in cols:
+            if "uncertainty" in col[1]:
+                df[col] = df[col] * df[(col[0], "mean")]
+    elif uncertainty_type == "2 sigma relative":
+        for col in cols:
+            if "uncertainty" in col[1]:
+                df[col] = df[col] * df[(col[0], "mean")] / 2
+
+    # create UPb objects
     ages = []
-    for ii in range(df.shape[0]):
-        ages.append(
-            UPb(
-                r206_238=(df.iloc[ii][cols[0]], df.iloc[ii][cols[1]] / 2),
-                r207_235=(df.iloc[ii][cols[2]], df.iloc[ii][cols[3]] / 2),
-                r207_206=(df.iloc[ii][cols[4]], df.iloc[ii][cols[5]] / 2),
-                rho_207235_206238=df.iloc[ii][cols[6]],
-                rho_238206_207206=df.iloc[ii][cols[7]],
-                name=df.index[ii],
+    if combination == "Wetherill":
+        for ii in range(df.shape[0]):
+            ages.append(
+                UPb(
+                    r206_238=(df.iloc[ii][cols[0]], df.iloc[ii][cols[1]]),
+                    r207_235=(df.iloc[ii][cols[2]], df.iloc[ii][cols[3]]),
+                    rho_207235_206238=df.iloc[ii][cols[4]],
+                    name=df.index[ii],
+                )
             )
-        )
+    elif combination == "All":
+        for ii in range(df.shape[0]):
+            ages.append(
+                UPb(
+                    r206_238=(df.iloc[ii][cols[0]], df.iloc[ii][cols[1]]),
+                    r207_235=(df.iloc[ii][cols[2]], df.iloc[ii][cols[3]]),
+                    r207_206=(df.iloc[ii][cols[4]], df.iloc[ii][cols[5]]),
+                    rho_207235_206238=df.iloc[ii][cols[6]],
+                    rho_238206_207206=df.iloc[ii][cols[7]],
+                    name=df.index[ii],
+                )
+            )
+    elif combination == "TW":
+        for ii in range(df.shape[0]):
+            ages.append(
+                UPb(
+                    r238_206=(df.iloc[ii][cols[0]], df.iloc[ii][cols[1]]),
+                    r207_206=(df.iloc[ii][cols[2]], df.iloc[ii][cols[3]]),
+                    rho_238206_207206=df.iloc[ii][cols[4]],
+                    name=df.index[ii],
+                )
+            )
     return ages
 
 

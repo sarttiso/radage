@@ -436,7 +436,7 @@ class UPb:
                 r206_238_mean, r206_238_std,
                 rho_207235_206238
             )
-        
+
         # case 2: 206Pb/238U and 207Pb/235U with rho_207235_206238
         elif r206_238 is not None and r207_235 is not None:
             r206_238_mean, r206_238_std = r206_238
@@ -451,7 +451,7 @@ class UPb:
                     rho_207235_206238
                 )
             rho_206238_207206 = -rho_238206_207206
-        
+
         # case 3: 238Pb/206U and 207Pb/206Pb with rho_238206_207206
         elif r238_206 is not None and r207_206 is not None:
             r238_206_mean, r238_206_std = r238_206
@@ -468,7 +468,7 @@ class UPb:
                     r207_206_mean, r207_206_std,
                     rho_206238_207206
                 )
-        
+
         # assign to self
         self.r206_238 = r206_238_mean
         self.r206_238_std = r206_238_std
@@ -486,7 +486,7 @@ class UPb:
             raise ValueError("rho_238206_207206 must be between -1 and 1")
         if rho_206238_207206 < -1 or rho_206238_207206 > 1:
             raise ValueError("rho_206238_207206 must be between -1 and 1")
-        self.rho_207235_206238 = rho_207235_206238 
+        self.rho_207235_206238 = rho_207235_206238
         self.rho_238206_207206 = rho_238206_207206
         self.rho_206238_207206 = rho_206238_207206
 
@@ -1160,6 +1160,30 @@ def discordance_filter(
 
     return ages_conc, idx
 
+def lower_intercept_76_86(m, b, x0=1000):
+    """Find the lower intercept date in Tera-Wasserburg space
+
+    Parameters
+    ----------
+    m : float
+        Slope of the line in Tera-Wasserburg space
+    b : float
+        Intercept of the line in Tera-Wasserburg space
+
+    Returns
+    -------
+    r238_206 : float
+        238/206 ratio at the lower intercept
+    t : float
+        Lower intercept date in Ma
+    """
+    sol = root_scalar(
+        root_fun_76_86, args=(m, b),
+        x0=x0, method='newton'
+    )
+    r238_206 = sol.root
+    t = t238(1 / r238_206)
+    return r238_206, t
 
 def root_fun_76_86(r238_206, m, b):
     """Root function for finding the lower intercept date in Tera-Wasserburg space
@@ -1180,6 +1204,37 @@ def root_fun_76_86(r238_206, m, b):
     r207_206_disc = m * r238_206 + b
     return r207_206_conc - r207_206_disc
 
+
+def line_mc_76_86(m, b, m_std, b_std, m_b_cov, N=1000):
+    """Sample isochrons in Tera-Wasserburg space
+
+    Parameters
+    ----------
+    m : float
+        Slope of the line in Tera-Wasserburg space
+    b : float
+        Intercept of the line in Tera-Wasserburg space
+    m_std : float
+        Standard deviation of the slope
+    b_std : float
+        Standard deviation of the intercept
+    m_b_cov : float
+        Covariance between the slope and intercept
+    N : int, optional
+        Number of samples to draw, by default 1000
+
+    Returns
+    -------
+    m : array
+        Array of length N with sampled slopes.
+    b : array
+        Array of length N with sampled intercepts.
+    """
+    # generate random samples for slope and intercept using a multivariate normal distribution
+    mean = [m, b]
+    cov = [[m_std**2, m_b_cov], [m_b_cov, b_std**2]]
+    m_mc, b_mc = np.random.multivariate_normal(mean, cov, size=N).T
+    return m_mc, b_mc
 
 def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None, Pbc_std=1e-2):
     """Lower intercept date in Tera-Wasserburg space
@@ -1215,6 +1270,8 @@ def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None, Pbc_std=1e-2):
             Standard deviation of the common lead ratio.
         - slope_intercept_cov : float
             Covariance between the slope and intercept.
+        - x_bar : float
+            Mean of the resulting 238/206 ratio after fitting.
         - mswd : float
             Mean square weighted deviation of the fit.
         - confint : list
@@ -1300,25 +1357,15 @@ def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None, Pbc_std=1e-2):
     )
 
     # find root
-    x0 = 1000  # initial 238/206 for root finding
     if conf is not None:
-        mod_mc = np.matmul(
-            np.linalg.cholesky(np.array([[m_sig**2, mb_cov], [mb_cov, b_sig**2]])),
-            np.random.randn(2, n_mc),
-        ) + np.array([[m], [b]])
-        m_mc = mod_mc[0]
-        b_mc = mod_mc[1]
+        m_mc, b_mc = line_mc_76_86(m, b, m_sig, b_sig, mb_cov, N=n_mc)
         dates = np.zeros(n_mc)
         for ii in range(n_mc):
-            sol = root_scalar(
-                root_fun_76_86, args=(m_mc[ii], b_mc[ii]), x0=x0, method="newton"
-            )
-            dates[ii] = t238(1 / sol.root)
+            _, dates[ii] = lower_intercept_76_86(m_mc[ii], b_mc[ii])
         confint = np.quantile(dates, [(1 - conf) / 2, 1 - (1 - conf) / 2])
         date = np.mean(dates)
     else:
-        sol = root_scalar(root_fun_76_86, args=(m, b), x0=x0, method="newton")
-        date = t238(1 / sol.root)
+        _, date = lower_intercept_76_86(m, b)
         confint = None
 
     result = {
@@ -1336,36 +1383,90 @@ def discordia_date_76_86(UPbs, conf=None, n_mc=500, Pbc=None, Pbc_std=1e-2):
     return result
 
 
-def wc1_corr(wc1_UPbs):
-    """Correct 238/206 ratios of WC1 analyses to achieve lower intercept age of 254 Ma with fixed common Pb 207/206 ratio of 0.85.
+def wc1_corr(wc1_UPbs, N=1000):
+    """Generate correction factor for 238/206 ratios of WC1 analyses.
+
+    Let X1 be a random variable representing the 238/206 ratio of the lower intercept for the data fit to the provided WC1 analyses. Let X2 be the random variable representing the 238/206 ratio of the lower intercept reported by Roberts et al. (2017) for the WC1 analyses.
+    The correction factor f is then defined as f = X2 / X1. This function estimates the correction factor f via Monte Carlo sampling.
 
     Parameters
     ----------
     wc1_UPbs : list
         List of UPb.radage objects for WC1 analyses
+    N : int, optional
+        Number of Monte Carlo samples to use for estimating uncertainty, by default 1000.
 
     Returns
     -------
-    factor: float
-        Factor by which to multiply 238/206 ratios to achieve lower intercept age of 254 Ma with fixed common Pb 207/206 ratio of 0.85.
+    f_mu: float
+        Mean of factor by which to correct 238/206 ratios.
+    f_std: float
+        Standard deviation of factor by which to correct 238/206 ratios.
     """
     # compute slope with fixed common lead ratio of 0.85
-    b = 0.85
-    result = discordia_date_76_86(wc1_UPbs, Pbc=b)
-    m = result["slope"]
+    b = 0.85     # Roberts et al. (2017), Table 1
+    b_std = 0.02
+    result = discordia_date_76_86(wc1_UPbs, Pbc=b, Pbc_std=b_std)
 
-    def cost(factor):
-        """Cost function for finding factor to multiply 238/206 ratios by"""
-        # compute lower intercept date
-        sol = root_scalar(root_fun_76_86, args=(m / factor, b), x0=500, method="newton")
-        date = t238(1 / sol.root)
+    m_mc, b_mc = line_mc_76_86(
+        result["slope"], result["intercept"],
+        result["slope_sig"], result["intercept_sig"],
+        result["slope_intercept_cov"], N=N
+    )
 
-        return (date - 254) ** 2
+    X1 = np.zeros(N)
+    for ii in range(N):
+        X1[ii], _ = lower_intercept_76_86(m_mc[ii], b_mc[ii])
 
-    # find factor that minimizes cost function
-    factor = minimize_scalar(cost, bounds=(0, 2), method="bounded").x
+    x2_mu = 24.84  # Roberts et al. (2017), Table 1
+    x2_std = 0.31
+    X2 = np.random.normal(loc=x2_mu, scale=x2_std, size=N)
 
-    return factor
+    f = X2 / X1
+    f_mu = np.mean(f)
+    f_std = np.std(f)
+    return f_mu, f_std
+
+def apply_corr(UPbs, f_mu, f_std):
+    """Apply correction factor to 238/206 ratios of UPb.radage objects.
+
+    Parameters
+    ----------
+    UPbs : list
+        List of UPb.radage objects to correct.
+    f_mu : float
+        Mean of factor by which to correct 238/206 ratios.
+    f_std : float
+        Standard deviation of factor by which to correct 238/206 ratios.
+
+    Returns
+    -------
+    UPbs_corr : list
+        List of corrected UPb.radage objects.
+    """
+    UPbs_corr = []
+    for cur_UPb in UPbs:
+        r238_206_corr = cur_UPb.r238_206 * f_mu
+        r238_206_std_corr = np.sqrt(
+            (cur_UPb.r238_206_std * f_mu) ** 2 +
+            (cur_UPb.r238_206 * f_std) ** 2 +
+            (f_std * cur_UPb.r238_206_std) ** 2
+        )
+        # also correct error correlation between 238/206 and 207/206
+        rho_corr = \
+            cur_UPb.rho_238206_207206 * \
+            cur_UPb.r238_206_std * \
+            f_mu / r238_206_std_corr
+
+        # easiest to recreate UPb.radage object with corrected values
+        UPbs_corr.append(
+            UPb(
+                r238_206=(r238_206_corr, r238_206_std_corr),
+                r207_206=(cur_UPb.r207_206, cur_UPb.r207_206_std),
+                rho_238206_207206=rho_corr
+            )
+        )
+    return UPbs_corr
 
 
 def kde(radages, t, kernel="gauss", bw="adaptive", weights="uncertainty", **kwargs):
@@ -1591,8 +1692,8 @@ def weighted_mean(ages, ages_s, sig_method="naive", standard_error=True):
     return mu, sig, mswd
 
 
-def get_ages(df, 
-             combination='Wetherill', 
+def get_ages(df,
+             combination='Wetherill',
              uncertainty_type='2 sigma absolute',
              columns=None):
     """Produce UPb age objects
@@ -1619,7 +1720,7 @@ def get_ages(df,
         DataFrame of U-Pb measurements, ideally from GeochemDB.GeochemDB.measurements_by_sample(). Assumes a hierarchical column index with levels matching the columns described above. Each level should have 'mean' and 'uncertainty' sublevels, except for the correlation coefficients, which should only have a 'mean' sublevel.
 
     combination : str, optional
-        Combination of input quantities to use for creating UPb objects, by default 'Wetherill'. Valid options are 'Wetherill', 'All', and 'TW'. 
+        Combination of input quantities to use for creating UPb objects, by default 'Wetherill'. Valid options are 'Wetherill', 'All', and 'TW'.
 
     uncertainty_type : str, optional
         Type of uncertainty to use for creating UPb objects, by default '2 sigma absolute'. Valid options are '2 sigma absolute', '1 sigma absolute', '2 sigma relative', and '1 sigma relative'. This parameter determines how the uncertainties in the dataframe are interpreted when creating the UPb objects.
@@ -1830,7 +1931,7 @@ class DetritalSpectra:
     discordance_method : str, optional
         Method to use for discordance filtering if discordance_filtering is True. Valid values are 'relative', 'absolute', 'aitchison', 'concordia-distance'. By default, 'concordia-distance'.
     discordance_threshold : float, optional
-        Threshold value for discordance filtering if discordance_filtering is True. See :func:`discordance_filter` for more details on how the threshold is applied for each method. By default, 3.    
+        Threshold value for discordance filtering if discordance_filtering is True. See :func:`discordance_filter` for more details on how the threshold is applied for each method. By default, 3.
     """
 
     def __init__(self, UPbs=None, ages=None, discordance_filtering=False, discordance_method="concordia-distance", discordance_threshold=3):
@@ -1854,7 +1955,7 @@ class DetritalSpectra:
             raise ValueError("Must provide either UPbs or ages")
         if (UPbs is not None) and (ages is not None):
             raise ValueError("Must provide only one of UPbs or ages")
-        
+
         if UPbs is not None:
             # process UPbs
             if isinstance(UPbs, dict):
@@ -1918,7 +2019,7 @@ class DetritalSpectra:
             - 'jensen-shannon': Jensen-Shannon distance between kernel density estimated age distributions. See kde_args below for the default kernel density estimation parameters. See https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.jensenshannon.html for more details.
         kde_args : dict, optional
             Additional arguments to pass to the kernel density estimation function if method is 'jensen-shannon'. See :func:`helper.kde_base` for more details on the available arguments and their default values.
- 
+
 
         Returns
         -------
@@ -1974,12 +2075,12 @@ class DetritalSpectra:
             # compute KDE for each group to get probability distributions, then compute pairwise distances between distributions
             kde_args_def = {"kernel": "gauss", "bw": "adaptive", "weights": "uncertainty"}
             kde_args_def.update(kde_args)
-            t_eval = np.linspace(np.min([np.min(self.ages[group]) for group in groups]), 
+            t_eval = np.linspace(np.min([np.min(self.ages[group]) for group in groups]),
                                  np.max([np.max(self.ages[group]) for group in groups]), 500)
             kde_values = {}
             for group in groups:
-                kde_values[group] = kde_base(self.ages[group], 
-                                             t_eval, 
+                kde_values[group] = kde_base(self.ages[group],
+                                             t_eval,
                                              **kde_args_def)
             for ii in range(n_groups):
                 for jj in range(ii + 1, n_groups):
@@ -1991,7 +2092,7 @@ class DetritalSpectra:
                     D[ii, jj] = jensenshannon(cur_sam_1, cur_sam_2)
                     D[jj, ii] = D[ii, jj]
         return D
-    
+
     def mds(self, D, n_components=2, random_state=0, **kwargs):
         """Perform multidimensional scaling on a dissimilarity matrix.
 

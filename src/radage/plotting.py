@@ -30,7 +30,7 @@ def plot_ages_concordia(ages=[],
 
     t1 : float, optional
         Youngest age to consider (Myr), defaults to youngest age in ages
-    
+
     t2 : float, optional
         Oldest age to consider (Myr), defaults to oldest age in ages
 
@@ -62,7 +62,7 @@ def plot_ages_concordia(ages=[],
         Dictionary of style parameters for the concordia confidence interval, plotted as a patch
 
     labels_style : dict, optional
-        Dictionary of style parameters for marker plotting of labeled times. 
+        Dictionary of style parameters for marker plotting of labeled times.
 
     labels_text_style : dict, optional
         Dictionary of style parameters for text labels of ages.
@@ -73,7 +73,7 @@ def plot_ages_concordia(ages=[],
         Axis object with plot.
     """
 
-    if t1 is None: 
+    if t1 is None:
         min68_age = np.min(np.array([age.date68()[0] - 3*age.date68()[1] for age in ages]))
         if tw:
             min76_age = np.min(np.array([age.date76(conf=None) - 3*age.date76()[1] for age in ages]))
@@ -95,7 +95,7 @@ def plot_ages_concordia(ages=[],
 
     # if not provided, make labels nice round numbers located within the desired range
     if labels is None:
-        locator = MaxNLocator(nbins=max_t_labels, 
+        locator = MaxNLocator(nbins=max_t_labels,
                               steps=[1, 2, 5, 10],
                               prune='both')
         t_lab = locator.tick_values(t1, t2)
@@ -135,7 +135,7 @@ def plot_ages_concordia(ages=[],
         conc_conf_style_def = {'color': 'gray', 'alpha': 0.5}
         if concordia_conf_style is None:
             conc_conf_style = conc_conf_style_def
-        else:   
+        else:
             conc_conf_style = conc_conf_style_def | concordia_conf_style
         lower_conc, upper_conc = concordia_confint(t_conc, conf=concordia_conf)
         conc_conf = np.concatenate([lower_conc, np.flipud(upper_conc)], axis=0)
@@ -170,7 +170,7 @@ def plot_ages_concordia(ages=[],
                     textcoords='offset points',
                     ha=ha,
                     **labels_text_style))
-    
+
     # enforce limits
     xlim, ylim = axlim_conc([t1, t2], ax=ax, tw=tw)
 
@@ -257,7 +257,7 @@ def annotate_concordia(ages, tw=False, ax=None, ann_style=None):
                     xytext=offset,
                     textcoords='offset points',
                     ha=ha)
-        
+
 
 def axlim_conc(tlims, ax=None, tw=False):
     """Set x and y lims for conccordia plot based on age range
@@ -296,7 +296,7 @@ def axlim_conc(tlims, ax=None, tw=False):
         return r75, r68
 
 
-def age_rank_plot_samples(samples_dict, sample_spacing=1, ax=None, 
+def age_rank_plot_samples(samples_dict, sample_spacing=1, ax=None,
                           sample_fontsize=10, sample_label_loc='top',
                           youngup=True, **kwargs):
     """Plot age rank diagrams for multiple samples
@@ -304,18 +304,18 @@ def age_rank_plot_samples(samples_dict, sample_spacing=1, ax=None,
     Parameters
     ----------
     samples_dict : dict
-        Dictionary with samples as keys. Each key has another dictionary with required keys 'ages', 'ages 2s' which have arrays of the same length to plot ages. Optional keys are 
+        Dictionary with samples as keys. Each key has another dictionary with required keys 'ages', 'ages 2s' which have arrays of the same length to plot ages. Optional keys are
             'style': patch_dict for age_rank_plot()
             'mean': weighted mean; requires 'sig' and plots a box showing a weighted
             mean across the other ages
             'sig': uncertainty on weighted mean
             'xmin': Start coordinate for weighted mean box, in number of ages out of total for the sample.
             'xmax': End coordinate for weighted mean box, in number of ages out of total for the sample.
-    sample_spacing : int, optional 
+    sample_spacing : int, optional
         Spacing between samples. Defaults to 1.
     ax : matplotlib.Axes, optional
         Axis to plot into. If None, one is created. Defaults to None.
-    sample_fontsize : float, optional 
+    sample_fontsize : float, optional
         Fontsize for labeling samples. Defaults to 10.
     sample_label_loc : str, optional
         Location to label sample, 'top' or 'bottom'. Defaults to 'top'.
@@ -351,9 +351,9 @@ def age_rank_plot_samples(samples_dict, sample_spacing=1, ax=None,
             xmin = cur_samp.get('xmin', 0)
             xmax = cur_samp.get('xmax', n_ages)
             assert xmin < xmax, 'xmin must be less than xmax'
-            cur_rect = Rectangle([rank_start-0.5 + xmin, 
+            cur_rect = Rectangle([rank_start-0.5 + xmin,
                                   cur_samp['mean']-cur_samp['sig']],
-                                 xmax-xmin, 
+                                 xmax-xmin,
                                  2*cur_samp['sig'],
                                  color='gray', alpha=0.5, zorder=0)
             ax.add_patch(cur_rect)
@@ -399,14 +399,14 @@ def age_rank_plot(ages, ages_2s, ranks=None, ax=None, wid=0.6, patch_dict=None):
 
     Parameters
     ----------
-    ages : array-like 
+    ages : array-like
         age means
     ages_2s : array-like
         (symmetric) age uncertainty to plot, 2-sigma. Same length as ages.
     ranks : array-like, optional
         Manually specified ranks (if plotting several different
         samples together). defaults to None
-    ax : matplotlib.plot.axes, optional 
+    ax : matplotlib.plot.axes, optional
         Axis to plot into. Defaults to None. If none, one is created.
     wid : float, optional
         Width of age bar. Defaults to 0.6.
@@ -460,8 +460,8 @@ def age_rank_plot(ages, ages_2s, ranks=None, ax=None, wid=0.6, patch_dict=None):
 
 
 def kde_plot(UPbs, t=None, bw='adaptive', kernel='gauss', weights='uncertainty',
-             ax=None, fill=True, rug=True, 
-             kde_style=None, kde_base_args=None, patch_style=None, 
+             ax=None, fill=True, rug=True,
+             kde_style=None, kde_base_args=None, patch_style=None,
              rug_style=None):
     """Plot a kernel density estimate of ages
 
@@ -497,7 +497,7 @@ def kde_plot(UPbs, t=None, bw='adaptive', kernel='gauss', weights='uncertainty',
     ax : matplotlib.pyplot.axes
         Axes object with plot
     """
-    
+
     # useful to precompute dates
     if t is None or rug:
         dates_conc = np.array([age.date_207_238_concordia()[0:2] for age in UPbs])
@@ -522,7 +522,7 @@ def kde_plot(UPbs, t=None, bw='adaptive', kernel='gauss', weights='uncertainty',
     # plot fill_between if requested
     cur_kde = kde(UPbs, t, bw=bw, kernel=kernel, weights=weights,
                   **kde_base_args) # call once
-    
+
     # set up kde style
     kde_style_def = {'color': 'k', 'linestyle': '-', 'linewidth': 1}
     if kde_style is None:
@@ -537,7 +537,7 @@ def kde_plot(UPbs, t=None, bw='adaptive', kernel='gauss', weights='uncertainty',
             patch_style = patch_style_def
         else:
             patch_style = patch_style_def | patch_style
-        h_fill = ax.fill_between(t, cur_kde, **patch_style | kde_style, zorder=2)        
+        h_fill = ax.fill_between(t, cur_kde, **patch_style | kde_style, zorder=2)
 
     # plot kde
     h_line = ax.plot(t, cur_kde, **kde_style)[0]
@@ -556,7 +556,7 @@ def kde_plot(UPbs, t=None, bw='adaptive', kernel='gauss', weights='uncertainty',
         yfact = 0.05
         # plot rug
         for ii, date in enumerate(dates_conc[:, 0]):
-            ax.plot([date, date], [-yrange*yfact, 0], alpha=1, 
+            ax.plot([date, date], [-yrange*yfact, 0], alpha=1,
                     zorder=3, **rug_style)
         ax.set_ylim([-yfact*yrange, ylim[1]])
         ax.axhspan(-yfact*yrange, 0, facecolor='white', edgecolor='k',
@@ -564,7 +564,7 @@ def kde_plot(UPbs, t=None, bw='adaptive', kernel='gauss', weights='uncertainty',
     else:
         ax.set_ylim([0, ax.get_ylim()[1]])
 
-    
+
     # format axes
     ax.minorticks_on()
     ax.grid(which='minor', axis='x', linewidth=0.5)
@@ -592,7 +592,7 @@ def plot_ellipses_68_75(ages, conf=0.95, patch_dict=None, ax=None):
         Styling dictionary or list of dictionaries. If None, default styling. If list, must be same length as ages. By default None
     ax : matplotlib.pyplot.axes, optional
         Axes object to plot into. If None, one is generated. By default None.
-    
+
     Returns
     -------
     ax : matplotlib.pyplot.axes
@@ -621,7 +621,7 @@ def plot_ellipses_76_86(ages, conf=0.95, patch_dict=None, ax=None):
         Styling dictionary or list of dictionaries. If None, default styling. If list, must be same length as ages. By default None
     ax : matplotlib.pyplot.axes, optional
         Axes object to plot into. If None, one is generated. By default None.
-    
+
     Returns
     -------
     ax : matplotlib.pyplot.axes
@@ -685,9 +685,9 @@ def discordia_array(fit, ax=None, conf=0.95, n_mc=1000):
 
     if conf is not None:
         # monte carlo simulation of confidence interval
-        mod_mc = np.matmul(np.linalg.cholesky(np.array([[m_sig**2, mb_cov], [mb_cov, b_sig**2]])),
-                        np.random.randn(2, n_mc)) + np.array([[m], [b]])
-        y_mc = mod_mc[0]*x.reshape(-1, 1) + mod_mc[1]
+        m_mc, b_mc = line_mc_76_86(m, b, m_sig, b_sig, mb_cov, N=n_mc)
+
+        y_mc = m_mc*x.reshape(-1, 1) + b_mc
         lower = np.percentile(y_mc, 100*(1-conf)/2, axis=1)
         upper = np.percentile(y_mc, 100*(1+conf)/2, axis=1)
 
@@ -699,7 +699,7 @@ def discordia_array(fit, ax=None, conf=0.95, n_mc=1000):
 
 def sk_discordia(t, ax=None, **kwargs):
     """ Plot discordia array for perfect Stacey-Kramers lead model age.
-    
+
     Parameters
     ----------
     t : float
@@ -732,7 +732,7 @@ def sk_discordia(t, ax=None, **kwargs):
 
 def eHf_model(t=None, ax=None):
     """CHUR and DM eHf evolution
-    
+
     Plot model lines for depleted mantle and CHUR evolution.
 
     Parameters
@@ -749,14 +749,14 @@ def eHf_model(t=None, ax=None):
     """
     if ax is None:
         ax = plt.gca()
-    
+
     if t is None:
         t = np.linspace(0, 4500, 500)
-    
+
     dm = eHf_DM(t)
     chur = np.zeros(len(t))
-    
+
     ax.plot(t, chur, color='grey')
     ax.plot(t, dm, color='k')
-    
+
     return ax

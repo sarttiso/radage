@@ -3,7 +3,7 @@
 ## 0.2.0
 
 ### Added
-- `radage.DetritalSpectra` class allows for comparison of detrital zircon spectra
+- `radage.DetritalSpectra` class allows for comparison of detrital zircon spectra via multidimensional scaling of various dissimilarity metrics
 
 ### Changed
 - `radage.UPb` can be intialized with different combinations of 206/238, 207/235, and 207/206 ratios

@@ -939,6 +939,55 @@ class UPb:
             confint = stats.norm.ppf(conf, date, sig) - date
             return date, sig, confint
 
+def sk_misfit(t, r238_206, r207_206, method='207/206', **sk_params):
+    """Misfit between observed 238/206 and 207/206 ratios and the Stacey and Kramers (1975) common lead model at a given age.
+
+    Parameters
+    ----------
+    t : float
+        Age (in Ma) for which to compute the misfit.
+    r238_206 : float or array
+        Observed 238/206 ratio(s).
+    r207_206 : float or array
+        Observed 207/206 ratio(s).
+    method : str, optional
+        Method for computing the misfit, by default '207/206'. Valid options are:
+
+        - '207/206': misfit is computed as the difference between observed and model 207/206 ratios (at given 238/206).
+        - '238/206': misfit is computed as the difference between observed and model 238/206 ratios (at given 207/206).
+        - 'orth': misfit is computed as shortest distance between the observed 238/206, 207/206 point and the Stacey and Kramers model curve.
+    sk_params : dict
+        Additional parameters to pass to the sk_pb function, such as t0, t1, mu1, mu2, x0, y0.
+
+    Returns
+    -------
+    misfit : float or array
+        Misfit value(s) between observed ratios and the Stacey and Kramers (1975) model at age t.
+    """
+    # Get model ratios at age t
+    r206_204, r207_204 = sk_pb(t, **sk_params)
+    Pbc = r207_204 / r206_204
+    r238_206_ctw, r207_206_ctw = concordia_tw(660)
+    m = (r207_206_ctw - Pbc) / r238_206_ctw
+
+    if method == '207/206':
+        # model Y value at observed X (r238_206)
+        r207_206_model = m*r238_206 + Pbc
+        misfit = r207_206 - r207_206_model
+    elif method == '238/206':
+        r238_206_model = (r207_206 - Pbc) / m
+        misfit = r238_206 - r238_206_model
+    elif method == 'orth':
+        # Compute orthogonal distance to the curve defined by the model ratios
+        r238_206_model = (r238_206 + m * (r207_206 - Pbc)) / (1 + m**2)
+        r207_206_model = m * r238_206_model + Pbc
+        misfit = np.sqrt((r238_206 - r238_206_model)**2 + (r207_206 - r207_206_model)**2)
+        # negative below line, positive above
+        misfit *= np.sign(r207_206 - r207_206_model)
+    else:
+        raise ValueError("Invalid method. Choose from '207/206', '238/206', or 'orth'.")
+
+    return misfit
 
 def sk_pb(t, t0=4.57e3, t1=3.7e3, mu1=7.19, mu2=9.74, x0=9.307, y0=10.294):
     """Common lead model from `Stacey and Kramers (1975) <https://doi.org/10.1016/0012-821X(75)90088-6>`__.

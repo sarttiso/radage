@@ -577,7 +577,7 @@ class UPb:
 
         See `here <https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Interval>`__ for more information.
         """
-        # set up a default stle
+        # set up a default style
         patch_dict = patch_dict_validator(patch_dict, 1)
 
         r = stats.chi2.ppf(conf, 2)

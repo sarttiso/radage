@@ -15,6 +15,7 @@ def plot_ages_concordia(ages=[],
                    concordia_env=False,
                    concordia_conf=0.95,
                    ax=None,
+                   colors=None,
                    patch_dict=None,
                    concordia_style=None,
                    concordia_conf_style=None,
@@ -51,6 +52,9 @@ def plot_ages_concordia(ages=[],
 
     ax : matplotlib.axes, optional
         Axis to plot. If None, a new axis is created. Defaults to None.
+
+    colors : list, optional
+        List of colors for the ellipses. If None, a default color is used. Takes precedence over colors specified in patch_dict.
 
     patch_dict : dict or list, optional
         list of dictionary of style parameters for the ellipse patch object. If a single dictionary is provided, it will be used for all ages. If None, a default style will be used.
@@ -184,8 +188,7 @@ def plot_ages_concordia(ages=[],
                and age.r207_206 - 3*age.r207_206_std < ylim[1] \
                and age.r207_206 + 3*age.r207_206_std > ylim[0]:
                 ages_plot.append(age)
-        patch_dict = patch_dict_validator(patch_dict, len(ages_plot))
-        plot_ellipses_76_86(ages_plot, ax=ax, patch_dict=patch_dict)
+        plot_ellipses_76_86(ages_plot, ax=ax, patch_dict=patch_dict, colors=colors)
     else:
         # only plot visible ellipses
         ages_plot = []
@@ -195,8 +198,7 @@ def plot_ages_concordia(ages=[],
                and age.r206_238 - 3*age.r206_238_std < ylim[1] \
                and age.r206_238 + 3*age.r206_238_std > ylim[0]:
                 ages_plot.append(age)
-        patch_dict = patch_dict_validator(patch_dict, len(ages_plot))
-        plot_ellipses_68_75(ages_plot, ax=ax, patch_dict=patch_dict)
+        plot_ellipses_68_75(ages_plot, ax=ax, patch_dict=patch_dict, colors=colors)
 
     if tw:
         ax.set_xlabel('$^{238}\\mathrm{U}/^{206}\\mathrm{Pb}$')
@@ -608,7 +610,7 @@ def plot_ellipses_68_75(ages, conf=0.95, patch_dict=None, ax=None):
     return ax
 
 
-def plot_ellipses_76_86(ages, conf=0.95, patch_dict=None, ax=None):
+def plot_ellipses_76_86(ages, conf=0.95, colors=None, patch_dict=None, ax=None):
     """Plot uncertainty ellipses for 207/206-238/206 ages
 
     Parameters
@@ -617,6 +619,8 @@ def plot_ellipses_76_86(ages, conf=0.95, patch_dict=None, ax=None):
         List of radage.UPb objects
     conf : float, optional
         Confidence level of ellipses, by default 0.95
+    colors : list, optional
+        List of colors for the ellipses. If None, a default color is used. Takes precedence over colors specified in patch_dict.
     patch_dict : dict or list, optional
         Styling dictionary or list of dictionaries. If None, default styling. If list, must be same length as ages. By default None
     ax : matplotlib.pyplot.axes, optional
@@ -628,6 +632,10 @@ def plot_ellipses_76_86(ages, conf=0.95, patch_dict=None, ax=None):
         Axes object with plot
     """
     patch_dict = patch_dict_validator(patch_dict, len(ages))
+
+    if colors is not None:
+        for ii, color in enumerate(colors):
+            patch_dict[ii]['facecolor'] = color
 
     if ax == None:
         ax = plt.axes()

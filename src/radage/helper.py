@@ -26,10 +26,10 @@ def patch_dict_validator(patch_dict, n):
                       'edgecolor': 'k',
                       'alpha': 0.3}
     if patch_dict is None:
-        patch_dict = n * [patch_dict_def]
+        patch_dict = [patch_dict_def.copy() for _ in range(n)]
     elif type(patch_dict) is dict:
-        patch_dict = patch_dict_def | patch_dict
-        patch_dict = n * [patch_dict]
+        merged = patch_dict_def | patch_dict
+        patch_dict = [merged.copy() for _ in range(n)]
     else:
         assert len(patch_dict) == n, 'Need one style dictionary per age.'
 

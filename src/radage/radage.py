@@ -407,7 +407,7 @@ class UPb:
         # parse input combinations; each conditional statement ultimately yields the following ratios and correlation coefficients:
         # 206-238, 207-235, 207-206, 238-206, rho_207235_206238, rho_206238_207206, rho_238206_207206
         #
-        # case 1: 206-238, 207-235, and 207-206, with rho_206238_207206 and/or rho_207235_206238
+        # case 1 (all): 206-238, 207-235, and 207-206, with rho_206238_207206 and/or rho_207235_206238
         if r206_238 is not None and r207_235 is not None and r207_206 is not None:
             r206_238_mean, r206_238_std = r206_238
             r207_235_mean, r207_235_std = r207_235
@@ -437,22 +437,24 @@ class UPb:
                 rho_207235_206238
             )
 
-        # case 2: 206Pb/238U and 207Pb/235U with rho_207235_206238
+        # case 2 (Wetherill): 206Pb/238U and 207Pb/235U with rho_207235_206238
         elif r206_238 is not None and r207_235 is not None:
             r206_238_mean, r206_238_std = r206_238
             r207_235_mean, r207_235_std = r207_235
             r207_206_mean = r207_235_mean / r206_238_mean / u238u235
             if rho_207235_206238 is None:
                 rho_207235_206238 = 0
-            rho_238206_207206, r238_206_std, r207206_std = \
+            rho_238206_207206, r238_206_std, r207_206_std = \
                 rho207235_206238_to_rho238206_207206(
                     r207_235_mean, r207_235_std,
                     r206_238_mean, r206_238_std,
                     rho_207235_206238
                 )
+            r238_206_mean = 1 / r206_238_mean
+            r238_206_std = (r206_238_std/r206_238_mean) * r238_206_mean
             rho_206238_207206 = -rho_238206_207206
 
-        # case 3: 238Pb/206U and 207Pb/206Pb with rho_238206_207206
+        # case 3 (Tera-Wasserburg): 238Pb/206U and 207Pb/206Pb with rho_238206_207206
         elif r238_206 is not None and r207_206 is not None:
             r238_206_mean, r238_206_std = r238_206
             r207_206_mean, r207_206_std = r207_206

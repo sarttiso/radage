@@ -1,0 +1,21 @@
+radage package
+==============
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   radage.helper
+   radage.plotting
+   radage.radage
+
+Module contents
+---------------
+
+.. automodule:: radage
+   :members:
+   :private-members:
+   :show-inheritance:
+   :undoc-members:
